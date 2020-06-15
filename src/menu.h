@@ -1,0 +1,151 @@
+#include "Arduino.h"
+#include "define_menu.h"
+#include "define_icons.h"
+#include "define_text.h"
+
+int messageindex = 0;
+String messagebuffer[4];
+
+int MenuLength = 0;
+int MenuOffset = 0;
+
+struct MenuStruct
+{
+  String Icon;
+  String Text;
+  String Data;
+  MenuItemType Type;
+};
+
+struct StackStruct
+{    
+  String Text;
+  String Data;
+  MenuItemType Type;
+  int Position;
+  int Offset;
+};
+
+
+
+bool restore = false;
+
+MenuStruct Menu[200];
+int MenuPosition = 0;
+
+StackStruct Stack[10];
+int stack_pos = 0;
+
+
+
+void GenMenuItem(String Icon, String Text, MenuItemType Type, String Data = "")
+{
+  Menu[MenuLength].Icon = Icon;
+  Menu[MenuLength].Text = Text;
+  Menu[MenuLength].Type = Type;
+  Menu[MenuLength].Data = Data;
+  MenuLength++;
+}
+
+void GenMenuStart()
+{
+  MenuLength = 0;
+}
+
+void GenMenuEnd()
+{
+  // LeftEncoder.reset();
+  MenuOffset = 0;
+}
+
+void MenuMain()
+{
+  stack_pos = 0;
+
+  GenMenuStart();
+
+  GenMenuItem(ICON_PLAY, TEXT_MENU_STATUS, MENU_STATUS);
+  GenMenuItem(ICON_CLOCK, TEXT_MENU_PLAYBACK, MENU_PLAYBACK);
+  GenMenuItem(ICON_MUSIC, TEXT_MENU_BROWSE, MENU_BROWSE);
+  GenMenuItem(ICON_LIST, TEXT_MENU_QUEUE, MENU_QUEUE);
+  GenMenuItem(ICON_STOP, TEXT_MENU_DARK, MENU_DARK);
+
+  GenMenuEnd();
+
+ 
+}
+
+void MenuPlayback()
+{
+  GenMenuStart();
+  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  GenMenuItem(ICON_PREV, TEXT_PLAYBACK_PREV, MENU_PLAYBACK_PREV);
+  GenMenuItem(ICON_NEXT, TEXT_PLAYBACK_NEXT, MENU_PLAYBACK_NEXT);
+  GenMenuItem(ICON_PLAY, TEXT_PLAYBACK_PLAY, MENU_PLAYBACK_PLAY);
+  GenMenuItem(ICON_PAUSE, TEXT_PLAYBACK_PAUSE, MENU_PLAYBACK_PAUSE);
+  // GenMenuItem(ICON_PAUSE, TEXT_PLAYBACK_TOGGLE, MENU_PLAYBACK_TOGGLE);
+  GenMenuItem(ICON_STOP, TEXT_PLAYBACK_STOP, MENU_PLAYBACK_STOP);
+  GenMenuItem(ICON_RANDOM, TEXT_PLAYBACK_RANDOM, MENU_PLAYBACK_RANDOM_SET_RESET);
+  GenMenuItem(ICON_REPEAT, TEXT_PLAYBACK_REPEAT, MENU_PLAYBACK_REPEAT_SET_RESET);
+  GenMenuEnd();
+}
+
+void ContextMenuSong(String data)
+{
+  GenMenuStart();
+  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
+  GenMenuItem(ICON_PLAY, TEXT_BROWSE_SONG_PLAY, MENU_BROWSE_SONG_PLAY, data);
+  GenMenuItem(ICON_LIST, TEXT_BROWSE_SONG_ADDTOQUEUE, MENU_BROWSE_SONG_ADDTOQUEUE, data);
+  GenMenuItem(ICON_LIST, TEXT_BROWSE_SONG_CLEARANDPLAY, MENU_BROWSE_SONG_CLEARANDPLAY, data);
+  // GenMenuItem(ICON_PLUS, TEXT_BROWSE_SONG_ADDTOPLAYLIST, MENU_BROWSE_SONG_ADDTOPLAYLIST, data);
+  // GenMenuItem(ICON_HEART, TEXT_BROWSE_SONG_ADDTOFAVORITES, MENU_BROWSE_SONG_ADDTOFAVORITES, data);
+  GenMenuEnd();
+}
+
+void ContextMenuWebradio(String data)
+{
+  GenMenuStart();
+  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
+  GenMenuItem(ICON_PLAY, TEXT_BROWSE_WEBRADIO_PLAY, MENU_BROWSE_WEBRADIO_PLAY, data);
+  GenMenuItem(ICON_LIST, TEXT_BROWSE_WEBRADIO_ADDTOQUEUE, MENU_BROWSE_WEBRADIO_ADDTOQUEUE, data);
+  GenMenuItem(ICON_LIST, TEXT_BROWSE_WEBRADIO_CLEARANDPLAY, MENU_BROWSE_WEBRADIO_CLEARANDPLAY, data);
+  // GenMenuItem(ICON_PLUS, TEXT_BROWSE_WEBRADIO_ADDTOPLAYLIST, MENU_BROWSE_WEBRADIO_ADDTOPLAYLIST, data);
+  // GenMenuItem(ICON_HEART, TEXT_BROWSE_WEBRADIO_ADDTOFAVORITES, MENU_BROWSE_WEBRADIO_ADDTOFAVORITES, data);
+  GenMenuEnd();
+}
+
+void ContextMenuQueue(int index)
+{
+  GenMenuStart();
+  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
+  GenMenuItem(ICON_PLAY, TEXT_QUEUE_TRACK_PLAY, MENU_QUEUE_TRACK_PLAY, String(index));
+  GenMenuItem(ICON_CLEAR, TEXT_QUEUE_TRACK_DELETE, MENU_QUEUE_TRACK_DELETE, String(index));
+
+  GenMenuEnd();
+}
+
+void MenuSystem()
+{
+}
+
+void MenuPush()
+{
+  Stack[stack_pos].Text = Menu[MenuPosition].Text;
+  Stack[stack_pos].Type = Menu[MenuPosition].Type;
+  Stack[stack_pos].Data = Menu[MenuPosition].Data;
+  Stack[stack_pos].Position = MenuPosition;
+  Stack[stack_pos].Offset = MenuOffset;
+
+  stack_pos++;
+}
+
+void MenuPop()
+{
+  if (stack_pos > 0)
+    stack_pos--;
+
+  // Menu[menu_pos] = Stack[stack_pos];
+}
