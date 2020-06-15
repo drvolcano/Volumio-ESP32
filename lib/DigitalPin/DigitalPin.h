@@ -3,7 +3,7 @@
 class DigitalPin
 {
 public:
-
+ //
   bool pressed = false;    //pressed = rising edge (is now but was not before), readonly
   bool released = false;   //released = falling edge (is not now but was before), readonly
   void begin(int pin);     //initialize with pin number. Pin mode must be set outside
