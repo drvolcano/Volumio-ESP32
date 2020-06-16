@@ -13,28 +13,27 @@
 #define DEBUG_PRINT(x)
 #endif
 
-#define DATA_BUFFER_LEN 1000
-char databuffer[DATA_BUFFER_LEN];
-
-bool SocketIO::connect(char *thehostname, int theport)
+bool SocketIO::connect(String hostname, int portnr)
 {
-  if (!client.connect(thehostname, theport))
+  //Connect to WiFi
+  if (!client.connect(hostname.c_str(), portnr))
     return false;
 
-  hostname = thehostname;
-  port = theport;
+  mem_hostname = hostname;
+  mem_portnr = portnr;
 
-  writeLine("GET /socket.io/?transport=polling&b64=true HTTP/1.1");
+  writeLine("GET /socket.io/?transport=polling HTTP/1.1");
   writeLine("Host: " + hostname);
   writeLine("");
   DEBUG_PRINTLN(F(""));
 
-  if (!waitForInput())
+  //Wait for response
+  if (!waitForData(3000))
     return false;
 
-  // check for happy "HTTP/1.1 200" response
   readLine();
 
+  //"HTTP/1.1 200"
   if (atoi(&databuffer[9]) != 200)
   {
     while (client.available())
@@ -57,67 +56,90 @@ bool SocketIO::connect(char *thehostname, int theport)
 
   String tmp = databuffer;
 
-  int sidindex = tmp.indexOf("sid") + 6;
-  DEBUG_PRINT("SocketIO: SID: Start: ");
-  DEBUG_PRINTLN(sidindex);
+  Parser.Load(tmp);
+  while (Parser.Read())
+  {
+    DEBUG_PRINT("SocketIO: JSON: ");
+    DEBUG_PRINT(Parser.Nodes[1]);
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(Parser.Value);
 
-  int sidendindex = tmp.indexOf("\"", sidindex);
-  DEBUG_PRINT("SocketIO: SID: End: ");
-  DEBUG_PRINTLN(sidendindex);
+    if (Parser.Nodes[1] == "sid")
+      sid = Parser.Value;
 
-  int count = sidendindex - sidindex;
-  DEBUG_PRINT("SocketIO: SID: Length: ");
-  DEBUG_PRINTLN(count);
+    if (Parser.Nodes[1] == "upgrades")
+      ;
 
-  sid = "";
+    if (Parser.Nodes[1] == "pingInterval")
+      keepAliveInterval = Parser.Value.toInt();
 
-  for (int i = 0; i < count; i++)
-    sid += databuffer[i + sidindex];
-
-  DEBUG_PRINT("SocketIO: SID = ");
-  DEBUG_PRINTLN(sid);
-
-  int intervalindex = tmp.indexOf("pingInterval") + 14;
-  DEBUG_PRINT("SocketIO: Interval: Start: ");
-  DEBUG_PRINTLN(intervalindex);
-
-  int intervalendindex = tmp.indexOf(",", intervalindex);
-  DEBUG_PRINT("SocketIO: Interval: End: ");
-  DEBUG_PRINTLN(intervalendindex);
-
-  int count2 = intervalendindex - intervalindex;
-  DEBUG_PRINT("SocketIO: Interval: Length: ");
-  DEBUG_PRINTLN(count2);
-
-  String intervaltext;
-
-  for (int i = 0; i < count2; i++)
-    intervaltext += databuffer[i + intervalindex];
-
-  interval = intervaltext.toInt();
-
-  DEBUG_PRINT("SocketIO: Interval = ");
-  DEBUG_PRINTLN(intervaltext);
+    if (Parser.Nodes[1] == "pingTimeout")
+      ;
+  }
 
   while (client.available())
     readLine();
 
   DEBUG_PRINTLN(F(""));
 
-  writeLine("GET /socket.io/?transport=websocket&b64=true&sid=" + sid + " HTTP/1.1");
+  //Generate 16-Byte random key
+  byte key[16];
+
+  esp_fill_random(key, 16);
+
+  for (int i = 0; i < 16; i++)
+  {
+    DEBUG_PRINTLN(key[i]);
+  }
+
+  //Convert into 24 digit base64 text
+  String keytext = "";
+
+  int j = 0;
+  int cnt = 0;
+  uint16_t buf = 0;
+
+  for (int i = 0; i < 24; i++)
+  {
+    if (cnt <= 8)
+      if (j < 16)
+      {
+        buf += key[j] << (8 - cnt);
+        cnt += 8;
+        j++;
+      }
+
+    byte val = buf >> 10;
+
+    if (cnt < 0)
+      keytext += (char)('=');
+    else if (val <= 25)
+      keytext += (char)('A' + val);
+    else if (val <= 51)
+      keytext += (char)('a' + val - 26);
+    else if (val <= 61)
+      keytext += (char)('0' + val - 52);
+    else if (val == 62)
+      keytext += (char)('+');
+    else if (val == 63)
+      keytext += (char)('/');
+
+    cnt -= 6;
+    buf = buf << 6;
+  }
+
+  writeLine("GET /socket.io/?transport=websocket&sid=" + sid + " HTTP/1.1");
   writeLine("Host: " + hostname);
-  writeLine("Sec-WebSocket-Version: 13");
-  writeLine("Origin: ArduinoSocketIO");
-  writeLine("Sec-WebSocket-Extensions: permessage-deflate");
-  writeLine("Sec-WebSocket-Key: IAMVERYEXCITEDESP32FTW=="); // can be anything
-  writeLine("Cookie: io=" + sid);
   writeLine("Connection: Upgrade");
-  writeLine("Upgrade: websocket"); 
+  writeLine("Upgrade: websocket");
+  writeLine("Sec-WebSocket-Version: 13");
+  writeLine("Sec-WebSocket-Extensions: permessage-deflate");
+  writeLine("Sec-WebSocket-Key: " + keytext); //16 byte in Base64
   writeLine("");
 
   DEBUG_PRINTLN(F(""));
 
-  if (!waitForInput())
+  if (!waitForData(3000))
     return false;
 
   readLine();
@@ -135,8 +157,8 @@ bool SocketIO::connect(char *thehostname, int theport)
 
   DEBUG_PRINTLN("");
 
-  sendMessage("52");
-  receive(); // treat the response as input
+  sendMessage("52"); //(String)engineIo_upgrade + (String)socketIo_event
+  receive();         // treat the response as input
   return true;
 }
 
@@ -161,20 +183,19 @@ char SocketIO::read()
 
 bool SocketIO::receive()
 {
+  unsigned long now = millis();
 
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis > interval)
+  if (now - lastKeepAlive > keepAliveInterval)
   {
-    previousMillis = currentMillis;
+    lastKeepAlive = now;
 
     DEBUG_PRINTLN("SocketIO: Send: Ping (keep alive)");
-
     sendMessage("2");
   }
 
   if (!client.connected())
   {
-    if (!client.connect(hostname.c_str(), port))
+    if (!client.connect(mem_hostname.c_str(), mem_portnr))
       return 0;
   }
 
@@ -458,13 +479,12 @@ bool SocketIO::receive()
   return 0;
 }
 
-bool SocketIO::waitForInput(void)
+bool SocketIO::waitForData(unsigned long delay)
 {
-  unsigned long now = millis();
-  while (!client.available() && ((millis() - now) < 30000UL))
-  {
+  unsigned long start = millis();
+  while (!client.available() && (millis() < (start + delay)))
     ;
-  }
+
   return client.available();
 }
 

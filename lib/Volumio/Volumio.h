@@ -1,5 +1,4 @@
 #include "SocketIO.h"
-#include "JSON.h"
 
 class Volumio
 {
