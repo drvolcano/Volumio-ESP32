@@ -97,6 +97,9 @@ class Volumio
   };
 
 public:
+ 
+
+
   //State of system
   StateStruct State;
 

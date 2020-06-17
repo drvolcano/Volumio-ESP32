@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include "Inflate.h"
 #include "JSON.h"
+#include "EasyStream.h"
 
 #define message_len_16bit 126
 #define message_len_64bit 127
@@ -13,7 +14,6 @@
 #define step_length2 2
 #define step_engineIo 3
 #define step_socketIo 4
-#define step_data 5
 
 //https://github.com/socketio/engine.io-protocol
 #define engineIo_open '0'
@@ -33,7 +33,7 @@
 #define socketIo_binary_event '5'
 #define socketIo_binary_ack '6'
 
-class SocketIO
+class SocketIO:public EasyStream
 {
 public:
   bool connect(String hostname, int portnr);
@@ -47,7 +47,6 @@ public:
   void finalize();
   char read();
 
-  String Message;
 
 private:
   bool waitForData(unsigned long delay);

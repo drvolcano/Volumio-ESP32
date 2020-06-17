@@ -126,63 +126,54 @@ void SocketIO::finalize()
 
 char SocketIO::read()
 {
-   //Compressed data
-    if (inflate)
+  //Compressed data
+  if (inflate)
+  {
+    if (!inflated)
     {
-      if (!inflated)
-      {
-        DEBUG_PRINTLN("SocketIO: Receive: Inflate");
-        DEBUG_PRINTLN("");
+      DEBUG_PRINTLN("SocketIO: Receive: Inflate");
+      DEBUG_PRINTLN("");
 
-        inflater.Run(&client, len);
-        len = 0;
-        inflated = true;
-      }
-      //Read one char from inflater
-      c = inflater.read();
-
-      if (inflater.Done)
-      {
-        inflater.finalize();
-
-        DEBUG_PRINTLN("");
-        DEBUG_PRINTLN("SocketIO: Receive: END");
-        DEBUG_PRINTLN("");
-        return 0;
-      }
-      else
-        return c;
-
+      inflater.Run(&client, len);
+      len = 0;
+      inflated = true;
     }
-    //Uncompressed data
-    else if (direct)
+    //Read one char from inflater
+    c = inflater.read();
+
+    if (inflater.Done)
     {
-      if (len == 0)
-      {
-        DEBUG_PRINTLN("");
-        DEBUG_PRINTLN("SocketIO: Receive: END");
-        DEBUG_PRINTLN("");
-        return 0;
-      }
+      inflater.finalize();
 
-      len--;
-      return client.read();
-     
+      DEBUG_PRINTLN("");
+      DEBUG_PRINTLN("SocketIO: Receive: END");
+      DEBUG_PRINTLN("");
+      return 0;
     }
-    //Before data type known
     else
+      return c;
+  }
+  //Uncompressed data
+  else if (direct)
+  {
+    if (len == 0)
     {
-      //Read one char from client
-      return client.read();
+      DEBUG_PRINTLN("");
+      DEBUG_PRINTLN("SocketIO: Receive: END");
+      DEBUG_PRINTLN("");
+      return 0;
     }
+
+    len--;
+    return client.read();
+  }
+  //Before data type known
+  else
+  {
+    //Read one char from client
+    return client.read();
+  }
 }
-
-
-
-
-
-
-
 
 bool SocketIO::receive()
 {
@@ -210,12 +201,8 @@ bool SocketIO::receive()
   //Step of header readout
   int step = step_header;
 
-  Message = "";
-
   //Count of bytes needed for length
   int lencnt = 0;
-
-  
 
   //Length of data
   len = 0;
@@ -229,7 +216,7 @@ bool SocketIO::receive()
   {
     c = read();
 
-    if(c == 0)
+    if (c == 0)
       return 1;
 
     switch (step)
@@ -389,31 +376,24 @@ bool SocketIO::receive()
       {
       case socketIo_connect:
         DEBUG_PRINT("connect");
-        step = step_data;
         break;
       case socketIo_disconnect:
         DEBUG_PRINT("disconnect");
-        step = step_data;
         break;
       case socketIo_event:
         DEBUG_PRINT("event");
-        step = step_data;
         break;
       case socketIo_ack:
         DEBUG_PRINT("ack");
-        step = step_data;
         break;
       case socketIo_error:
         DEBUG_PRINT("error");
-        step = step_data;
         break;
       case socketIo_binary_event:
         DEBUG_PRINT("binary event");
-        step = step_data;
         break;
       case socketIo_binary_ack:
         DEBUG_PRINT("binary ack");
-        step = step_data;
         break;
       default:
         DEBUG_PRINT("???");
@@ -422,14 +402,7 @@ bool SocketIO::receive()
 
       DEBUG_PRINTLN(")");
 
-      //DEBUG_PRINT("SocketIO: Receive: JSON: ");
-
-      break;
-
-    case step_data:
-
-      DEBUG_PRINT(c);
-      Message += c;
+      return 1;
 
       break;
     }

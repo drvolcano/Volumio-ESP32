@@ -64,8 +64,24 @@ void JSON::Print()
   Value = textValue;
 }
 
+void JSON::ConnectToStream(EasyStream* stream)
+{
+  easyStream = stream;
+  fromStream = true;
+  Buffer = "";
+  stackpos = 0;
+  Index = 0;
+  Value = "";
+  text = false;
+  value = false;
+  lastwaspop = false;
+
+  DEBUG_PRINT("JSON: Connect to Stream ");
+}
+
 void JSON::Load(String Message)
 {
+  fromStream = false;
   Buffer = Message;
   stackpos = 0;
   Index = 0;
@@ -85,11 +101,22 @@ bool JSON::Read()
 
   Value = "";
 
-  while (Index < Buffer.length())
+  while (Index < Buffer.length() || fromStream)
   {
     bool doreturn;
 
-    char c = Buffer[Index];
+    char c;
+
+    if (fromStream)
+    {
+      c = easyStream->read();
+      if (c == 0)
+        break;
+    }
+    else
+    {
+      c = Buffer[Index];
+    }
 
     DEBUG_PRINT("JSON: ");
     DEBUG_PRINTLN(c);

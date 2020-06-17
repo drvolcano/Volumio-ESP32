@@ -354,8 +354,25 @@ void Volumio::process()
 
   if (socketIoClient.receive())
   {
-    //Feed received message to parser
-    Parser.Load(socketIoClient.Message);
+    String Message = "";
+
+    if (false)
+    {
+      while (true)
+      {
+        char c = socketIoClient.read();
+
+        if (c == 0)
+          break;
+        else
+          Message += c;
+      }
+
+      //Feed received message to parser
+      Parser.Load(Message);
+    }
+    else
+      Parser.ConnectToStream(&socketIoClient);
 
     //Process data as long as data generates lines
     if (Parser.Read())
