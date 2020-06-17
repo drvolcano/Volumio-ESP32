@@ -874,7 +874,7 @@ void loop()
 
         //Artist
         int widthArtist = display.getUTF8Width(volumio.State.artist.c_str());
-        display.drawUTF8((DisplayWidth - widthArtist) / 2, 16 * 3, volumio.State.artist.c_str());
+        display.drawUTF8((DisplayWidth - widthArtist) / 2, 16 * 2, volumio.State.artist.c_str());
 
         //Title
         String line1 = volumio.State.title;
