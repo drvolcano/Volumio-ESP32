@@ -62,9 +62,11 @@ int lastscreenshot =0;
 
 u8g2_uint_t line1_offset; // current offset for the scrolling text
 u8g2_uint_t line2_offset; // current offset for the scrolling text
+u8g2_uint_t item_offset; // current offset for the scrolling text
 
 u8g2_uint_t line1_width;
 u8g2_uint_t line2_width;
+u8g2_uint_t item_width;
 
 bool WaitForSourceUpdate = false;
 bool WaitForLibraryUpdate = false;

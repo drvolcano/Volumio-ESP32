@@ -49,15 +49,17 @@ int ScrollInterval = 10; //ms
 //Gap between end and start of scrolling text
 u8g2_uint_t scrollGap = 32;//px
 
+u8g2_uint_t scrollGapMenu = 8;//px
+
+
 //After x ms without operation go back to status display
-long delayBackStatus = 10* 1000;//ms
+long delayBackStatus = 30* 1000;//ms
 
 //After x ms without operation switch display off, if not play
 long delayDisplayOffWhenNotPlay = 60 * 1000; //ms
 
 //After x ms without operation switch display off
 long delayDisplayOff = 0; //ms
-
 
 //###########################################################
 // Display
@@ -79,8 +81,6 @@ sketch folder.
 
 U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0,PIN_SPI_CS,PIN_SPI_DC,U8X8_PIN_NONE);
 
-
-
 //###########################################################
 // Menu
 //###########################################################
@@ -91,11 +91,9 @@ U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0,PIN_SPI_CS,PIN_SPI_DC,U8X8_P
 #define MenuPixelHeight 128
 #define MenuPixelWidth 128
 
-
-  //https://github.com/olikraus/u8g2/wiki/fntlistall#u8g2-font-names
+//https://github.com/olikraus/u8g2/wiki/fntlistall#u8g2-font-names
 #define MenuTextFont u8g2_font_t0_12_tf
 #define StatusTextFont u8g2_font_t0_12_tf
 #define ToastTextFont u8g2_font_t0_12_tf
 
 #define MenuIconFont u8g2_font_open_iconic_all_1x_t
-

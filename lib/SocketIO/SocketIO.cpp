@@ -1,5 +1,4 @@
-//Original code from https://github.com/washo4evr/Socket.io-v1.x-Library
-//Most was rewritten, due lack of advanced features (compression, >256 Bytes,...)
+//inspired by https://github.com/washo4evr/Socket.io-v1.x-Library
 
 #include "SocketIO.h"
 
@@ -129,14 +128,14 @@ char SocketIO::read()
   //Compressed data
   if (inflate)
   {
-    if (!inflated)
+    if (!inflaterInitialized)
     {
       DEBUG_PRINTLN("SocketIO: Receive: Inflate");
       DEBUG_PRINTLN("");
 
       inflater.Run(&client, len);
       len = 0;
-      inflated = true;
+      inflaterInitialized = true;
     }
     //Read one char from inflater
     c = inflater.read();
@@ -209,7 +208,7 @@ bool SocketIO::receive()
   masked = false;
   compressed = false;
   inflate = false;
-  inflated = false;
+  inflaterInitialized = false;
   direct = false;
 
   while (true)

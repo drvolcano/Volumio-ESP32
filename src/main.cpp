@@ -38,7 +38,7 @@ void DisplayMessage(String Message)
 
     do
     {
-       //Draw message texts
+      //Draw message texts
       for (int i = 0; i < msgcnt; i++)
         display.drawUTF8(0, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, messagebuffer[(messageindex - i + msgcnt) % msgcnt].c_str());
 
@@ -597,8 +597,8 @@ void loop()
   //######################################################################
   // Touch pins
   //######################################################################
-    
-     /*
+
+  /*
   TouchPin0.process();
   TouchPin1.process();
   TouchPin2.process();
@@ -674,6 +674,7 @@ void loop()
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
+    item_offset = 0;
   }
 
   //Do nothing if statusdisplay active
@@ -682,7 +683,7 @@ void loop()
   }
   else
   {
-    
+
     if (restore && !WaitForLibraryUpdate && !WaitForQueueUpdate && !WaitForSourceUpdate)
     {
       restore = false;
@@ -934,27 +935,76 @@ void loop()
       }
       else
       {
-        //Show scrollbar if menu is longer than screen
-        if (MenuLength > MenuVisibleItems)
-        {
-          int barlen = (int)((float)MenuVisibleItems / (float)MenuLength * MenuPixelHeight);
-          int barpos = (int)((float)MenuOffset / (float)MenuLength * MenuPixelHeight);
-          display.drawLine(MenuPixelWidth - 1, barpos, MenuPixelWidth - 1, barpos + barlen);
-        }
+        bool style2 = false;
 
-        //Highlight actual menu item
-        display.drawRFrame(0, MenuItemHeight * (MenuPosition - MenuOffset), MenuPixelWidth - 2, MenuItemHeight, 0);
+        if (style2)
+          display.drawRBox(0, MenuItemHeight * (MenuPosition - MenuOffset), MenuPixelWidth - 3, MenuItemHeight, 0);
 
         //Write menu texts
         for (int i = 0; i < MenuVisibleItems; i++)
           if (i + MenuOffset < MenuLength)
           {
-            display.setFont(MenuTextFont);
-            display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
 
-            display.setFont(MenuIconFont);
-            display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+            if (i == MenuPosition - MenuOffset)
+            {
+              if (style2)
+                display.setColorIndex(0);
+              else
+                display.setColorIndex(1);
+
+              item_width = display.getUTF8Width(Menu[i + MenuOffset].Text.c_str()) + MenuItemHeight;
+
+              if (item_width <= MenuPixelWidth)
+              {
+                display.setFont(MenuTextFont);
+                display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
+                display.setFont(MenuIconFont);
+                display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+              }
+              else
+              //Scrolling text
+              {
+                x = item_offset;
+
+              
+                  do
+                  {
+                    display.setFont(MenuTextFont);
+                    display.drawUTF8(MenuItemHeight + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
+                    display.setFont(MenuIconFont);
+                    display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2 + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+
+                    //second text
+                    x += item_width + scrollGapMenu;
+                  } while (x < DisplayWidth);
+              }
+            }
+            else
+            {
+              display.setFont(MenuTextFont);
+              display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
+              display.setFont(MenuIconFont);
+              display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+            }
           }
+
+        //Highlight actual menu item
+        if (MenuLength > MenuVisibleItems)
+          display.drawRFrame(0, MenuItemHeight * (MenuPosition - MenuOffset), MenuPixelWidth - 3, MenuItemHeight, 0);
+        else
+          display.drawRFrame(0, MenuItemHeight * (MenuPosition - MenuOffset), MenuPixelWidth, MenuItemHeight, 0);
+
+        //Show scrollbar if menu is longer than screen
+        if (MenuLength > MenuVisibleItems)
+        {
+          display.setColorIndex(0);
+          display.drawRBox(MenuPixelWidth - 3, 0, 3, MenuPixelHeight, 0);
+          display.setColorIndex(1);
+
+          int barlen = (int)((float)MenuVisibleItems / (float)MenuLength * MenuPixelHeight);
+          int barpos = (int)((float)MenuOffset / (float)MenuLength * MenuPixelHeight);
+          display.drawLine(MenuPixelWidth - 1, barpos, MenuPixelWidth - 1, barpos + barlen);
+        }
       }
 
       //Display volume
@@ -993,6 +1043,7 @@ void loop()
     scrollbuffer -= ScrollInterval;
     line1_offset -= 1;
     line2_offset -= 1;
+    item_offset -= 1;
   }
 
   //Restart scrolling when at end
@@ -1001,6 +1052,9 @@ void loop()
 
   if ((u8g2_uint_t)line2_offset < (u8g2_uint_t)-line2_width - scrollGap)
     line2_offset = 0;
+
+  if ((u8g2_uint_t)item_offset < (u8g2_uint_t)-item_width - scrollGapMenu)
+    item_offset = 0;
 
   //######################################################################
   // Send screenshot to PC

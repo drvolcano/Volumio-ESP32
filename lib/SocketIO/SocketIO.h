@@ -78,7 +78,7 @@ private:
   bool masked = false;
   bool compressed = false;
   bool inflate = false;
-  bool inflated = false;
+  bool inflaterInitialized = false;
   bool direct = false;
   char c;
 
