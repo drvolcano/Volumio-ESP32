@@ -1,4 +1,3 @@
-//#include "Arduino.h"
 #include <WiFi.h>
 #include "Inflate.h"
 #include "JSON.h"
@@ -16,6 +15,7 @@
 #define step_socketIo 4
 #define step_data 5
 
+//https://github.com/socketio/engine.io-protocol
 #define engineIo_open '0'
 #define engineIo_close '1'
 #define engineIo_ping '2'
@@ -24,6 +24,7 @@
 #define engineIo_upgrade '5'
 #define engineIo_noop '6'
 
+//https://github.com/socketio/socket.io-protocol
 #define socketIo_connect '0'
 #define socketIo_disconnect '1'
 #define socketIo_event '2'
@@ -31,8 +32,6 @@
 #define socketIo_error '4'
 #define socketIo_binary_event '5'
 #define socketIo_binary_ack '6'
-
-
 
 class SocketIO
 {
@@ -52,8 +51,9 @@ public:
 
 private:
   bool waitForData(unsigned long delay);
-  void readLine();
+  String readLine();
   void writeLine(String line);
+  String genKey();
 
   String mem_hostname;
   int mem_portnr;
@@ -66,9 +66,21 @@ private:
 
   char *dataptr;
 
+
   String sid;
   JSON Parser;
 
   #define DATA_BUFFER_LEN 1000
   char databuffer[DATA_BUFFER_LEN];
+
+
+ //Length of data
+  unsigned long len = 0;
+  bool masked = false;
+  bool compressed = false;
+  bool inflate = false;
+  bool inflated = false;
+  bool direct = false;
+  char c;
+
 };

@@ -31,10 +31,7 @@ bool SocketIO::connect(String hostname, int portnr)
   if (!waitForData(3000))
     return false;
 
-  readLine();
-
-  //"HTTP/1.1 200"
-  if (atoi(&databuffer[9]) != 200)
+  if (!readLine().startsWith("HTTP/1.1 200"))
   {
     while (client.available())
       readLine();
@@ -43,20 +40,16 @@ bool SocketIO::connect(String hostname, int portnr)
     return false;
   }
 
+  //Read until end of message (empty line)
   while (client.available())
-  { // consume the header
-    readLine();
-    if (strlen(databuffer) == 0)
+    if (readLine().length() == 0)
       break;
-  }
-
-  readLine();
 
   DEBUG_PRINTLN(F(""));
 
-  String tmp = databuffer;
+  //Load string into JSON-parser
+  Parser.Load(readLine());
 
-  Parser.Load(tmp);
   while (Parser.Read())
   {
     DEBUG_PRINT("SocketIO: JSON: ");
@@ -77,61 +70,18 @@ bool SocketIO::connect(String hostname, int portnr)
       ;
   }
 
+  //Read rest of message
   while (client.available())
     readLine();
 
   DEBUG_PRINTLN(F(""));
 
-  //Generate 16-Byte random key
-  byte key[16];
-
-  esp_fill_random(key, 16);
-
-  for (int i = 0; i < 16; i++)
-  {
-    DEBUG_PRINTLN(key[i]);
-  }
-
-  //Convert into 24 digit base64 text
-  String keytext = "";
-
-  int j = 0;
-  int cnt = 0;
-  uint16_t buf = 0;
-
-  for (int i = 0; i < 24; i++)
-  {
-    if (cnt <= 8)
-      if (j < 16)
-      {
-        buf += key[j] << (8 - cnt);
-        cnt += 8;
-        j++;
-      }
-
-    byte val = buf >> 10;
-
-    if (cnt < 0)
-      keytext += (char)('=');
-    else if (val <= 25)
-      keytext += (char)('A' + val);
-    else if (val <= 51)
-      keytext += (char)('a' + val - 26);
-    else if (val <= 61)
-      keytext += (char)('0' + val - 52);
-    else if (val == 62)
-      keytext += (char)('+');
-    else if (val == 63)
-      keytext += (char)('/');
-
-    cnt -= 6;
-    buf = buf << 6;
-  }
+  String keytext = genKey();
 
   writeLine("GET /socket.io/?transport=websocket&sid=" + sid + " HTTP/1.1");
   writeLine("Host: " + hostname);
-  writeLine("Connection: Upgrade");
   writeLine("Upgrade: websocket");
+  writeLine("Connection: Upgrade");
   writeLine("Sec-WebSocket-Version: 13");
   writeLine("Sec-WebSocket-Extensions: permessage-deflate");
   writeLine("Sec-WebSocket-Key: " + keytext); //16 byte in Base64
@@ -142,10 +92,8 @@ bool SocketIO::connect(String hostname, int portnr)
   if (!waitForData(3000))
     return false;
 
-  readLine();
-
-  if (atoi(&databuffer[9]) != 101)
-  { // check for "HTTP/1.1 101 response, means Updrage to Websocket OK
+  if (!readLine().startsWith("HTTP/1.1 101"))
+  {
     while (client.available())
       readLine();
     client.stop();
@@ -157,8 +105,8 @@ bool SocketIO::connect(String hostname, int portnr)
 
   DEBUG_PRINTLN("");
 
-  sendMessage("52"); //(String)engineIo_upgrade + (String)socketIo_event
-  receive();         // treat the response as input
+  sendMessage("52");
+
   return true;
 }
 
@@ -178,14 +126,69 @@ void SocketIO::finalize()
 
 char SocketIO::read()
 {
-  return ' ';
+   //Compressed data
+    if (inflate)
+    {
+      if (!inflated)
+      {
+        DEBUG_PRINTLN("SocketIO: Receive: Inflate");
+        DEBUG_PRINTLN("");
+
+        inflater.Run(&client, len);
+        len = 0;
+        inflated = true;
+      }
+      //Read one char from inflater
+      c = inflater.read();
+
+      if (inflater.Done)
+      {
+        inflater.finalize();
+
+        DEBUG_PRINTLN("");
+        DEBUG_PRINTLN("SocketIO: Receive: END");
+        DEBUG_PRINTLN("");
+        return 0;
+      }
+      else
+        return c;
+
+    }
+    //Uncompressed data
+    else if (direct)
+    {
+      if (len == 0)
+      {
+        DEBUG_PRINTLN("");
+        DEBUG_PRINTLN("SocketIO: Receive: END");
+        DEBUG_PRINTLN("");
+        return 0;
+      }
+
+      len--;
+      return client.read();
+     
+    }
+    //Before data type known
+    else
+    {
+      //Read one char from client
+      return client.read();
+    }
 }
+
+
+
+
+
+
+
 
 bool SocketIO::receive()
 {
   unsigned long now = millis();
 
-  if (now - lastKeepAlive > keepAliveInterval)
+  if (now > lastKeepAlive + keepAliveInterval)
   {
     lastKeepAlive = now;
 
@@ -212,66 +215,22 @@ bool SocketIO::receive()
   //Count of bytes needed for length
   int lencnt = 0;
 
+  
+
   //Length of data
-  unsigned long len = 0;
-
-  bool masked = false;
-  bool compressed = false;
-
-  char c;
-  bool inflate = false;
-  bool inflated = false;
-  bool direct = false;
+  len = 0;
+  masked = false;
+  compressed = false;
+  inflate = false;
+  inflated = false;
+  direct = false;
 
   while (true)
   {
-    //Compressed data
-    if (inflate)
-    {
-      if (!inflated)
-      {
-        DEBUG_PRINTLN("SocketIO: Receive: Inflate");
-        DEBUG_PRINTLN("");
+    c = read();
 
-        inflater.Run(&client, len);
-        len = 0;
-        inflated = true;
-      }
-      //Read one char from inflater
-      c = inflater.read();
-
-      if (inflater.Done)
-      {
-        inflater.finalize();
-
-        DEBUG_PRINTLN("");
-        DEBUG_PRINTLN("SocketIO: Receive: END");
-        DEBUG_PRINTLN("");
-        return 1;
-      }
-    }
-    //Uncompressed data
-    else if (direct)
-    {
-
-      if (len == 0)
-
-      {
-        DEBUG_PRINTLN("");
-        DEBUG_PRINTLN("SocketIO: Receive: END");
-        DEBUG_PRINTLN("");
-        return 1;
-      }
-
-      c = client.read();
-      len--;
-    }
-    //Before data type known
-    else
-    {
-      //Read one char from client
-      c = client.read();
-    }
+    if(c == 0)
+      return 1;
 
     switch (step)
     {
@@ -495,8 +454,55 @@ void SocketIO::writeLine(String line)
   DEBUG_PRINTLN(line);
 }
 
-void SocketIO::readLine()
+String SocketIO::genKey()
 {
+  //Generate 16-Byte random key
+  byte key[16];
+  esp_fill_random(key, 16);
+
+  //Convert into 24 digit base64 text
+  String keytext = "";
+
+  int j = 0;
+  int cnt = 0;
+  uint16_t buf = 0;
+
+  for (int i = 0; i < 24; i++)
+  {
+    if (cnt <= 8)
+      if (j < 16)
+      {
+        buf += key[j] << (8 - cnt);
+        cnt += 8;
+        j++;
+      }
+
+    byte val = buf >> 10;
+
+    if (cnt < 0)
+      keytext += (char)('=');
+    else if (val <= 25)
+      keytext += (char)('A' + val);
+    else if (val <= 51)
+      keytext += (char)('a' + val - 26);
+    else if (val <= 61)
+      keytext += (char)('0' + val - 52);
+    else if (val == 62)
+      keytext += (char)('+');
+    else if (val == 63)
+      keytext += (char)('/');
+
+    cnt -= 6;
+    buf = buf << 6;
+  }
+
+  return keytext;
+}
+
+String SocketIO::readLine()
+{
+  String line = "";
+
   for (int i = 0; i < DATA_BUFFER_LEN; i++)
     databuffer[i] = ' ';
 
@@ -514,12 +520,17 @@ void SocketIO::readLine()
     else if (c == '\n')
       break;
     else
+    {
       *dataptr++ = c;
+      line += c;
+    }
   }
   *dataptr = 0;
 
   DEBUG_PRINT("SocketIO: Receive: ");
-  DEBUG_PRINTLN(databuffer);
+  DEBUG_PRINTLN(line);
+
+  return line;
 }
 
 void SocketIO::sendMessage(String message)
