@@ -952,9 +952,10 @@ void loop()
               else
                 display.setColorIndex(1);
 
+              display.setFont(MenuTextFont);
               item_width = display.getUTF8Width(Menu[i + MenuOffset].Text.c_str()) + MenuItemHeight;
 
-              if (item_width <= MenuPixelWidth)
+              if (item_width <= MenuPixelWidth - 3)
               {
                 display.setFont(MenuTextFont);
                 display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
@@ -966,17 +967,16 @@ void loop()
               {
                 x = item_offset;
 
-              
-                  do
-                  {
-                    display.setFont(MenuTextFont);
-                    display.drawUTF8(MenuItemHeight + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
-                    display.setFont(MenuIconFont);
-                    display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2 + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+                do
+                {
+                  display.setFont(MenuTextFont);
+                  display.drawUTF8(MenuItemHeight + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
+                  display.setFont(MenuIconFont);
+                  display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2 + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
 
-                    //second text
-                    x += item_width + scrollGapMenu;
-                  } while (x < DisplayWidth);
+                  //second text
+                  x += item_width + scrollGapMenu;
+                } while (x < DisplayWidth);
               }
             }
             else
