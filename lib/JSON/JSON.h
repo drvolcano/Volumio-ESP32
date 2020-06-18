@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "EasyStream.h"
+#include "CharStream.h"
 
 class JSON
 {
@@ -10,13 +10,8 @@ class JSON
 public:
   void Parse(String Message);
   void Load(String Message);
-  void ConnectToStream(EasyStream* stream);
-
- 
-
-  //  void Run(SocketIO *client, int count);
+  void ConnectToStream(CharStream* stream);
   bool Read();
-  void finalize();
 
   String Value;
   String Nodes[10];
@@ -28,7 +23,7 @@ public:
 private:
 
   bool fromStream= false;
-  EasyStream* easyStream;
+  CharStream* charStream;
 
   String stack[10];
   int stacktype[10];

@@ -37,20 +37,22 @@ int port = 80;
 //Min and Max possible volume on my System, standard would be 0-100
 int VolumeMinimum = 0;
 int VolumeMaximum = 40;
-int VolumeSetDelay = 300; //ms
-int VolumeDuration = 2000; //ms
+long VolumeSetDelay = 300; //ms
+long VolumeDuration = 2000; //ms
 
 //How long toest messages are displayed
-int ToastDuration = 5000; //ms
+long ToastDuration = 5 * 1000; //ms
 
 //scroll one pixel each x ms
-int ScrollInterval = 10; //ms
+long ScrollInterval = 10; //ms
 
 //Gap between end and start of scrolling text
 u8g2_uint_t scrollGap = 32;//px
 
-u8g2_uint_t scrollGapMenu = 8;//px
+u8g2_uint_t scrollGapMenu = 16;//px
 
+//How long menu must stand still until scrolling starts
+long delayScrollMenu = 1 * 1000; //ms
 
 //After x ms without operation go back to status display
 long delayBackStatus = 30* 1000;//ms

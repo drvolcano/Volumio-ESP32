@@ -56,9 +56,11 @@ bool ToastDisplay= false;
 long ToastStart = 0;
 bool NoDisplay= false;
 
-int lastscroll = 0;
+long lastscroll = 0;
 int scrollbuffer= 0;
-int lastscreenshot =0;
+long lastscreenshot =0;
+long lastmenuchange =0;
+
 
 u8g2_uint_t line1_offset; // current offset for the scrolling text
 u8g2_uint_t line2_offset; // current offset for the scrolling text

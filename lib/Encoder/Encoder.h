@@ -22,7 +22,7 @@ private:
     bool OLD_B; //old state of pin B
     int oldState; //state of both pins
     int cnt = 0; //internal counter value
-    int halvings = 1; //how many times "cnt" is divided by 2 to get "Value"
+    int halvings = 2; //how many times "cnt" is divided by 2 to get "Value"
     void Update(); //internal function to process pin changes
     int OldValue = 0;
 

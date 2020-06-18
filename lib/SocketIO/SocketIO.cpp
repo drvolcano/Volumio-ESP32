@@ -475,29 +475,14 @@ String SocketIO::readLine()
 {
   String line = "";
 
-  for (int i = 0; i < DATA_BUFFER_LEN; i++)
-    databuffer[i] = ' ';
-
-  dataptr = databuffer;
-
-  while (client.available() && (dataptr < &databuffer[DATA_BUFFER_LEN - 2]))
+  while (client.available())
   {
     char c = client.read();
-    if (c == 0)
-      ;
-    else if (c == 255)
-      ;
-    else if (c == '\r')
-      ;
-    else if (c == '\n')
+    if (c == 0 || c == 255 || c == '\r' || c == '\n')
       break;
-    else
-    {
-      *dataptr++ = c;
-      line += c;
-    }
+
+    line += c;
   }
-  *dataptr = 0;
 
   DEBUG_PRINT("SocketIO: Receive: ");
   DEBUG_PRINTLN(line);
@@ -508,13 +493,12 @@ String SocketIO::readLine()
 void SocketIO::sendMessage(String message)
 {
   int msglength = message.length();
-  randomSeed(analogRead(0));
   String mask = "";
   String masked = message;
 
   for (int i = 0; i < 4; i++)
   {
-    char a = random(48, 57);
+    char a = random((byte)'0', (byte)'9');
     mask += a;
   }
 

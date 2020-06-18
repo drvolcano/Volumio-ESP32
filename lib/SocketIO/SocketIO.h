@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include "Inflate.h"
 #include "JSON.h"
-#include "EasyStream.h"
+#include "CharStream.h"
 
 #define message_len_16bit 126
 #define message_len_64bit 127
@@ -33,7 +33,7 @@
 #define socketIo_binary_event '5'
 #define socketIo_binary_ack '6'
 
-class SocketIO:public EasyStream
+class SocketIO:public CharStream
 {
 public:
   bool connect(String hostname, int portnr);
@@ -68,10 +68,6 @@ private:
 
   String sid;
   JSON Parser;
-
-  #define DATA_BUFFER_LEN 1000
-  char databuffer[DATA_BUFFER_LEN];
-
 
  //Length of data
   unsigned long len = 0;

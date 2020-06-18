@@ -621,6 +621,7 @@ void loop()
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
+    lastmenuchange= now;
 
     //Activate display if not switched on
     if (NoDisplay)
@@ -674,6 +675,7 @@ void loop()
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
+    lastmenuchange= now;
     item_offset = 0;
   }
 
@@ -955,8 +957,9 @@ void loop()
               display.setFont(MenuTextFont);
               item_width = display.getUTF8Width(Menu[i + MenuOffset].Text.c_str()) + MenuItemHeight;
 
-              if (item_width <= MenuPixelWidth - 3)
-              {
+              if (item_width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu )
+              {  
+                 item_offset = 0;
                 display.setFont(MenuTextFont);
                 display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
                 display.setFont(MenuIconFont);

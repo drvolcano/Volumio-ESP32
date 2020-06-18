@@ -64,9 +64,9 @@ void JSON::Print()
   Value = textValue;
 }
 
-void JSON::ConnectToStream(EasyStream* stream)
+void JSON::ConnectToStream(CharStream* stream)
 {
-  easyStream = stream;
+  charStream = stream;
   fromStream = true;
   Buffer = "";
   stackpos = 0;
@@ -96,7 +96,6 @@ void JSON::Load(String Message)
 
 bool JSON::Read()
 {
-
   Popped = false;
 
   Value = "";
@@ -109,7 +108,7 @@ bool JSON::Read()
 
     if (fromStream)
     {
-      c = easyStream->read();
+      c = charStream->read();
       if (c == 0)
         break;
     }

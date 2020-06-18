@@ -1,6 +1,6 @@
 #pragma once
 
-class EasyStream
+class CharStream
 {
   public:
       virtual char read() =0;

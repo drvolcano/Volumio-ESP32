@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "WiFi.h"
-
-class Inflate
+#include "CharStream.h"
+class Inflate:public CharStream
 {
 
 public:
