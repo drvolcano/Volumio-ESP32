@@ -41,7 +41,7 @@ Volumio volumio;
 // Volume
 //###########################################################
 
-bool volumeprogress = false;
+
 bool volumedisplay = false;
 int startvolume = 0;
 int startcnt = 0;
@@ -49,7 +49,10 @@ int startcnt = 0;
 int newvolume = 0;
 long laststop = 0;
 long lastsetvolume = 0;
+long lastsendvolume = 0;
 long lastinput =0;
+
+bool waitvolumechange = false;
 
 bool StatusDisplay = true;
 bool ToastDisplay= false;

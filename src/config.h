@@ -38,7 +38,8 @@ int port = 80;
 int VolumeMinimum = 0;
 int VolumeMaximum = 40;
 long VolumeSetDelay = 300; //ms
-long VolumeDuration = 2000; //ms
+long VolumeDuration = 2 * 1000; //ms
+
 
 //How long toest messages are displayed
 long ToastDuration = 5 * 1000; //ms

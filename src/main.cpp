@@ -574,6 +574,11 @@ void loop()
         MenuOffset = Stack[stack_pos].Offset;
       }
     }
+    else
+    {
+       while (volumio.ReadNextQueueItem());
+    }
+    
   }
 
   //Volumio pushes toast message
@@ -583,16 +588,14 @@ void loop()
 
     if (volumio.ReadPushToastMessage())
     {
-      ToastDisplay = true;
-      ToastStart = now;
+       ToastDisplay = true;
+       ToastStart = now;
     }
   }
 
-  if (ToastDisplay)
-  {
-    if (now > ToastStart + ToastDuration)
-      ToastDisplay = false;
-  }
+  //Volumio pushes status update
+  if (volumio.StatusUpdate)
+    waitvolumechange = false;
 
   //######################################################################
   // Touch pins
@@ -621,7 +624,7 @@ void loop()
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
-    lastmenuchange= now;
+    lastmenuchange = now;
 
     //Activate display if not switched on
     if (NoDisplay)
@@ -675,7 +678,7 @@ void loop()
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
-    lastmenuchange= now;
+    lastmenuchange = now;
     item_offset = 0;
   }
 
@@ -723,13 +726,9 @@ void loop()
     lastinput = now;
 
     //Show volume progress bar
-    volumeprogress = true;
     volumedisplay = true;
     lastsetvolume = now;
-  }
 
-  if (volumeprogress)
-  {
     newvolume = startvolume - ((RightEncoder.Value - startcnt));
 
     if (newvolume < VolumeMinimum)
@@ -737,27 +736,26 @@ void loop()
 
     if (newvolume > VolumeMaximum)
       newvolume = VolumeMaximum;
+  }
 
-    volumio.State.volume = newvolume;
-
-    if ((now - lastsetvolume) > VolumeSetDelay)
-    {
-      volumio.volume(newvolume);
-      volumeprogress = false;
-    }
+  if (volumedisplay)
+  {
+    if (volumio.State.volume != newvolume)
+      //  if (!waitvolumechange)
+      if (now > lastsendvolume + VolumeSetDelay)
+      {
+        waitvolumechange = true;
+        volumio.volume(newvolume);
+        lastsendvolume = now;
+      }
   }
   //Memorize start values when volume update not in progress
   else
   {
     startcnt = RightEncoder.Value;
     startvolume = volumio.State.volume;
-  }
-
-  //Close progressbar after given time
-  if (volumedisplay)
-  {
-    if ((now - lastsetvolume) > VolumeDuration)
-      volumedisplay = false;
+    lastsendvolume = 0;
+    //    waitvolumechange = false;
   }
 
   //######################################################################
@@ -778,6 +776,16 @@ void loop()
   if (delayDisplayOffWhenNotPlay > 0)
     if (now - lastinput > delayDisplayOffWhenNotPlay && volumio.State.status != "" && volumio.State.status != "play")
       NoDisplay = true;
+
+  //Duration of toast display
+  if (ToastDisplay)
+    if (now > ToastStart + ToastDuration)
+      ToastDisplay = false;
+
+  //Close progressbar after given time
+  if (volumedisplay)
+    if ((now - lastsetvolume) > VolumeDuration)
+      volumedisplay = false;
 
   //######################################################################
   // Display
@@ -933,7 +941,38 @@ void loop()
             } while (x < DisplayWidth);
         }
 
-        float SeekPercent = (float)volumio.State.seek / (float)volumio.State.duration / 1000.0;
+        if (volumio.State.duration > 0)
+        {
+
+          float SeekPercent = (float)volumio.State.seek / (float)volumio.State.duration / 1000.0;
+
+          float barlen = SeekPercent * (DisplayWidth - 4);
+          float barBoxHeight = 8;
+          float barHeight = 4;
+
+          int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
+
+          display.setColorIndex(0);
+          display.drawRBox(0, posy, DisplayWidth, barBoxHeight, 0);
+          display.setColorIndex(1);
+
+          display.drawRFrame(0, posy, DisplayWidth, barBoxHeight, 0);
+
+          if (int(barlen) > 0)
+            display.drawRBox(2, posy + (barBoxHeight - barHeight) / 2, int(barlen), barHeight, 0);
+
+          display.setFont(StatusTextFont);
+
+          int trackMin = volumio.State.duration / 60;
+          int trackSec = volumio.State.duration % 60;
+          String txt1 = String(trackMin) + ":" + ((trackSec < 10) ? "0" : "") + String(trackSec);
+          display.drawUTF8(DisplayWidth - 32, 16 * 7, txt1.c_str());
+
+          int seekMin = int(volumio.State.seek / 1000.0) / 60;
+          int seekSec = int(volumio.State.seek / 1000.0) % 60;
+          String txt2 = String(seekMin) + ":" + ((seekSec < 10) ? "0" : "") + String(seekSec);
+          display.drawUTF8(0, 16 * 7, txt2.c_str());
+        }
       }
       else
       {
@@ -957,9 +996,9 @@ void loop()
               display.setFont(MenuTextFont);
               item_width = display.getUTF8Width(Menu[i + MenuOffset].Text.c_str()) + MenuItemHeight;
 
-              if (item_width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu )
-              {  
-                 item_offset = 0;
+              if (item_width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu)
+              {
+                item_offset = 0;
                 display.setFont(MenuTextFont);
                 display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
                 display.setFont(MenuIconFont);
@@ -1013,7 +1052,8 @@ void loop()
       //Display volume
       if (volumedisplay)
       {
-        float VolumePercent = float(volumio.State.volume) / (float)VolumeMaximum;
+        //   float VolumePercent = float(volumio.State.volume) / (float)VolumeMaximum;
+        float VolumePercent = float(newvolume) / (float)VolumeMaximum;
 
         float barlen = VolumePercent * (DisplayWidth - 4);
         float barBoxHeight = 8;
@@ -1026,7 +1066,9 @@ void loop()
         display.setColorIndex(1);
 
         display.drawRFrame(0, posy, DisplayWidth, barBoxHeight, 0);
-        display.drawRBox(2, posy + (barBoxHeight - barHeight) / 2, int(barlen), barHeight, 0);
+
+        if (int(barlen) > 0)
+          display.drawRBox(2, posy + (barBoxHeight - barHeight) / 2, int(barlen), barHeight, 0);
       }
     }
   } while (display.nextPage());

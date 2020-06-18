@@ -1,6 +1,6 @@
 #include "JSON.h"
 
-//#define  DEBUG_JSON
+//#define DEBUG_JSON
 
 #ifdef DEBUG_JSON
 #define DEBUG_PRINTLN(x) Serial.println(x)
@@ -64,7 +64,7 @@ void JSON::Print()
   Value = textValue;
 }
 
-void JSON::ConnectToStream(CharStream* stream)
+void JSON::ConnectToStream(CharStream *stream)
 {
   charStream = stream;
   fromStream = true;
@@ -76,7 +76,7 @@ void JSON::ConnectToStream(CharStream* stream)
   value = false;
   lastwaspop = false;
 
-  DEBUG_PRINT("JSON: Connect to Stream ");
+  DEBUG_PRINTLN("JSON: Connect to Stream ");
 }
 
 void JSON::Load(String Message)
@@ -109,16 +109,18 @@ bool JSON::Read()
     if (fromStream)
     {
       c = charStream->read();
+      DEBUG_PRINT("JSON: ");
+      DEBUG_PRINTLN(c);
+
       if (c == 0)
         break;
     }
     else
     {
       c = Buffer[Index];
+      DEBUG_PRINT("JSON: ");
+      DEBUG_PRINTLN(c);
     }
-
-    DEBUG_PRINT("JSON: ");
-    DEBUG_PRINTLN(c);
 
     Index++;
 

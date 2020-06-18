@@ -53,7 +53,12 @@ bool Volumio::ReadPushToastMessage()
       CurrentToastItem.type = Parser.Value;
 
     if (Parser.Popped)
+    {
+      while (Parser.Read())
+        ;
+
       return true;
+    }
   }
 
   return false;
