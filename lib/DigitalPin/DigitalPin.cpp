@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DigitalPin.h"
 
-void DigitalPin::begin(int pinNumber)
+void DigitalPin::begin(uint8_t pinNumber, uint8_t Mode)
 {
   pinNr = pinNumber;
+  pinMode(pinNr, Mode);
   statusPin = digitalRead(pinNr) == LOW;
   lastChange = millis();
 }

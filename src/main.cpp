@@ -369,26 +369,20 @@ void setup()
   WiFi.mode(WIFI_STA);
 
   //Initialize left encoder
-  pinMode(PIN_LeftEncoder_CLK, INPUT_PULLUP);
-  pinMode(PIN_LeftEncoder_DT, INPUT_PULLUP);
-  LeftEncoder.begin(PIN_LeftEncoder_CLK, PIN_LeftEncoder_DT);
+  LeftEncoder.begin(PIN_LeftEncoder_CLK, PIN_LeftEncoder_DT, INPUT_PULLUP);
   attachInterrupt(PIN_LeftEncoder_CLK, ISR_LeftEncoder_A, CHANGE);
   attachInterrupt(PIN_LeftEncoder_DT, ISR_LeftEncoder_B, CHANGE);
 
   //Initialize right encoder
-  pinMode(PIN_RightEncoder_CLK, INPUT_PULLUP);
-  pinMode(PIN_RightEncoder_DT, INPUT_PULLUP);
-  RightEncoder.begin(PIN_RightEncoder_CLK, PIN_RightEncoder_DT);
+  RightEncoder.begin(PIN_RightEncoder_CLK, PIN_RightEncoder_DT, INPUT_PULLUP);
   attachInterrupt(PIN_RightEncoder_CLK, ISR_RightEncoder_A, CHANGE);
   attachInterrupt(PIN_RightEncoder_DT, ISR_RightEncoder_B, CHANGE);
 
   //Initialize push button of left encoder
-  pinMode(PIN_LeftEncoder_SW, INPUT_PULLUP);
-  LeftSwitch.begin(PIN_LeftEncoder_SW);
+  LeftSwitch.begin(PIN_LeftEncoder_SW, INPUT_PULLUP);
 
   //Initialize push button of right encoder
-  pinMode(PIN_RightEncoder_SW, INPUT_PULLUP);
-  RightSwitch.begin(PIN_RightEncoder_SW);
+  RightSwitch.begin(PIN_RightEncoder_SW, INPUT_PULLUP);
 
   //Capacitive touch pins
   //actually not used
@@ -505,7 +499,7 @@ void loop()
       if (restore && false)
       {
         restore = false;
-        LeftEncoder.set(Stack[stack_pos].Position);
+        LeftEncoder.setValue(Stack[stack_pos].Position);
         MenuOffset = Stack[stack_pos].Offset;
       }
     }
@@ -563,7 +557,7 @@ void loop()
       if (restore && false)
       {
         restore = false;
-        LeftEncoder.set(Stack[stack_pos].Position);
+        LeftEncoder.setValue(Stack[stack_pos].Position);
         MenuOffset = Stack[stack_pos].Offset;
       }
     }
@@ -589,15 +583,15 @@ void loop()
       if (restore && false)
       {
         restore = false;
-        LeftEncoder.set(Stack[stack_pos].Position);
+        LeftEncoder.setValue(Stack[stack_pos].Position);
         MenuOffset = Stack[stack_pos].Offset;
       }
     }
     else
     {
-       while (volumio.ReadNextQueueItem());
+      while (volumio.ReadNextQueueItem())
+        ;
     }
-    
   }
 
   //Volumio pushes toast message
@@ -607,8 +601,8 @@ void loop()
 
     if (volumio.ReadPushToastMessage())
     {
-       ToastDisplay = true;
-       ToastStart = now;
+      ToastDisplay = true;
+      ToastStart = now;
     }
   }
 
@@ -693,7 +687,7 @@ void loop()
 
   LeftEncoder.process();
 
-  if (LeftEncoder.changed)
+  if (LeftEncoder.getChanged())
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
@@ -711,18 +705,18 @@ void loop()
     if (restore && !WaitForLibraryUpdate && !WaitForQueueUpdate && !WaitForSourceUpdate)
     {
       restore = false;
-      LeftEncoder.set(Stack[stack_pos].Position);
+      LeftEncoder.setValue(Stack[stack_pos].Position);
       MenuOffset = Stack[stack_pos].Offset;
     }
 
     //Limit encoder value to menu length
-    if (LeftEncoder.Value > (MenuLength - 1))
-      LeftEncoder.set(MenuLength - 1);
-    if (LeftEncoder.Value < 0)
-      LeftEncoder.set(0);
+    if (LeftEncoder.getValue() > (MenuLength - 1))
+      LeftEncoder.setValue(MenuLength - 1);
+    if (LeftEncoder.getValue() < 0)
+      LeftEncoder.setValue(0);
 
     //Position of menu = encoder-value
-    MenuPosition = LeftEncoder.Value;
+    MenuPosition = LeftEncoder.getValue();
 
     //Scroll menu when encoder reaches lower end of screen
     if (MenuPosition >= MenuVisibleItems + MenuOffset - 1)
@@ -739,7 +733,7 @@ void loop()
 
   RightEncoder.process();
 
-  if (RightEncoder.changed)
+  if (RightEncoder.getChanged())
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
@@ -748,7 +742,7 @@ void loop()
     volumedisplay = true;
     lastsetvolume = now;
 
-    newvolume = startvolume - ((RightEncoder.Value - startcnt));
+    newvolume = startvolume - ((RightEncoder.getValue() - startcnt));
 
     if (newvolume < VolumeMinimum)
       newvolume = VolumeMinimum;
@@ -771,7 +765,7 @@ void loop()
   //Memorize start values when volume update not in progress
   else
   {
-    startcnt = RightEncoder.Value;
+    startcnt = RightEncoder.getValue();
     startvolume = volumio.State.volume;
     lastsendvolume = 0;
     //    waitvolumechange = false;

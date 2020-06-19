@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Inflate.h"
 
+//Uncomment line below to enable debugging messages on COM-port
 //#define DEBUG_INFLATE
 
 #ifdef DEBUG_INFLATE
@@ -60,7 +61,6 @@ const int LengthBits[] =
         4, 4, 4, 4,
         5, 5, 5, 5,
         0};
-    
 
 const int LengthLengths[] =
     {
@@ -125,7 +125,7 @@ const byte LengthOrder[] =
         12, 3, 13, 2,
         14, 1, 15};
 
-int Inflate::Bits(int cnt)
+int Inflate::readBits(int cnt)
 {
   int b = 0;
 
@@ -134,7 +134,7 @@ int Inflate::Bits(int cnt)
     if (bcnt == 0)
     {
       TEMP = (*source).read();
-      actualread++;
+      abtualByte++;
       bcnt = 8;
     }
 
@@ -149,26 +149,27 @@ int Inflate::Bits(int cnt)
 void Inflate::finalize()
 {
   DEBUG_PRINT("Inflate: bytes to terminate = ");
-  DEBUG_PRINTLN(maxread - actualread);
+  DEBUG_PRINTLN(totalBytes - abtualByte);
 
-  while (actualread < maxread)
+  while (abtualByte < totalBytes)
   {
     (*source).read();
-    actualread++;
+    abtualByte++;
   }
 }
 
-char Inflate::read()
+char Inflate::readChar()
 {
-  if (Length <= RESPTR)
+  if (length <= RESPTR)
   {
     int temp2 = 0;
     int i2 = 0;
     bool ok2 = false;
     int res2 = 0;
+
     while (true)
     {
-      bool bit = Bits(1) != 0;
+      bool bit = readBits(1) != 0;
       temp2 <<= 1;
       if (bit)
         temp2 += 1;
@@ -196,14 +197,14 @@ char Inflate::read()
     {
       DEBUG_PRINTLN("}");
       DEBUG_PRINTLN("");
-      Done = true;
+      done = true;
       return -1;
     }
     //Normal char
     else if (res2 < 256)
     {
-      distbuffer[Length % LEN_DISTBUFFER] = (char)res2;
-      Length++;
+      distbuffer[length % LEN_DISTBUFFER] = (char)res2;
+      length++;
     }
     //Distance
     else if (res2 > 256)
@@ -215,7 +216,7 @@ char Inflate::read()
 
       if (extra > 0)
       {
-        extra2 = Bits(extra);
+        extra2 = readBits(extra);
       }
 
       int res3 = 0;
@@ -225,7 +226,7 @@ char Inflate::read()
 
       while (true)
       {
-        bool bit = Bits(1) != 0;
+        bool bit = readBits(1) != 0;
         temp3 <<= 1;
         if (bit)
           temp3 += 1;
@@ -249,17 +250,17 @@ char Inflate::read()
       }
 
       int extra4 = ExtraBits[res3];
-      int extra5 = Bits(extra4);
+      int extra5 = readBits(extra4);
 
       int addlen = LengthLengths[val] + extra2;
       int adddist = ExtraDist[res3] + extra5;
 
-      int addpos = Length - adddist;
+      int addpos = length - adddist;
 
       for (int i = 0; i < addlen; i++)
       {
-        distbuffer[Length % LEN_DISTBUFFER] = distbuffer[(addpos + i + LEN_DISTBUFFER) % LEN_DISTBUFFER];
-        Length++;
+        distbuffer[length % LEN_DISTBUFFER] = distbuffer[(addpos + i + LEN_DISTBUFFER) % LEN_DISTBUFFER];
+        length++;
       }
     }
   }
@@ -267,24 +268,21 @@ char Inflate::read()
   return distbuffer[(RESPTR++) % LEN_DISTBUFFER];
 }
 
-void Inflate::Run(WiFiClient *client, int count)
+void Inflate::initialize(WiFiClient *wifiClient, int byteCount)
 {
-  maxread = count;
-  actualread = 0;
-
-  source = client;
-
-  Done = false;
+  totalBytes = byteCount;
+  abtualByte = 0;
+  source = wifiClient;
+  done = false;
   RESPTR = 0;
-
   bcnt = 0;
   TEMP = 0;
 
   DEBUG_PRINT("Inflate: count = ");
-  DEBUG_PRINTLN(count);
+  DEBUG_PRINTLN(totalBytes);
 
-  BFINAL = Bits(1) != 0;
-  BTYPE = Bits(2);
+  BFINAL = readBits(1) != 0;
+  BTYPE = readBits(2);
 
   DEBUG_PRINT("Inflate: BFINAL = ");
   DEBUG_PRINTLN(BFINAL);
@@ -355,9 +353,9 @@ void Inflate::Run(WiFiClient *client, int count)
     // 5 Bits: HDIST, # of Distance codes - 1        (1 - 32)
     // 4 Bits: HCLEN, # of Code Length codes - 4     (4 - 19)
 
-    HLIT = Bits(5) + 257;
-    HDIST = Bits(5) + 1;
-    HCLEN = Bits(4) + 4;
+    HLIT = readBits(5) + 257;
+    HDIST = readBits(5) + 1;
+    HCLEN = readBits(4) + 4;
 
     DEBUG_PRINT("Inflate: HLIT = ");
     DEBUG_PRINTLN(HLIT);
@@ -370,7 +368,7 @@ void Inflate::Run(WiFiClient *client, int count)
     code_clen = 0;
     code_lit = 0;
     code_dist = 0;
-    Length = 0;
+    length = 0;
 
     for (int i = 0; i < 8; i++)
     {
@@ -410,7 +408,7 @@ void Inflate::Run(WiFiClient *client, int count)
     //Read lengths
     for (int i = 0; i < HCLEN; i++)
     {
-      int clen = Bits(3);
+      int clen = readBits(3);
       lensrt[LengthOrder[i]] = clen;
       DEBUG_PRINT(clen);
 
@@ -481,7 +479,7 @@ void Inflate::Run(WiFiClient *client, int count)
 
       while (true)
       {
-        bool bit = Bits(1) != 0;
+        bool bit = readBits(1) != 0;
         temp <<= 1;
         if (bit)
           temp += 1;
@@ -509,7 +507,7 @@ void Inflate::Run(WiFiClient *client, int count)
       }
       else if (res == 16)
       {
-        int cnt = Bits(2) + 3;
+        int cnt = readBits(2) + 3;
 
         int prev = lengths[lenpos - 1];
 
@@ -518,14 +516,14 @@ void Inflate::Run(WiFiClient *client, int count)
       }
       else if (res == 17)
       {
-        int cnt = Bits(3) + 3;
+        int cnt = readBits(3) + 3;
 
         for (int n = 0; n < cnt; n++)
           lengths[lenpos++] = 0;
       }
       else if (res == 18)
       {
-        int cnt = Bits(7) + 11;
+        int cnt = readBits(7) + 11;
 
         for (int n = 0; n < cnt; n++)
           lengths[lenpos++] = 0;
@@ -580,7 +578,7 @@ void Inflate::Run(WiFiClient *client, int count)
     }
     DEBUG_PRINTLN("}");
 
-    //count lengths 
+    //count lengths
     for (int i = 0; i < HDIST; i++)
       if (lengths[i + HLIT] != 0)
         lencnt_dist[lengths[i + HLIT]]++;

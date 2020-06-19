@@ -20,12 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Encoder.h"
 #include "Arduino.h"
 
-void Encoder::begin(int PinA, int PinB)
+void Encoder::begin(uint8_t PinA, uint8_t PinB, uint8_t Mode)
 {
     PIN_A = PinA;
     PIN_B = PinB;
-    Value = 0;
-    OldValue = 0;
+    pinMode(PIN_A, Mode);
+    pinMode(PIN_B, Mode);
+    newValue = 0;
+    oldValue = 0;
 }
 
 void Encoder::A_CHANGED()
@@ -62,20 +64,19 @@ void Encoder::B_CHANGED()
 
 void Encoder::reset()
 {
-    set(0);
+    setValue(0);
 }
 
-void Encoder::set(int value)
+void Encoder::setValue(int value)
 {
     //Internal value may have more digits than official value (e.g. factor 2)
-    cnt = value << halvings;
-    Value = cnt  >> halvings;
+    cnt = value << 2;
+    newValue = cnt >> 2;
 }
 
 void Encoder::process()
 {
-    Value = (cnt + 2 )  >> halvings;
-    //  Value = cnt;
-    changed = Value != OldValue;
-    OldValue = Value;
+    newValue = (cnt + 2) >> 2;
+    changed = newValue != oldValue;
+    oldValue = newValue;
 }

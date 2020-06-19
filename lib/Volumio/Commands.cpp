@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Volumio.h"
 
+//Uncomment line below to enable debugging messages on COM-port
 //#define DEBUG_VOLUMIO
 
 #ifdef DEBUG_VOLUMIO

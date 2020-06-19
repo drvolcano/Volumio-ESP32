@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "SocketIO.h"
 
+//Uncomment line below to enable debugging messages on COM-port
 //#define DEBUG_SOCKETIO
 
 #ifdef DEBUG_SOCKETIO
@@ -66,25 +67,25 @@ bool SocketIO::connect(String hostname, int portnr)
   DEBUG_PRINTLN(F(""));
 
   //Load string into JSON-parser
-  Parser.Load(readLine());
+  Parser.initialize(readLine());
 
-  while (Parser.Read())
+  while (Parser.next())
   {
     DEBUG_PRINT("SocketIO: JSON: ");
     DEBUG_PRINT(Parser.Nodes[1]);
     DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(Parser.Value);
 
-    if (Parser.Nodes[1] == "sid")
-      sid = Parser.Value;
+    if (Parser.getNode(1) == "sid")
+      sid = Parser.getValue();
 
-    if (Parser.Nodes[1] == "upgrades")
+    if (Parser.getNode(1) == "upgrades")
       ;
 
-    if (Parser.Nodes[1] == "pingInterval")
-      keepAliveInterval = Parser.Value.toInt();
+    if (Parser.getNode(1) == "pingInterval")
+      keepAliveInterval = Parser.getValue().toInt();
 
-    if (Parser.Nodes[1] == "pingTimeout")
+    if (Parser.getNode(1) == "pingTimeout")
       ;
   }
 
@@ -142,7 +143,7 @@ void SocketIO::finalize()
 {
 }
 
-char SocketIO::read()
+char SocketIO::readChar()
 {
   //Compressed data
   if (inflate)
@@ -152,14 +153,14 @@ char SocketIO::read()
       DEBUG_PRINTLN("SocketIO: Receive: Inflate");
       DEBUG_PRINTLN("");
 
-      inflater.Run(&client, len);
+      inflater.initialize(&client, len);
       len = 0;
       inflaterInitialized = true;
     }
     //Read one char from inflater
-    c = inflater.read();
+    c = inflater.readChar();
 
-    if (inflater.Done)
+    if (inflater.getDone())
     {
       inflater.finalize();
 
@@ -232,7 +233,7 @@ bool SocketIO::receive()
 
   while (true)
   {
-    c = read();
+    c = readChar();
 
     if (c == 0)
       return 1;

@@ -52,20 +52,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define socketIo_binary_event '5'
 #define socketIo_binary_ack '6'
 
-class SocketIO:public CharStream
+class SocketIO : public CharStream
 {
 public:
   bool connect(String hostname, int portnr);
   bool connected();
   void disconnect();
- 
+
   void sendMessage(String message);
   void sendJSON(String RID, String JSON = "");
 
   bool receive();
   void finalize();
-  char read();
-
+  char readChar();
 
 private:
   bool waitForData(unsigned long delay);
@@ -77,18 +76,17 @@ private:
   int mem_portnr;
 
   unsigned long lastKeepAlive = 0;
-  long keepAliveInterval = 5000;//ms
+  long keepAliveInterval = 5000; //ms
 
   WiFiClient client;
   Inflate inflater;
 
   char *dataptr;
 
-
   String sid;
   JSON Parser;
 
- //Length of data
+  //Length of data
   unsigned long len = 0;
   bool masked = false;
   bool compressed = false;
@@ -96,5 +94,4 @@ private:
   bool inflaterInitialized = false;
   bool direct = false;
   char c;
-
 };

@@ -22,14 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class DigitalPin
 {
 public:
-  bool getPressed() { return pressed; }   //pressed = rising edge (is now but was not before)
-  bool getReleased() { return released; } //released = falling edge (is not now but was before)
-  void begin(int pinNumber);              //initialize with pin number. Pin mode must be set outside
-  void process();                         //cyclic call of internal functions
-  int debounceTime = 50;                  //debounce time in milliseconds
+  bool getPressed() { return pressed; }        //pressed = rising edge (is now but was not before)
+  bool getReleased() { return released; }      //released = falling edge (is not now but was before)
+  void begin(uint8_t pinNumber, uint8_t Mode); //initialize with pin number.
+  void process();                              //cyclic call of internal functions
+  int debounceTime = 50;                       //debounce time in milliseconds
 
 private:
-  int pinNr;                    //number of input pin
+  uint8_t pinNr;                //number of input pin
   unsigned long lastChange;     //last time the debounced state changed
   bool statusPin = false;       //actual state of pin (read from input)
   bool statusDebounced = false; //debounced state of pin (used debounce-delay)

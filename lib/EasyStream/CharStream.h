@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
-
 #pragma once
 
 class CharStream
 {
   public:
-      virtual char read() =0;
+      virtual char readChar() =0;
 };

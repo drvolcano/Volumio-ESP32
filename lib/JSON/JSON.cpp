@@ -44,7 +44,7 @@ void JSON::Pop()
   Popped = true;
 }
 
-String JSON::GetPath()
+String JSON::getPath()
 {
 
   String result = "";
@@ -83,7 +83,7 @@ void JSON::Print()
   Value = textValue;
 }
 
-void JSON::ConnectToStream(CharStream *stream)
+void JSON::initialize(CharStream *stream)
 {
   charStream = stream;
   fromStream = true;
@@ -98,7 +98,7 @@ void JSON::ConnectToStream(CharStream *stream)
   DEBUG_PRINTLN("JSON: Connect to Stream ");
 }
 
-void JSON::Load(String Message)
+void JSON::initialize(String Message)
 {
   fromStream = false;
   Buffer = Message;
@@ -113,7 +113,7 @@ void JSON::Load(String Message)
   DEBUG_PRINTLN(Message);
 }
 
-bool JSON::Read()
+bool JSON::next()
 {
   Popped = false;
 
@@ -127,7 +127,7 @@ bool JSON::Read()
 
     if (fromStream)
     {
-      c = charStream->read();
+      c = charStream->readChar();
       DEBUG_PRINT("JSON: ");
       DEBUG_PRINTLN(c);
 
@@ -237,80 +237,4 @@ bool JSON::Read()
   }
 
   return false;
-}
-
-void JSON::Parse(String Message)
-{
-
-  for (int i = 0; i < Message.length(); i++)
-  {
-    char c = Message[i];
-
-    if (text)
-      if (c == '"')
-        text = false;
-      else if (value)
-        textValue += c;
-      else
-        stack[stackpos] += c;
-    else
-      switch (c)
-      {
-      case '{':
-        Push();
-        value = false;
-        stacktype[stackpos] = Type_Class;
-        break;
-
-      case '[':
-        Push();
-        value = true;
-        textValue = "";
-        stacktype[stackpos] = Type_Array;
-        aryindex = 0;
-        stack[stackpos] = String(aryindex);
-        break;
-
-      case '}':
-        if (value)
-          Print();
-        value = false;
-        Pop();
-        break;
-
-      case ']':
-        if (value)
-          Print();
-        value = false;
-        textValue = "";
-        Pop();
-        break;
-
-      case ':':
-        value = true;
-        textValue = "";
-        break;
-
-      case ',':
-        Print();
-        value = (stacktype[stackpos] == Type_Array);
-
-        if (stacktype[stackpos] == Type_Array)
-          stack[stackpos] = String(++aryindex);
-        else
-          stack[stackpos] = "";
-        break;
-
-      case ' ':
-        break;
-
-      case '"':
-        text = true;
-        break;
-
-      default:
-        textValue += c;
-        break;
-      }
-  }
 }

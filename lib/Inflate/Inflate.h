@@ -20,31 +20,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Arduino.h"
 #include "WiFi.h"
 #include "CharStream.h"
-class Inflate:public CharStream
+
+class Inflate : public CharStream
 {
 
 public:
-  void Run(WiFiClient *client, int count);
-  char read();
+  void initialize(WiFiClient *client, int count);
+  char readChar();
   void finalize();
-  int Length = 0;
-  bool Done = false;
+  bool getDone() { return done; }
 
 private:
-
-  int maxread=0;
-  int actualread=0;
-
+  int readBits(int cnt);
   WiFiClient *source;
-  int Bits(int cnt);
+  bool done = false;
+  int totalBytes = 0;
+  int abtualByte = 0;
+  int length = 0;
   int bcnt = 0;
   unsigned long RESPTR;
   byte TEMP;
-
   bool BFINAL = false;
   int BTYPE = 0;
 
-  #define LEN_DISTBUFFER 32768
+#define LEN_DISTBUFFER 32768
   char distbuffer[LEN_DISTBUFFER];
 
   int lensrt[19];   //19 per definition
