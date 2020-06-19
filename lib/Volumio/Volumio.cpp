@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 void Volumio::connect(char *hostname, int port)
 {
+  lastTime = millis();
+
   if (!socketIoClient.connect(hostname, port))
   {
     DEBUG_PRINTLN("Volumio: connection failed");
@@ -47,34 +49,35 @@ bool Volumio::connected()
   return socketIoClient.connected();
 }
 
-bool Volumio::ReadPushToastMessage()
+bool Volumio::readPushToastMessage()
 {
+  //Example
   //42["pushToastMessage",{"type":"success","title":"Entfernen","message":"Entferne Hell To The Heavens aus Warteschlange"}]
 
-  if (!PushToastUpdate)
+  if (pushType != pushToastMessage)
     return false;
 
   CurrentToastItem.message = "";
   CurrentToastItem.title = "";
   CurrentToastItem.type = "";
 
-  while (Parser.next())
+  while (jsonParser.next())
   {
     DEBUG_PRINT("Volumio: Receive: pushToastMessage: ");
-    DEBUG_PRINT(Parser.getPath());
+    DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.getValue());
+    DEBUG_PRINTLN(jsonParser.getValue());
 
-    if (Parser.getNode(2) == "message")
-      CurrentToastItem.message = Parser.getValue();
-    if (Parser.getNode(2) == "title")
-      CurrentToastItem.title = Parser.getValue();
-    if (Parser.getNode(2) == "type")
-      CurrentToastItem.type = Parser.getValue();
+    if (jsonParser.getNode(2) == "message")
+      CurrentToastItem.message = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "title")
+      CurrentToastItem.title = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "type")
+      CurrentToastItem.type = jsonParser.getValue();
 
-    if (Parser.getBlockEnd())
+    if (jsonParser.getBlockEnd())
     {
-      while (Parser.next())
+      while (jsonParser.next())
         ;
 
       return true;
@@ -84,9 +87,9 @@ bool Volumio::ReadPushToastMessage()
   return false;
 }
 
-bool Volumio::ReadNextSourceItem()
+bool Volumio::readNextSourceItem()
 {
-  if (!SourceUpdate)
+  if (pushType != pushBrowseSources)
     return false;
 
   CurrentSourceItem.albumart = "";
@@ -96,36 +99,36 @@ bool Volumio::ReadNextSourceItem()
   CurrentSourceItem.plugin_name = "";
   CurrentSourceItem.icon = "";
 
-  while (Parser.next())
+  while (jsonParser.next())
   {
     DEBUG_PRINT("Volumio: Receive: pushBrowseSources: ");
-    DEBUG_PRINT(Parser.getPath());
+    DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.getValue());
+    DEBUG_PRINTLN(jsonParser.getValue());
 
-    if (Parser.getNode(3) == "albumart")
-      CurrentSourceItem.albumart = Parser.getValue();
-    if (Parser.getNode(3) == "name")
-      CurrentSourceItem.name = Parser.getValue();
-    if (Parser.getNode(3) == "uri")
-      CurrentSourceItem.uri = Parser.getValue();
-    if (Parser.getNode(3) == "plugin_type")
-      CurrentSourceItem.plugin_type = Parser.getValue();
-    if (Parser.getNode(3) == "plugin_name")
-      CurrentSourceItem.plugin_name = Parser.getValue();
-    if (Parser.getNode(3) == "icon")
-      CurrentSourceItem.icon = Parser.getValue();
+    if (jsonParser.getNode(3) == "albumart")
+      CurrentSourceItem.albumart = jsonParser.getValue();
+    if (jsonParser.getNode(3) == "name")
+      CurrentSourceItem.name = jsonParser.getValue();
+    if (jsonParser.getNode(3) == "uri")
+      CurrentSourceItem.uri = jsonParser.getValue();
+    if (jsonParser.getNode(3) == "plugin_type")
+      CurrentSourceItem.plugin_type = jsonParser.getValue();
+    if (jsonParser.getNode(3) == "plugin_name")
+      CurrentSourceItem.plugin_name = jsonParser.getValue();
+    if (jsonParser.getNode(3) == "icon")
+      CurrentSourceItem.icon = jsonParser.getValue();
 
-    if (Parser.getBlockEnd())
+    if (jsonParser.getBlockEnd())
       return true;
   }
 
   return false;
 }
 
-bool Volumio::ReadNextQueueItem()
+bool Volumio::readNextQueueItem()
 {
-  if (!QueueUpdate)
+  if (pushType != pushQueue)
     return false;
 
   CurrentQueueItem.uri = "";
@@ -142,50 +145,50 @@ bool Volumio::ReadNextQueueItem()
   CurrentQueueItem.trackType = "";
   CurrentQueueItem.channels = "";
 
-  while (Parser.next())
+  while (jsonParser.next())
   {
     DEBUG_PRINT("Volumio: Receive: pushQueue: ");
-    DEBUG_PRINT(Parser.getPath());
+    DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.getValue());
+    DEBUG_PRINTLN(jsonParser.getValue());
 
-    if (Parser.getNode(3) == "uri")
-      CurrentQueueItem.uri = Parser.getValue();
-    else if (Parser.getNode(3) == "service")
-      CurrentQueueItem.service = Parser.getValue();
-    else if (Parser.getNode(3) == "name")
-      CurrentQueueItem.name = Parser.getValue();
-    else if (Parser.getNode(3) == "artist")
-      CurrentQueueItem.artist = Parser.getValue();
-    else if (Parser.getNode(3) == "album")
-      CurrentQueueItem.album = Parser.getValue();
-    else if (Parser.getNode(3) == "type")
-      CurrentQueueItem.type = Parser.getValue();
-    else if (Parser.getNode(3) == "tracknumber")
-      CurrentQueueItem.tracknumber = Parser.getValue();
-    else if (Parser.getNode(3) == "albumart")
-      CurrentQueueItem.albumart = Parser.getValue();
-    else if (Parser.getNode(3) == "duration")
-      CurrentQueueItem.duration = Parser.getValue();
-    else if (Parser.getNode(3) == "samplerate")
-      CurrentQueueItem.samplerate = Parser.getValue();
-    else if (Parser.getNode(3) == "bitdepth")
-      CurrentQueueItem.bitdepth = Parser.getValue();
-    else if (Parser.getNode(3) == "trackType")
-      CurrentQueueItem.trackType = Parser.getValue();
-    else if (Parser.getNode(3) == "channels")
-      CurrentQueueItem.channels = Parser.getValue();
+    if (jsonParser.getNode(3) == "uri")
+      CurrentQueueItem.uri = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "service")
+      CurrentQueueItem.service = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "name")
+      CurrentQueueItem.name = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "artist")
+      CurrentQueueItem.artist = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "album")
+      CurrentQueueItem.album = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "type")
+      CurrentQueueItem.type = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "tracknumber")
+      CurrentQueueItem.tracknumber = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "albumart")
+      CurrentQueueItem.albumart = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "duration")
+      CurrentQueueItem.duration = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "samplerate")
+      CurrentQueueItem.samplerate = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "bitdepth")
+      CurrentQueueItem.bitdepth = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "trackType")
+      CurrentQueueItem.trackType = jsonParser.getValue();
+    else if (jsonParser.getNode(3) == "channels")
+      CurrentQueueItem.channels = jsonParser.getValue();
 
-    if (Parser.getBlockEnd())
+    if (jsonParser.getBlockEnd())
       return true;
   }
 
   return false;
 }
 
-bool Volumio::ReadNextLibraryItem()
+bool Volumio::readNextLibraryItem()
 {
-  if (!LibraryUpdate)
+  if (pushType != pushBrowseLibrary)
     return false;
 
   CurrentLibraryItem.service = "";
@@ -200,61 +203,61 @@ bool Volumio::ReadNextLibraryItem()
   CurrentLibraryItem.trackType = "";
   CurrentLibraryItem.icon = "";
 
-  while (Parser.next())
+  while (jsonParser.next())
   {
     DEBUG_PRINT("Volumio: Receive: pushBrowseLibrary: ");
-    DEBUG_PRINT(Parser.getPath());
+    DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.getValue());
-    if (Parser.getLevel() == 7)
+    DEBUG_PRINTLN(jsonParser.getValue());
+    if (jsonParser.getLevel() == 7)
     {
 
-      if (Parser.getNode(7) == "service")
-        CurrentLibraryItem.service = Parser.getValue();
-      else if (Parser.getNode(7) == "type")
-        CurrentLibraryItem.type = Parser.getValue();
-      else if (Parser.getNode(7) == "title")
-        CurrentLibraryItem.title = Parser.getValue();
-      else if (Parser.getNode(7) == "artist")
-        CurrentLibraryItem.artist = Parser.getValue();
-      else if (Parser.getNode(7) == "album")
-        CurrentLibraryItem.album = Parser.getValue();
-      else if (Parser.getNode(7) == "uri")
-        CurrentLibraryItem.uri = Parser.getValue();
-      else if (Parser.getNode(7) == "albumart")
-        CurrentLibraryItem.albumart = Parser.getValue();
-      else if (Parser.getNode(7) == "tracknumber")
-        CurrentLibraryItem.tracknumber = Parser.getValue();
-      else if (Parser.getNode(7) == "duration")
-        CurrentLibraryItem.duration = Parser.getValue();
-      else if (Parser.getNode(7) == "trackType")
-        CurrentLibraryItem.trackType = Parser.getValue();
-      else if (Parser.getNode(7) == "icon")
-        CurrentLibraryItem.icon = Parser.getValue();
+      if (jsonParser.getNode(7) == "service")
+        CurrentLibraryItem.service = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "type")
+        CurrentLibraryItem.type = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "title")
+        CurrentLibraryItem.title = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "artist")
+        CurrentLibraryItem.artist = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "album")
+        CurrentLibraryItem.album = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "uri")
+        CurrentLibraryItem.uri = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "albumart")
+        CurrentLibraryItem.albumart = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "tracknumber")
+        CurrentLibraryItem.tracknumber = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "duration")
+        CurrentLibraryItem.duration = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "trackType")
+        CurrentLibraryItem.trackType = jsonParser.getValue();
+      else if (jsonParser.getNode(7) == "icon")
+        CurrentLibraryItem.icon = jsonParser.getValue();
 
-      if (Parser.getBlockEnd())
+      if (jsonParser.getBlockEnd())
         return true;
     }
-    if (Parser.getLevel() == 4)
+    if (jsonParser.getLevel() == 4)
     {
-      if (Parser.getNode(3) == "prev")
+      if (jsonParser.getNode(3) == "prev")
       {
-        if (Parser.getNode(4) == "uri")
-          LibraryPrev.uri = Parser.getValue();
+        if (jsonParser.getNode(4) == "uri")
+          LibraryPrev.uri = jsonParser.getValue();
       }
 
-      if (Parser.getNode(3) == "info")
+      if (jsonParser.getNode(3) == "info")
       {
-        if (Parser.getNode(4) == "uri")
-          LibraryInfo.uri = Parser.getValue();
-        if (Parser.getNode(4) == "title")
-          LibraryInfo.title = Parser.getValue();
-        if (Parser.getNode(4) == "service")
-          LibraryInfo.service = Parser.getValue();
-        if (Parser.getNode(4) == "type")
-          LibraryInfo.type = Parser.getValue();
-        if (Parser.getNode(4) == "albumart")
-          LibraryInfo.albumart = Parser.getValue();
+        if (jsonParser.getNode(4) == "uri")
+          LibraryInfo.uri = jsonParser.getValue();
+        if (jsonParser.getNode(4) == "title")
+          LibraryInfo.title = jsonParser.getValue();
+        if (jsonParser.getNode(4) == "service")
+          LibraryInfo.service = jsonParser.getValue();
+        if (jsonParser.getNode(4) == "type")
+          LibraryInfo.type = jsonParser.getValue();
+        if (jsonParser.getNode(4) == "albumart")
+          LibraryInfo.albumart = jsonParser.getValue();
       }
     }
   }
@@ -262,37 +265,37 @@ bool Volumio::ReadNextLibraryItem()
   return false;
 }
 
-bool Volumio::ReadLibraryPrev()
+bool Volumio::readLibraryPrev()
 {
-  //if (!LibraryUpdate)
-  //   return false;
+  if (pushType != pushBrowseLibrary)
+    return false;
 
-  if (Parser.next())
+  if (jsonParser.next())
   //if (Parser.Count == 4)
   {
     DEBUG_PRINT("Volumio: Receive: pushBrowseLibrary: #### ");
-    DEBUG_PRINT(Parser.getPath());
+    DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.getValue());
+    DEBUG_PRINTLN(jsonParser.getValue());
 
-    if (Parser.getNode(3) == "prev")
+    if (jsonParser.getNode(3) == "prev")
     {
-      if (Parser.getNode(4) == "uri")
-        LibraryPrev.uri = Parser.getValue();
+      if (jsonParser.getNode(4) == "uri")
+        LibraryPrev.uri = jsonParser.getValue();
     }
 
-    if (Parser.getNode(3) == "info")
+    if (jsonParser.getNode(3) == "info")
     {
-      if (Parser.getNode(4) == "uri")
-        LibraryInfo.uri = Parser.getValue();
-      if (Parser.getNode(4) == "title")
-        LibraryInfo.title = Parser.getValue();
-      if (Parser.getNode(4) == "service")
-        LibraryInfo.service = Parser.getValue();
-      if (Parser.getNode(4) == "type")
-        LibraryInfo.type = Parser.getValue();
-      if (Parser.getNode(4) == "albumart")
-        LibraryInfo.albumart = Parser.getValue();
+      if (jsonParser.getNode(4) == "uri")
+        LibraryInfo.uri = jsonParser.getValue();
+      if (jsonParser.getNode(4) == "title")
+        LibraryInfo.title = jsonParser.getValue();
+      if (jsonParser.getNode(4) == "service")
+        LibraryInfo.service = jsonParser.getValue();
+      if (jsonParser.getNode(4) == "type")
+        LibraryInfo.type = jsonParser.getValue();
+      if (jsonParser.getNode(4) == "albumart")
+        LibraryInfo.albumart = jsonParser.getValue();
     }
     return true;
   }
@@ -300,63 +303,66 @@ bool Volumio::ReadLibraryPrev()
   return false;
 }
 
-void Volumio::ReadState()
+bool Volumio::readState()
 {
-  while (Parser.next())
+  if (pushType != pushState)
+    return false;
+
+  while (jsonParser.next())
   {
-    if (Parser.getNode(2) == "status")
-      State.status = Parser.getValue();
-    if (Parser.getNode(2) == "position")
-      State.position = Parser.getValue();
-    if (Parser.getNode(2) == "title")
-      State.title = Parser.getValue();
-    if (Parser.getNode(2) == "artist")
-      State.artist = Parser.getValue();
-    if (Parser.getNode(2) == "album")
-      State.album = Parser.getValue();
-    if (Parser.getNode(2) == "albumart")
-      State.albumart = Parser.getValue();
-    if (Parser.getNode(2) == "uri")
-      State.uri = Parser.getValue();
-    if (Parser.getNode(2) == "trackType")
-      State.trackType = Parser.getValue();
-    if (Parser.getNode(2) == "seek")
-      State.seek = atol(Parser.getValue().c_str());
-    if (Parser.getNode(2) == "duration")
-      State.duration = atol(Parser.getValue().c_str());
-    if (Parser.getNode(2) == "samplerate")
-      State.samplerate = Parser.getValue();
-    if (Parser.getNode(2) == "bitdepth")
-      State.bitdepth = Parser.getValue();
-    if (Parser.getNode(2) == "channels")
-      State.channels = Parser.getValue();
-    if (Parser.getNode(2) == "random")
-      State.random = Parser.getValue();
-    if (Parser.getNode(2) == "repeat")
-      State.repeat = Parser.getValue();
-    if (Parser.getNode(2) == "repeatSingle")
-      State.repeatSingle = Parser.getValue();
-    if (Parser.getNode(2) == "consume")
-      State.consume = Parser.getValue();
-    if (Parser.getNode(2) == "volume")
-      State.volume = atoi(Parser.getValue().c_str());
-    if (Parser.getNode(2) == "mute")
-      State.mute = Parser.getValue();
-    if (Parser.getNode(2) == "disableVolumeControl")
-      State.disableVolumeControl = Parser.getValue();
-    if (Parser.getNode(2) == "stream")
-      State.stream = Parser.getValue();
-    if (Parser.getNode(2) == "updatedb")
-      State.updatedb = Parser.getValue();
-    if (Parser.getNode(2) == "service")
-      State.service = Parser.getValue();
-    if (Parser.getNode(2) == "Streaming")
-      State.Streaming = Parser.getValue();
+    if (jsonParser.getNode(2) == "status")
+      State.status = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "position")
+      State.position = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "title")
+      State.title = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "artist")
+      State.artist = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "album")
+      State.album = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "albumart")
+      State.albumart = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "uri")
+      State.uri = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "trackType")
+      State.trackType = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "seek")
+      State.seek = atol(jsonParser.getValue().c_str());
+    if (jsonParser.getNode(2) == "duration")
+      State.duration = atol(jsonParser.getValue().c_str());
+    if (jsonParser.getNode(2) == "samplerate")
+      State.samplerate = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "bitdepth")
+      State.bitdepth = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "channels")
+      State.channels = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "random")
+      State.random = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "repeat")
+      State.repeat = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "repeatSingle")
+      State.repeatSingle = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "consume")
+      State.consume = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "volume")
+      State.volume = atoi(jsonParser.getValue().c_str());
+    if (jsonParser.getNode(2) == "mute")
+      State.mute = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "disableVolumeControl")
+      State.disableVolumeControl = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "stream")
+      State.stream = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "updatedb")
+      State.updatedb = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "service")
+      State.service = jsonParser.getValue();
+    if (jsonParser.getNode(2) == "Streaming")
+      State.Streaming = jsonParser.getValue();
 
     DEBUG_PRINT("Volumio: Receive: pushState: ");
-    DEBUG_PRINT(Parser.getNode(2));
+    DEBUG_PRINT(jsonParser.getNode(2));
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.getValue());
+    DEBUG_PRINTLN(jsonParser.getValue());
   }
 
   DEBUG_PRINTLN("");
@@ -364,37 +370,37 @@ void Volumio::ReadState()
 
 void Volumio::process()
 {
-  unsigned long currentMillis = millis();
+  //cleanup a bit
+  while (jsonParser.next())
+    ;
+
+  unsigned long now = millis();
 
   if (State.status == "play")
-    State.seek += (currentMillis - previousMillis);
+    State.seek += (now - lastTime);
 
-  previousMillis = currentMillis;
+  lastTime = now;
 
-  StatusUpdate = false;
-  SourceUpdate = false;
-  LibraryUpdate = false;
-  QueueUpdate = false;
-  PushToastUpdate = false;
+  pushType = pushNone;
 
   if (socketIoClient.receive())
   {
     //link messagstream to JSON-parser
-    Parser.initialize(&socketIoClient);
+    jsonParser.initialize(&socketIoClient);
 
     //Process data as long as data generates lines
-    if (Parser.next())
+    if (jsonParser.next())
     {
-      DEBUG_PRINT("Volumio: Receive: ");
-      DEBUG_PRINTLN(Parser.getValue());
+      DEBUG_PRINT("Volumio: Process: Receive: ");
+      DEBUG_PRINTLN(jsonParser.getValue());
 
-      if (Parser.getValue() == "pushToastMessage")
+      if (jsonParser.getValue() == "pushToastMessage")
       {
-        PushToastUpdate = true;
+        pushType = pushToastMessage;
       }
-      else if (Parser.getValue() == "pushBrowseLibrary")
+      else if (jsonParser.getValue() == "pushBrowseLibrary")
       {
-        LibraryUpdate = true;
+        pushType = pushBrowseLibrary;
 
         LibraryInfo.uri = "";
         LibraryInfo.title = "";
@@ -402,25 +408,20 @@ void Volumio::process()
         LibraryInfo.type = "";
         LibraryInfo.albumart = "";
       }
-      else if (Parser.getValue() == "pushBrowseSources")
-        SourceUpdate = true;
-      else if (Parser.getValue() == "pushQueue")
-        QueueUpdate = true;
-      else if (Parser.getValue() == "pushState")
-        StatusUpdate = true;
+      else if (jsonParser.getValue() == "pushBrowseSources")
+        pushType = pushBrowseSources;
+      else if (jsonParser.getValue() == "pushQueue")
+        pushType = pushQueue;
+      else if (jsonParser.getValue() == "pushState")
+        pushType = pushState;
       else
       {
-        while (Parser.next())
+        while (jsonParser.next())
         {
-          DEBUG_PRINT(Parser.getPath());
+          DEBUG_PRINT(jsonParser.getPath());
           DEBUG_PRINT(" = ");
-          DEBUG_PRINTLN(Parser.getValue());
+          DEBUG_PRINTLN(jsonParser.getValue());
         }
-      }
-
-      if (StatusUpdate)
-      {
-        ReadState();
       }
     }
   }

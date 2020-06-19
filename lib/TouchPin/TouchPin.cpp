@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TouchPin.h"
 
-void TouchPin::begin(int pin)
+void TouchPin::begin(uint8_t pinNumber)
 {
-  pinnr = pin;
-  value = touchRead(pinnr);
-  lastchange = millis();
+  pinNr = pinNumber;
+  value = touchRead(pinNr);
+  lastChange = millis();
 }
 
 void TouchPin::process()
@@ -32,28 +32,28 @@ void TouchPin::process()
 
   //now should always be higher than lastchange.
   //but after overflow this may occur
-  if (now < lastchange)
-    lastchange = now;
+  if (now < lastChange)
+    lastChange = now;
 
-  value = touchRead(pinnr);
+  value = touchRead(pinNr);
 
-  if (value > valuehigh)
+  if (value > valueReleased)
     statusPin = false;
 
-  if (value < valuelow)
+  if (value < valuePressed)
     statusPin = true;
 
- //Only recognize a pin change after a certain time
-  if (statusPin != statusDeb)
-    if (now > lastchange + debounce)
+  //Only recognize a pin change after a certain time
+  if (statusPin != statusDebounced)
+    if (now > lastChange + debounceTime)
     {
-      statusDeb = statusPin;
-      lastchange = now;
+      statusDebounced = statusPin;
+      lastChange = now;
     }
 
- //shift states ( not --> old, debounced --> now)
+  //shift states ( not --> old, debounced --> now)
   statusOld = statusNow;
-  statusNow = statusDeb;
+  statusNow = statusDebounced;
 
   //pressed = rising edge (is now but was not before)
   pressed = statusNow && !statusOld;

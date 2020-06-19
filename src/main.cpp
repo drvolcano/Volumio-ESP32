@@ -131,7 +131,7 @@ void IRAM_ATTR ISR_RightEncoder_B()
 void MenuAction(MenuItemType type, String data)
 {
   DEBUG_PRINT("ACTION: ");
-  DEBUG_PRINT(target.Type);
+  DEBUG_PRINT(type);
   DEBUG_PRINTLN("#");
 
   WaitForSourceUpdate = false;
@@ -409,9 +409,9 @@ void loop()
 {
   long now = millis();
 
-  //######################################################################
-  // Connection to WiFi and Voulumio
-  //######################################################################
+  /*#################################################################*\
+  |* Connection to WiFi and Voulumio
+  \*#################################################################*/
 
   //Check if WiFi is connected. If not --> reconnect
   while (WiFi.status() != WL_CONNECTED)
@@ -477,21 +477,21 @@ void loop()
     }
   }
 
-  //######################################################################
-  // Process data from Volumio (Updates)
-  //######################################################################
+  /*#################################################################*\
+  |* Process data from Volumio (Updates)
+  \*#################################################################*/
 
   volumio.process();
 
-  //Volumio pushes list of sources
-  if (volumio.SourceUpdate)
+  switch (volumio.getPushType())
   {
+  case Volumio::pushBrowseSources: //Volumio pushes list of sources
     DEBUG_PRINTLN("MAIN: Sourceupdate");
 
     //Only if push was requested
     if (WaitForSourceUpdate)
     {
-      while (volumio.ReadNextSourceItem())
+      while (volumio.readNextSourceItem())
         GenMenuItem(ICON_ARROW, volumio.CurrentSourceItem.name, MENU_BROWSE_SOURCE, volumio.CurrentSourceItem.uri);
 
       GenMenuEnd();
@@ -503,11 +503,11 @@ void loop()
         MenuOffset = Stack[stack_pos].Offset;
       }
     }
-  }
 
-  //Volumio pushes library content
-  if (volumio.LibraryUpdate)
-  {
+    break;
+
+  case Volumio::pushBrowseLibrary: //Volumio pushes library content
+
     DEBUG_PRINTLN("MAIN: LibraryUpdate");
 
     //Only if push was requested
@@ -515,7 +515,7 @@ void loop()
     {
       volumio.LibraryPrev.uri = "";
 
-      while (volumio.ReadNextLibraryItem())
+      while (volumio.readNextLibraryItem())
       {
         DEBUG_PRINTLN(volumio.CurrentLibraryItem.title);
 
@@ -539,7 +539,7 @@ void loop()
           GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.type, MENU_HOME);
       }
 
-      while (volumio.ReadLibraryPrev())
+      while (volumio.readLibraryPrev())
         ;
 
       DEBUG_PRINTLN(volumio.LibraryPrev.uri);
@@ -561,11 +561,11 @@ void loop()
         MenuOffset = Stack[stack_pos].Offset;
       }
     }
-  }
 
-  //Volumio pushes queue content
-  if (volumio.QueueUpdate)
-  {
+    break;
+
+  case Volumio::pushQueue: //Volumio pushes queue content
+
     DEBUG_PRINTLN("MAIN: QueueUpdate");
 
     //Only if push was requested
@@ -574,7 +574,7 @@ void loop()
       //Queue is referenced by index, not uri
       int index = 0;
 
-      while (volumio.ReadNextQueueItem())
+      while (volumio.readNextQueueItem())
         if (volumio.CurrentQueueItem.name != "")
           GenMenuItem(ICON_SONG, volumio.CurrentQueueItem.name, MENU_QUEUE_TRACK, String(index++));
 
@@ -589,30 +589,33 @@ void loop()
     }
     else
     {
-      while (volumio.ReadNextQueueItem())
+      while (volumio.readNextQueueItem())
         ;
     }
-  }
+    break;
 
-  //Volumio pushes toast message
-  if (volumio.PushToastUpdate)
-  {
+  case Volumio::pushToastMessage: //Volumio pushes toast message
     DEBUG_PRINTLN("MAIN: PushToastUpdate");
 
-    if (volumio.ReadPushToastMessage())
+    if (volumio.readPushToastMessage())
     {
       ToastDisplay = true;
       ToastStart = now;
     }
-  }
 
-  //Volumio pushes status update
-  if (volumio.StatusUpdate)
+    break;
+
+  case Volumio::pushState: //Volumio pushes status update
+
+    volumio.readState();
     waitvolumechange = false;
 
-  //######################################################################
-  // Touch pins
-  //######################################################################
+    break;
+  }
+
+  /*#################################################################*\
+  |* Touch pins
+  \*#################################################################*/
 
   /*
   TouchPin0.process();
@@ -627,9 +630,9 @@ void loop()
   TouchPin9.process();
   */
 
-  //######################################################################
-  // Left switch - navigate through menu
-  //######################################################################
+  /*#################################################################*\
+  |* Left switch - navigate through menu
+  \*#################################################################*/
 
   LeftSwitch.process();
 
@@ -662,9 +665,9 @@ void loop()
     }
   }
 
-  //######################################################################
-  // Right switch - toggle play/pause (play/stop on radio)
-  //######################################################################
+  /*#################################################################*\
+  |* Right switch - toggle play/pause (play/stop on radio)
+  \*#################################################################*/
 
   RightSwitch.process();
 
@@ -681,9 +684,9 @@ void loop()
       volumio.toggle();
   }
 
-  //######################################################################
-  // Left rotary encoder - scroll through menu
-  //######################################################################
+  /*#################################################################*\
+  |* Left rotary encoder - scroll through menu
+  \*#################################################################*/
 
   LeftEncoder.process();
 
@@ -727,9 +730,9 @@ void loop()
       MenuOffset = MenuPosition;
   }
 
-  //######################################################################
-  // Right rotary encoder - volume up/down
-  //######################################################################
+  /*#################################################################*\
+  |* Right rotary encoder - volume up/down
+  \*#################################################################*/
 
   RightEncoder.process();
 
@@ -771,9 +774,9 @@ void loop()
     //    waitvolumechange = false;
   }
 
-  //######################################################################
-  // Timer
-  //######################################################################
+  /*#################################################################*\
+  |* Timer
+  \*#################################################################*/
 
   //After some time without action automatically go back to status display
   if (delayBackStatus > 0)
@@ -800,9 +803,9 @@ void loop()
     if ((now - lastsetvolume) > VolumeDuration)
       volumedisplay = false;
 
-  //######################################################################
-  // Display
-  //######################################################################
+  /*#################################################################*\
+  |* Display
+  \*#################################################################*/
 
   display.setFontDirection(0);
   display.firstPage();
@@ -1086,9 +1089,9 @@ void loop()
     }
   } while (display.nextPage());
 
-  //######################################################################
-  // Scrolling text
-  //######################################################################
+  /*#################################################################*\
+  |* Scrolling Text
+  \*#################################################################*/
 
   //Calculate milliseconds since last scroll
   if (lastscroll != 0)
@@ -1114,9 +1117,9 @@ void loop()
   if ((u8g2_uint_t)item_offset < (u8g2_uint_t)-item_width - scrollGapMenu)
     item_offset = 0;
 
-  //######################################################################
-  // Send screenshot to PC
-  //######################################################################
+  /*#################################################################*\
+  |* Send Screenshot to PC
+  \*#################################################################*/
 
   //not working, bug in u8g2 with this display?
   //only receiving 8 lines with empty pixels

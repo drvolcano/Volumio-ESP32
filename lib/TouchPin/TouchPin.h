@@ -22,21 +22,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class TouchPin
 {
 public:
-  bool pressed = false;  //pressed = rising edge (is now but was not before), readonly
-  bool released = false; //released = falling edge (is not now but was before), readonly
-  void begin(int pin);   //initialize with pin number. Pin mode must be set outside
-  void process();        //cyclic call of internal functions
+  bool getPressed() { return pressed; }   //pressed = rising edge (is now but was not before)
+  bool getReleased() { return released; } //released = falling edge (is not now but was before)
+  void begin(uint8_t pinNumber);          //initialize with pin number. Pin mode must be set outside
+  void process();                         //cyclic call of internal functions
+  int valuePressed = 20;
+  int valueReleased = 40;
+  int debounceTime = 100; //debounce time in milliseconds
 
 private:
   int value;
-  int valuelow = 20;
-  int valuehigh = 40;
- 
-  int pinnr;                    //number of input pin
-  int debounce = 100;           //debounce time in milliseconds
+
+  bool pressed = false;  //pressed = rising edge (is now but was not before), readonly
+  bool released = false; //released = falling edge (is not now but was before), readonly
+
+  uint8_t pinNr; //number of input pin
+
   bool statusPin = false;       //actual state of pin (read from input)
-  bool statusDeb = false;       //debounced state of pin (used debounce-delay)
+  bool statusDebounced = false; //debounced state of pin (used debounce-delay)
   bool statusNow = false;       //actual state after debouncing
   bool statusOld = false;       //state of last processing
-  unsigned long lastchange = 0; //last time the debounced state changed
+  unsigned long lastChange = 0; //last time the debounced state changed
 };

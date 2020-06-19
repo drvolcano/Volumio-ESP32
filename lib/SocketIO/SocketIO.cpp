@@ -72,9 +72,9 @@ bool SocketIO::connect(String hostname, int portnr)
   while (Parser.next())
   {
     DEBUG_PRINT("SocketIO: JSON: ");
-    DEBUG_PRINT(Parser.Nodes[1]);
+    DEBUG_PRINT(Parser.getNode(1));
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.Value);
+    DEBUG_PRINTLN(Parser.getValue());
 
     if (Parser.getNode(1) == "sid")
       sid = Parser.getValue();

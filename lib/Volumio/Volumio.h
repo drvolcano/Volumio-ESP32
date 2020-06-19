@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class Volumio
 {
+
   struct StateStruct
   {
     String status;
@@ -116,8 +117,15 @@ class Volumio
   };
 
 public:
- 
-
+  enum PushType
+  {
+    pushNone,
+    pushState,
+    pushBrowseSources,
+    pushQueue,
+    pushBrowseLibrary,
+    pushToastMessage,
+  };
 
   //State of system
   StateStruct State;
@@ -130,11 +138,7 @@ public:
   ToastStruct CurrentToastItem;
 
   //New State received
-  bool StatusUpdate = false;
-  bool SourceUpdate = false;
-  bool QueueUpdate = false;
-  bool LibraryUpdate = false;
-  bool PushToastUpdate = false;
+  PushType getPushType() { return pushType; };
 
   //Call oce in Setup
   void connect(char hostname[], int port);
@@ -143,12 +147,12 @@ public:
   //Call cyclic in loop()
   void process();
 
-  bool ReadNextSourceItem();
-  bool ReadNextLibraryItem();
-  bool ReadNextQueueItem();
-  bool ReadLibraryPrev();
-  bool ReadPushToastMessage();
-  void ReadState();
+  bool readNextSourceItem();
+  bool readNextLibraryItem();
+  bool readNextQueueItem();
+  bool readLibraryPrev();
+  bool readPushToastMessage();
+  bool readState();
 
   //Commands
   void getState();
@@ -184,7 +188,8 @@ public:
   void getPlaylistIndex();
 
 private:
+  PushType pushType = pushNone;
   SocketIO socketIoClient;
-  JSON Parser;
-  unsigned long previousMillis = 0;
+  JSON jsonParser;
+  unsigned long lastTime = 0;
 };

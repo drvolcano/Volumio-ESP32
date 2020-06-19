@@ -31,13 +31,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 void JSON::Push()
 {
-  DEBUG_PRINTLN("JSON: Push ");
+  DEBUG_PRINTLN("");
+  DEBUG_PRINTLN("JSON: Push()");
+  DEBUG_PRINT("JSON: ");
   stackpos++;
 }
 
 void JSON::Pop()
 {
-  DEBUG_PRINTLN("JSON: Pop ");
+  DEBUG_PRINTLN("");
+  DEBUG_PRINTLN("JSON: Pop()");
+  DEBUG_PRINT("JSON: ");
   stack[stackpos] = "";
   stacktype[stackpos] = 0;
   stackpos--;
@@ -115,6 +119,9 @@ void JSON::initialize(String Message)
 
 bool JSON::next()
 {
+  DEBUG_PRINTLN("JSON: next()");
+  DEBUG_PRINT("JSON: ");
+ 
   Popped = false;
 
   Value = "";
@@ -128,8 +135,8 @@ bool JSON::next()
     if (fromStream)
     {
       c = charStream->readChar();
-      DEBUG_PRINT("JSON: ");
-      DEBUG_PRINTLN(c);
+
+      DEBUG_PRINT(c);
 
       if (c == 0)
         break;
@@ -137,8 +144,8 @@ bool JSON::next()
     else
     {
       c = Buffer[Index];
-      DEBUG_PRINT("JSON: ");
-      DEBUG_PRINTLN(c);
+      // DEBUG_PRINT("JSON: ");
+      DEBUG_PRINT(c);
     }
 
     Index++;
@@ -182,7 +189,10 @@ bool JSON::next()
         lastwaspop = true;
 
         if (doreturn)
+        {
+          DEBUG_PRINTLN("");
           return true;
+        }
         break;
 
       case ']':
@@ -197,7 +207,10 @@ bool JSON::next()
         lastwaspop = true;
 
         if (doreturn)
+        {
+          DEBUG_PRINTLN("");
           return true;
+        }
         break;
 
       case ':':
@@ -218,7 +231,10 @@ bool JSON::next()
           stack[stackpos] = "";
 
         if (doreturn)
+        {
+          DEBUG_PRINTLN("");
           return true;
+        }
         break;
 
       case ' ':
@@ -235,6 +251,6 @@ bool JSON::next()
         break;
       }
   }
-
+  DEBUG_PRINTLN("");
   return false;
 }
