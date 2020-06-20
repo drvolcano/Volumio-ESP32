@@ -35,7 +35,7 @@ int messageindex = 0;
 String messagebuffer[4];
 
 int MenuLength = 0;
-int MenuOffset = 0;
+int menuOffset = 0;
 
 struct MenuStruct
 {
@@ -57,12 +57,12 @@ struct StackStruct
 bool restore = false;
 
 MenuStruct Menu[200];
-int MenuPosition = 0;
+int menuPosition = 0;
 
-StackStruct Stack[10];
-int stack_pos = 0;
+StackStruct menuStack[10];
+int menuStackIndex = 0;
 
-void GenMenuItem(String Icon, String Text, MenuItemType Type, String Data = "")
+void genMenuItem(String Icon, String Text, MenuItemType Type, String Data = "")
 {
   Menu[MenuLength].Icon = Icon;
   Menu[MenuLength].Text = Text;
@@ -71,7 +71,7 @@ void GenMenuItem(String Icon, String Text, MenuItemType Type, String Data = "")
   MenuLength++;
 }
 
-void GenMenuStart()
+void genMenuStart()
 {
   MenuLength = 0;
 }
@@ -79,110 +79,143 @@ void GenMenuStart()
 void GenMenuEnd()
 {
   // LeftEncoder.reset();
-  MenuOffset = 0;
+  menuOffset = 0;
 }
 
-void MenuMain()
+void menuMain()
 {
   DEBUG_PRINTLN("Main: MenuMain()");
 
-  stack_pos = 0;
+  menuStackIndex = 0;
 
-  GenMenuStart();
+  genMenuStart();
 
-  GenMenuItem(ICON_PLAY, TEXT_MENU_STATUS, MENU_STATUS);
-  GenMenuItem(ICON_CLOCK, TEXT_MENU_PLAYBACK, MENU_PLAYBACK);
-  GenMenuItem(ICON_MUSIC, TEXT_MENU_BROWSE, MENU_BROWSE);
-  GenMenuItem(ICON_LIST, TEXT_MENU_QUEUE, MENU_QUEUE);
-  GenMenuItem(ICON_STOP, TEXT_MENU_DARK, MENU_DARK);
+  genMenuItem(ICON_PLAY, TEXT_MENU_STATUS, MENU_STATUS);
+  genMenuItem(ICON_CLOCK, TEXT_MENU_PLAYBACK, MENU_PLAYBACK);
+  genMenuItem(ICON_MUSIC, TEXT_MENU_BROWSE, MENU_BROWSE);
+  genMenuItem(ICON_LIST, TEXT_MENU_QUEUE, MENU_QUEUE);
+  genMenuItem(ICON_STOP, TEXT_MENU_DARK, MENU_DARK);
 
   GenMenuEnd();
 }
 
-void MenuPlayback()
+void menuPlayback()
 {
   DEBUG_PRINTLN("Main: MenuPlayback()");
 
-  GenMenuStart();
-  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-  GenMenuItem(ICON_PREV, TEXT_PLAYBACK_PREV, MENU_PLAYBACK_PREV);
-  GenMenuItem(ICON_NEXT, TEXT_PLAYBACK_NEXT, MENU_PLAYBACK_NEXT);
-  GenMenuItem(ICON_PLAY, TEXT_PLAYBACK_PLAY, MENU_PLAYBACK_PLAY);
-  GenMenuItem(ICON_PAUSE, TEXT_PLAYBACK_PAUSE, MENU_PLAYBACK_PAUSE);
+  genMenuStart();
+  genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  genMenuItem(ICON_PREV, TEXT_PLAYBACK_PREV, MENU_PLAYBACK_PREV);
+  genMenuItem(ICON_NEXT, TEXT_PLAYBACK_NEXT, MENU_PLAYBACK_NEXT);
+  genMenuItem(ICON_PLAY, TEXT_PLAYBACK_PLAY, MENU_PLAYBACK_PLAY);
+  genMenuItem(ICON_PAUSE, TEXT_PLAYBACK_PAUSE, MENU_PLAYBACK_PAUSE);
   // GenMenuItem(ICON_PAUSE, TEXT_PLAYBACK_TOGGLE, MENU_PLAYBACK_TOGGLE);
-  GenMenuItem(ICON_STOP, TEXT_PLAYBACK_STOP, MENU_PLAYBACK_STOP);
-  GenMenuItem(ICON_RANDOM, TEXT_PLAYBACK_RANDOM, MENU_PLAYBACK_RANDOM_SET_RESET);
-  GenMenuItem(ICON_REPEAT, TEXT_PLAYBACK_REPEAT, MENU_PLAYBACK_REPEAT_SET_RESET);
+  genMenuItem(ICON_STOP, TEXT_PLAYBACK_STOP, MENU_PLAYBACK_STOP);
+  genMenuItem(ICON_RANDOM, TEXT_PLAYBACK_RANDOM, MENU_PLAYBACK_RANDOM_SET_RESET);
+  genMenuItem(ICON_REPEAT, TEXT_PLAYBACK_REPEAT, MENU_PLAYBACK_REPEAT_SET_RESET);
   GenMenuEnd();
 }
 
-void ContextMenuSong(String data)
+void contextMenuSong(String data)
 {
   DEBUG_PRINTLN("Main: ContextMenuSong()");
 
-  GenMenuStart();
-  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-  GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-  GenMenuItem(ICON_PLAY, TEXT_BROWSE_SONG_PLAY, MENU_BROWSE_SONG_PLAY, data);
-  GenMenuItem(ICON_LIST, TEXT_BROWSE_SONG_ADDTOQUEUE, MENU_BROWSE_SONG_ADDTOQUEUE, data);
-  GenMenuItem(ICON_LIST, TEXT_BROWSE_SONG_CLEARANDPLAY, MENU_BROWSE_SONG_CLEARANDPLAY, data);
+  genMenuStart();
+  genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+  genMenuItem(ICON_PLAY, TEXT_BROWSE_SONG_PLAY, MENU_BROWSE_SONG_PLAY, data);
+  genMenuItem(ICON_LIST, TEXT_BROWSE_SONG_ADDTOQUEUE, MENU_BROWSE_SONG_ADDTOQUEUE, data);
+  genMenuItem(ICON_LIST, TEXT_BROWSE_SONG_CLEARANDPLAY, MENU_BROWSE_SONG_CLEARANDPLAY, data);
   // GenMenuItem(ICON_PLUS, TEXT_BROWSE_SONG_ADDTOPLAYLIST, MENU_BROWSE_SONG_ADDTOPLAYLIST, data);
   // GenMenuItem(ICON_HEART, TEXT_BROWSE_SONG_ADDTOFAVORITES, MENU_BROWSE_SONG_ADDTOFAVORITES, data);
   GenMenuEnd();
 }
 
-void ContextMenuWebradio(String data)
+void contextMenuWebradio(String data)
 {
   DEBUG_PRINTLN("Main: ContextMenuWebradio()");
 
-  GenMenuStart();
-  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-  GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-  GenMenuItem(ICON_PLAY, TEXT_BROWSE_WEBRADIO_PLAY, MENU_BROWSE_WEBRADIO_PLAY, data);
-  GenMenuItem(ICON_LIST, TEXT_BROWSE_WEBRADIO_ADDTOQUEUE, MENU_BROWSE_WEBRADIO_ADDTOQUEUE, data);
-  GenMenuItem(ICON_LIST, TEXT_BROWSE_WEBRADIO_CLEARANDPLAY, MENU_BROWSE_WEBRADIO_CLEARANDPLAY, data);
+  genMenuStart();
+  genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+  genMenuItem(ICON_PLAY, TEXT_BROWSE_WEBRADIO_PLAY, MENU_BROWSE_WEBRADIO_PLAY, data);
+  genMenuItem(ICON_LIST, TEXT_BROWSE_WEBRADIO_ADDTOQUEUE, MENU_BROWSE_WEBRADIO_ADDTOQUEUE, data);
+  genMenuItem(ICON_LIST, TEXT_BROWSE_WEBRADIO_CLEARANDPLAY, MENU_BROWSE_WEBRADIO_CLEARANDPLAY, data);
   // GenMenuItem(ICON_PLUS, TEXT_BROWSE_WEBRADIO_ADDTOPLAYLIST, MENU_BROWSE_WEBRADIO_ADDTOPLAYLIST, data);
   // GenMenuItem(ICON_HEART, TEXT_BROWSE_WEBRADIO_ADDTOFAVORITES, MENU_BROWSE_WEBRADIO_ADDTOFAVORITES, data);
   GenMenuEnd();
 }
 
-void ContextMenuQueue(int index)
+void contextMenuQueue(int index)
 {
   DEBUG_PRINTLN("Main: ContextMenuQueue()");
 
-  GenMenuStart();
-  GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-  GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-  GenMenuItem(ICON_PLAY, TEXT_QUEUE_TRACK_PLAY, MENU_QUEUE_TRACK_PLAY, String(index));
-  GenMenuItem(ICON_CLEAR, TEXT_QUEUE_TRACK_DELETE, MENU_QUEUE_TRACK_DELETE, String(index));
+  genMenuStart();
+  genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+  genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+  genMenuItem(ICON_PLAY, TEXT_QUEUE_TRACK_PLAY, MENU_QUEUE_TRACK_PLAY, String(index));
+  genMenuItem(ICON_CLEAR, TEXT_QUEUE_TRACK_DELETE, MENU_QUEUE_TRACK_DELETE, String(index));
 
   GenMenuEnd();
 }
 
-void MenuSystem()
+void menuSystem()
 {
   DEBUG_PRINTLN("Main: MenuSystem()");
 }
 
-void MenuPush()
+void menuPush()
 {
-  DEBUG_PRINTLN("Main: MenuPush()");
 
-  Stack[stack_pos].Text = Menu[MenuPosition].Text;
-  Stack[stack_pos].Type = Menu[MenuPosition].Type;
-  Stack[stack_pos].Data = Menu[MenuPosition].Data;
-  Stack[stack_pos].Position = MenuPosition;
-  Stack[stack_pos].Offset = MenuOffset;
+  menuStack[menuStackIndex].Text = Menu[menuPosition].Text;
+  menuStack[menuStackIndex].Type = Menu[menuPosition].Type;
+  menuStack[menuStackIndex].Data = Menu[menuPosition].Data;
+  menuStack[menuStackIndex].Position = menuPosition;
+  menuStack[menuStackIndex].Offset = menuOffset;
 
-  stack_pos++;
+  DEBUG_PRINT("Main: MenuPush(): Text: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Text);
+  DEBUG_PRINT("Main: MenuPush(): Type: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Type);
+  DEBUG_PRINT("Main: MenuPush(): Data: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Data);
+  DEBUG_PRINT("Main: MenuPush(): Position: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Position);
+  DEBUG_PRINT("Main: MenuPush(): Offset:   ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Offset);
+
+  DEBUG_PRINT("Main: MenuPush(): ");
+  DEBUG_PRINT(menuStackIndex);
+  menuStackIndex++;
+  DEBUG_PRINT(" --> ");
+  DEBUG_PRINT(menuStackIndex);
+  DEBUG_PRINTLN(" ");
 }
 
-void MenuPop()
+void menuPop()
 {
-  DEBUG_PRINTLN("Main: MenuPop()");
+  DEBUG_PRINT("Main: MenuPop(): ");
+  DEBUG_PRINT(menuStackIndex);
 
-  if (stack_pos > 0)
-    stack_pos--;
+  if (menuStackIndex > 0)
+    menuStackIndex--;
+
+  menuPosition = menuStack[menuStackIndex].Position;
+  menuOffset = menuStack[menuStackIndex].Offset;
+
+  DEBUG_PRINT(" --> ");
+  DEBUG_PRINTLN(menuStackIndex);
+
+  DEBUG_PRINT("Main: MenuPop(): Text: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Text);
+  DEBUG_PRINT("Main: MenuPop(): Type: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Type);
+  DEBUG_PRINT("Main: MenuPop(): Data: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Data);
+  DEBUG_PRINT("Main: MenuPop(): Position: ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Position);
+  DEBUG_PRINT("Main: MenuPop(): Offset:   ");
+  DEBUG_PRINTLN(menuStack[menuStackIndex].Offset);
 
   // Menu[menu_pos] = Stack[stack_pos];
 }

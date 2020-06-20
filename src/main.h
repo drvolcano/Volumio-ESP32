@@ -80,7 +80,7 @@ bool waitvolumechange = false;
 \*#################################################################*/
 
 bool volumedisplay = false;
-bool StatusDisplay = true;
+bool statusDisplay = true;
 bool ToastDisplay= false;
 long ToastStart = 0;
 bool NoDisplay= false;
@@ -103,6 +103,6 @@ u8g2_uint_t item_width;
 |* Menu
 \*#################################################################*/
 
-bool WaitForSourceUpdate = false;
-bool WaitForLibraryUpdate = false;
+bool waitForSourceUpdate = false;
+bool waitForLibraryUpdate = false;
 bool WaitForQueueUpdate = false;

@@ -131,9 +131,9 @@ void menuAction(MenuItemType type, String data)
 {
   DEBUG_PRINT("Main: menuAction(): ");
 
-  WaitForSourceUpdate = false;
+  waitForSourceUpdate = false;
   WaitForQueueUpdate = false;
-  WaitForLibraryUpdate = false;
+  waitForLibraryUpdate = false;
   restore = false;
 
   switch (type)
@@ -143,7 +143,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
     restore = true;
-    MenuMain();
+    menuMain();
     break;
   case MENU_BACK:
     DEBUG_PRINT("MENU_BACK");
@@ -151,94 +151,94 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     //Jump 2 menus up and then one down
     //Same effect as jumping one up, but minimizes stack size because only action, not full menu can be stored
-    MenuPop();
-    MenuPop();
+    menuPop();
+    menuPop();
     restore = true;
-    menuAction(Stack[stack_pos].Type, Stack[stack_pos].Data);
+    menuAction(menuStack[menuStackIndex].Type, menuStack[menuStackIndex].Data);
     break;
   case MENU_STATUS:
     DEBUG_PRINT("MENU_STATUS");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    StatusDisplay = true;
+    statusDisplay = true;
     break;
   case MENU_BROWSE:
     DEBUG_PRINT("MENU_BROWSE");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    WaitForSourceUpdate = true;
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    waitForSourceUpdate = true;
     volumio.getBrowseSources();
     break;
   case MENU_BROWSE_SOURCE:
     DEBUG_PRINT("MENU_BROWSE_SOURCE");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-    WaitForLibraryUpdate = true;
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
     break;
   case MENU_BROWSE_PLAYLIST:
     DEBUG_PRINT("MENU_BROWSE_PLAYLIST");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-    WaitForLibraryUpdate = true;
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
     break;
   case MENU_BROWSE_FOLDER:
     DEBUG_PRINT("MENU_BROWSE_FOLDER");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-    WaitForLibraryUpdate = true;
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
     break;
   case MENU_BROWSE_SONG:
     DEBUG_PRINT("MENU_BROWSE_SONG");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    ContextMenuSong(data);
+    menuPush();
+    contextMenuSong(data);
     break;
   case MENU_BROWSE_RADIOCATEGORY:
     DEBUG_PRINT("MENU_BROWSE_RADIOCATEGORY");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-    WaitForLibraryUpdate = true;
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
     break;
   case MENU_BROWSE_WEBRADIO:
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    ContextMenuWebradio(data);
+    menuPush();
+    contextMenuWebradio(data);
     break;
   case MENU_BROWSE_STREAMINGCATEGORY:
     DEBUG_PRINT("MENU_BROWSE_STREAMINGCATEGORY");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
-    WaitForLibraryUpdate = true;
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
     break;
   case MENU_BROWSE_FOLDER_PLAY:
@@ -301,7 +301,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_PLAY");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    volumio.addPlay("webradio", Stack[stack_pos - 1].Text, Stack[stack_pos - 1].Data);
+    volumio.addPlay("webradio", menuStack[menuStackIndex - 1].Text, menuStack[menuStackIndex - 1].Data);
     break;
   case MENU_BROWSE_WEBRADIO_ADDTOQUEUE:
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_ADDTOQUEUE");
@@ -329,8 +329,8 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_PLAYBACK");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    MenuPlayback();
+    menuPush();
+    menuPlayback();
     break;
   case MENU_PLAYBACK_PREV:
     DEBUG_PRINT("MENU_PLAYBACK_PREV");
@@ -445,10 +445,10 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_QUEUE");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    GenMenuItem(ICON_CLEAR, TEXT_CLEAR, MENU_QUEUE_CLEAR);
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_CLEAR, TEXT_CLEAR, MENU_QUEUE_CLEAR);
     WaitForQueueUpdate = true;
     volumio.getQueue();
     break;
@@ -457,9 +457,9 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
     volumio.clearQueue();
-    GenMenuStart();
-    GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    GenMenuItem(ICON_CLEAR, TEXT_CLEAR, MENU_QUEUE_CLEAR);
+    genMenuStart();
+    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_CLEAR, TEXT_CLEAR, MENU_QUEUE_CLEAR);
     WaitForQueueUpdate = true;
     volumio.getQueue();
     break;
@@ -477,32 +477,32 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_QUEUE_TRACK");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuPush();
-    ContextMenuQueue(atoi(data.c_str()));
+    menuPush();
+    contextMenuQueue(atoi(data.c_str()));
     break;
   case MENU_QUEUE_TRACK_DELETE:
     DEBUG_PRINT("MENU_QUEUE_TRACK_DELETE");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
     volumio.removeQueueItem(atoi(data.c_str()));
-    MenuPop();
-    MenuPop();
-    menuAction(Stack[stack_pos].Type, Stack[stack_pos].Data);
+    menuPop();
+    menuPop();
+    menuAction(menuStack[menuStackIndex].Type, menuStack[menuStackIndex].Data);
     break;
   case MENU_QUEUE_TRACK_PLAY:
     DEBUG_PRINT("MENU_QUEUE_TRACK_PLAY");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
     volumio.play(atoi(data.c_str()));
-    MenuPop();
-    MenuPop();
-    menuAction(Stack[stack_pos].Type, Stack[stack_pos].Data);
+    menuPop();
+    menuPop();
+    menuAction(menuStack[menuStackIndex].Type, menuStack[menuStackIndex].Data);
     break;
   case MENU_SYSTEM:
     DEBUG_PRINT("MENU_SYSTEM");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    MenuSystem();
+    menuSystem();
     break;
   case MENU_DARK:
     DEBUG_PRINT("MENU_DARK");
@@ -635,7 +635,7 @@ void loop()
     {
       volumio.getState();
 
-      MenuMain();
+      menuMain();
     }
   }
 
@@ -651,7 +651,7 @@ void loop()
     DEBUG_PRINTLN("Main: Volumio: pushBrowseSources");
 
     //Only if push was requested
-    if (WaitForSourceUpdate)
+    if (waitForSourceUpdate)
     {
       while (volumio.readNextSourceItem())
       {
@@ -660,7 +660,7 @@ void loop()
         DEBUG_PRINT(": ");
         DEBUG_PRINTLN(volumio.CurrentSourceItem.uri);
 
-        GenMenuItem(ICON_ARROW, volumio.CurrentSourceItem.name, MENU_BROWSE_SOURCE, volumio.CurrentSourceItem.uri);
+        genMenuItem(ICON_ARROW, volumio.CurrentSourceItem.name, MENU_BROWSE_SOURCE, volumio.CurrentSourceItem.uri);
       }
 
       GenMenuEnd();
@@ -668,8 +668,8 @@ void loop()
       if (restore && false)
       {
         restore = false;
-        LeftEncoder.setValue(Stack[stack_pos].Position);
-        MenuOffset = Stack[stack_pos].Offset;
+        LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+        menuOffset = menuStack[menuStackIndex].Offset;
       }
     }
 
@@ -679,7 +679,7 @@ void loop()
     DEBUG_PRINTLN("Main: Volumio: pushBrowseLibrary");
 
     //Only if push was requested
-    if (WaitForLibraryUpdate)
+    if (waitForLibraryUpdate)
     {
       volumio.LibraryPrev.uri = "";
 
@@ -693,23 +693,23 @@ void loop()
         DEBUG_PRINTLN(volumio.CurrentLibraryItem.uri);
 
         if (volumio.CurrentLibraryItem.type == "song")
-          GenMenuItem(ICON_SONG, volumio.CurrentLibraryItem.title, MENU_BROWSE_SONG, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_SONG, volumio.CurrentLibraryItem.title, MENU_BROWSE_SONG, volumio.CurrentLibraryItem.uri);
         else if (volumio.CurrentLibraryItem.type == "folder")
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_FOLDER, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_FOLDER, volumio.CurrentLibraryItem.uri);
         else if (volumio.CurrentLibraryItem.type == "radio-category")
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_RADIOCATEGORY, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_RADIOCATEGORY, volumio.CurrentLibraryItem.uri);
         else if (volumio.CurrentLibraryItem.type == "mywebradio-category")
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_RADIOCATEGORY, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_RADIOCATEGORY, volumio.CurrentLibraryItem.uri);
         else if (volumio.CurrentLibraryItem.type == "radio-favourites")
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_RADIOCATEGORY, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_RADIOCATEGORY, volumio.CurrentLibraryItem.uri);
         else if (volumio.CurrentLibraryItem.type == "streaming-category")
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_STREAMINGCATEGORY, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_STREAMINGCATEGORY, volumio.CurrentLibraryItem.uri);
         else if (volumio.CurrentLibraryItem.type == "webradio")
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_WEBRADIO, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_WEBRADIO, volumio.CurrentLibraryItem.uri);
         else if (volumio.CurrentLibraryItem.type == "playlist")
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_PLAYLIST, volumio.CurrentLibraryItem.uri);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.title, MENU_BROWSE_PLAYLIST, volumio.CurrentLibraryItem.uri);
         else
-          GenMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.type, MENU_HOME);
+          genMenuItem(ICON_ARROW, volumio.CurrentLibraryItem.type, MENU_HOME);
       }
 
       while (volumio.readLibraryPrev())
@@ -725,9 +725,9 @@ void loop()
         DEBUG_PRINT(": ");
         DEBUG_PRINTLN(volumio.LibraryInfo.uri);
 
-        GenMenuItem(ICON_PLAY, TEXT_BROWSE_FOLDER_PLAY, MENU_BROWSE_FOLDER_PLAY, volumio.LibraryInfo.uri);
-        GenMenuItem(ICON_LIST, TEXT_BROWSE_FOLDER_ADDTOQUEUE, MENU_BROWSE_FOLDER_ADDTOQUEUE, volumio.LibraryInfo.uri);
-        GenMenuItem(ICON_LIST, TEXT_BROWSE_FOLDER_CLEARANDPLAY, MENU_BROWSE_FOLDER_CLEARANDPLAY, volumio.LibraryInfo.uri);
+        genMenuItem(ICON_PLAY, TEXT_BROWSE_FOLDER_PLAY, MENU_BROWSE_FOLDER_PLAY, volumio.LibraryInfo.uri);
+        genMenuItem(ICON_LIST, TEXT_BROWSE_FOLDER_ADDTOQUEUE, MENU_BROWSE_FOLDER_ADDTOQUEUE, volumio.LibraryInfo.uri);
+        genMenuItem(ICON_LIST, TEXT_BROWSE_FOLDER_CLEARANDPLAY, MENU_BROWSE_FOLDER_CLEARANDPLAY, volumio.LibraryInfo.uri);
       }
 
       GenMenuEnd();
@@ -735,8 +735,8 @@ void loop()
       if (restore && false)
       {
         restore = false;
-        LeftEncoder.setValue(Stack[stack_pos].Position);
-        MenuOffset = Stack[stack_pos].Offset;
+        LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+        menuOffset = menuStack[menuStackIndex].Offset;
       }
     }
 
@@ -759,7 +759,7 @@ void loop()
           DEBUG_PRINT(": ");
           DEBUG_PRINTLN(index);
 
-          GenMenuItem(ICON_SONG, volumio.CurrentQueueItem.name, MENU_QUEUE_TRACK, String(index++));
+          genMenuItem(ICON_SONG, volumio.CurrentQueueItem.name, MENU_QUEUE_TRACK, String(index++));
         }
 
       GenMenuEnd();
@@ -767,8 +767,8 @@ void loop()
       if (restore && false)
       {
         restore = false;
-        LeftEncoder.setValue(Stack[stack_pos].Position);
-        MenuOffset = Stack[stack_pos].Offset;
+        LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+        menuOffset = menuStack[menuStackIndex].Offset;
       }
     }
     else
@@ -838,14 +838,14 @@ void loop()
         ToastDisplay = false;
       }
       //Switch to menu if status is displayed
-      else if (StatusDisplay)
+      else if (statusDisplay)
       {
-        StatusDisplay = false;
+        statusDisplay = false;
       }
       //Activate menu-item if in menu
       else
       {
-        menuAction(Menu[MenuPosition].Type, Menu[MenuPosition].Data);
+        menuAction(Menu[menuPosition].Type, Menu[menuPosition].Data);
       }
     }
   }
@@ -884,17 +884,17 @@ void loop()
   }
 
   //Do nothing if statusdisplay active
-  if (StatusDisplay)
+  if (statusDisplay)
   {
   }
   else
   {
 
-    if (restore && !WaitForLibraryUpdate && !WaitForQueueUpdate && !WaitForSourceUpdate)
+    if (restore && !waitForLibraryUpdate && !WaitForQueueUpdate && !waitForSourceUpdate)
     {
       restore = false;
-      LeftEncoder.setValue(Stack[stack_pos].Position);
-      MenuOffset = Stack[stack_pos].Offset;
+      LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+      menuOffset = menuStack[menuStackIndex].Offset;
     }
 
     //Limit encoder value to menu length
@@ -904,15 +904,15 @@ void loop()
       LeftEncoder.setValue(0);
 
     //Position of menu = encoder-value
-    MenuPosition = LeftEncoder.getValue();
+    menuPosition = LeftEncoder.getValue();
 
     //Scroll menu when encoder reaches lower end of screen
-    if (MenuPosition >= MenuVisibleItems + MenuOffset - 1)
-      MenuOffset = MenuPosition - MenuVisibleItems + 1;
+    if (menuPosition >= MenuVisibleItems + menuOffset - 1)
+      menuOffset = menuPosition - MenuVisibleItems + 1;
 
     //Scroll menu when encoder reaches upper end of screen
-    if (MenuPosition < MenuOffset)
-      MenuOffset = MenuPosition;
+    if (menuPosition < menuOffset)
+      menuOffset = menuPosition;
   }
 
   /*#################################################################*\
@@ -966,7 +966,7 @@ void loop()
   //After some time without action automatically go back to status display
   if (delayBackStatus > 0)
     if (now - lastinput > delayBackStatus && volumio.State.status != "")
-      StatusDisplay = true;
+      statusDisplay = true;
 
   //After some time without action automatically switch off display
   if (delayDisplayOff > 0)
@@ -1060,7 +1060,7 @@ void loop()
         }
       }
       //Display player status
-      else if (StatusDisplay)
+      else if (statusDisplay)
       {
         //Draw small Volumio logo
         display.drawXBM((DisplayWidth - logo_volumio_small_width) / 2, (MenuItemHeight - logo_volumio_small_height) / 2, logo_volumio_small_width, logo_volumio_small_height, logo_volumio_small_bits);
@@ -1180,14 +1180,14 @@ void loop()
         bool style2 = false;
 
         if (style2)
-          display.drawRBox(0, MenuItemHeight * (MenuPosition - MenuOffset), MenuPixelWidth - 3, MenuItemHeight, 0);
+          display.drawRBox(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight, 0);
 
         //Write menu texts
         for (int i = 0; i < MenuVisibleItems; i++)
-          if (i + MenuOffset < MenuLength)
+          if (i + menuOffset < MenuLength)
           {
 
-            if (i == MenuPosition - MenuOffset)
+            if (i == menuPosition - menuOffset)
             {
               if (style2)
                 display.setColorIndex(0);
@@ -1195,15 +1195,15 @@ void loop()
                 display.setColorIndex(1);
 
               display.setFont(MenuTextFont);
-              item_width = display.getUTF8Width(Menu[i + MenuOffset].Text.c_str()) + MenuItemHeight;
+              item_width = display.getUTF8Width(Menu[i + menuOffset].Text.c_str()) + MenuItemHeight;
 
               if (item_width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu)
               {
                 item_offset = 0;
                 display.setFont(MenuTextFont);
-                display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
+                display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Text.c_str());
                 display.setFont(MenuIconFont);
-                display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+                display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Icon.c_str());
               }
               else
               //Scrolling text
@@ -1213,9 +1213,9 @@ void loop()
                 do
                 {
                   display.setFont(MenuTextFont);
-                  display.drawUTF8(MenuItemHeight + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
+                  display.drawUTF8(MenuItemHeight + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Text.c_str());
                   display.setFont(MenuIconFont);
-                  display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2 + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+                  display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2 + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Icon.c_str());
 
                   //second text
                   x += item_width + scrollGapMenu;
@@ -1225,17 +1225,17 @@ void loop()
             else
             {
               display.setFont(MenuTextFont);
-              display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Text.c_str());
+              display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Text.c_str());
               display.setFont(MenuIconFont);
-              display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + MenuOffset].Icon.c_str());
+              display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Icon.c_str());
             }
           }
 
         //Highlight actual menu item
         if (MenuLength > MenuVisibleItems)
-          display.drawRFrame(0, MenuItemHeight * (MenuPosition - MenuOffset), MenuPixelWidth - 3, MenuItemHeight, 0);
+          display.drawRFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight, 0);
         else
-          display.drawRFrame(0, MenuItemHeight * (MenuPosition - MenuOffset), MenuPixelWidth, MenuItemHeight, 0);
+          display.drawRFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth, MenuItemHeight, 0);
 
         //Show scrollbar if menu is longer than screen
         if (MenuLength > MenuVisibleItems)
@@ -1245,7 +1245,7 @@ void loop()
           display.setColorIndex(1);
 
           int barlen = (int)((float)MenuVisibleItems / (float)MenuLength * MenuPixelHeight);
-          int barpos = (int)((float)MenuOffset / (float)MenuLength * MenuPixelHeight);
+          int barpos = (int)((float)menuOffset / (float)MenuLength * MenuPixelHeight);
           display.drawLine(MenuPixelWidth - 1, barpos, MenuPixelWidth - 1, barpos + barlen);
         }
       }
