@@ -57,7 +57,7 @@ class SocketIO : public CharStream
 {
 public:
   bool connect(String hostname, int portnr);
-  bool connected();
+  bool getConnected();
   void disconnect();
 
   void sendMessage(String message);

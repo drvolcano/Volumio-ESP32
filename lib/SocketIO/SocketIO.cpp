@@ -127,7 +127,7 @@ bool SocketIO::connect(String hostname, int portnr)
   return true;
 }
 
-bool SocketIO::connected()
+bool SocketIO::getConnected()
 {
   return client.connected();
 }

@@ -625,13 +625,13 @@ void loop()
   }
 
   //Check if Volumi (SocketIO) is connected. If not --> reconnect
-  while (!volumio.connected())
+  while (!volumio.getConnected())
   {
     DisplayMessage(TEXT_CONNECT_VOLUMIO);
 
     volumio.connect(host, port);
 
-    if (!volumio.connected())
+    if (!volumio.getConnected())
       delay(100);
     else
     {
@@ -1152,7 +1152,7 @@ void loop()
     
           int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
 
-          UI.drawProgressBar(0, posy, DisplayWidth, 0, SeekPercent);
+          UI.drawProgressBar(4, posy, DisplayWidth-8, 0, SeekPercent);
 
           int trackMin = volumio.State.duration / 60;
           int trackSec = volumio.State.duration % 60;

@@ -142,8 +142,8 @@ public:
   PushType getPushType() { return pushType; };
 
   //Call oce in Setup
-  void connect(char hostname[], int port);
-  bool connected();
+  void connect(String hostname, int portnr);
+  bool getConnected();
 
   //Call cyclic in loop()
   void process();

@@ -28,32 +28,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
-void Volumio::connect(char *hostname, int port)
+void Volumio::connect(String hostname, int port)
 {
   lastTime = millis();
 
   if (!socketIoClient.connect(hostname, port))
-  {
-    DEBUG_PRINTLN("Volumio: connection failed");
-  }
-  if (socketIoClient.connected())
-  {
-    DEBUG_PRINTLN("Volumio: connected");
-  }
+    DEBUG_PRINTLN("Volumio: connect(): connection failed");
+
+  if (socketIoClient.getConnected())
+    DEBUG_PRINTLN("Volumio: connect(): connected");
 }
 
-bool Volumio::connected()
+bool Volumio::getConnected()
 {
-  return socketIoClient.connected();
+  return socketIoClient.getConnected();
 }
 
 bool Volumio::readPushToastMessage()
 {
-  //Example
-  //42["pushToastMessage",{"type":"success","title":"Entfernen","message":"Entferne Hell To The Heavens aus Warteschlange"}]
-
   if (pushType != pushToastMessage)
+  {
+    DEBUG_PRINTLN("Volumio: readPushToastMessage(): ERROR, no data avaliable");
     return false;
+  }
 
   CurrentToastItem.message = "";
   CurrentToastItem.title = "";
@@ -61,7 +58,7 @@ bool Volumio::readPushToastMessage()
 
   while (jsonParser.next())
   {
-    DEBUG_PRINT("Volumio: Receive: pushToastMessage: ");
+    DEBUG_PRINT("Volumio: readPushToastMessage(): ");
     DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(jsonParser.getValue());
@@ -88,7 +85,10 @@ bool Volumio::readPushToastMessage()
 bool Volumio::readNextSourceItem()
 {
   if (pushType != pushBrowseSources)
+  {
+    DEBUG_PRINTLN("Volumio: readNextSourceItem(): ERROR, no data avaliable");
     return false;
+  }
 
   CurrentSourceItem.albumart = "";
   CurrentSourceItem.name = "";
@@ -99,7 +99,7 @@ bool Volumio::readNextSourceItem()
 
   while (jsonParser.next())
   {
-    DEBUG_PRINT("Volumio: Receive: pushBrowseSources: ");
+    DEBUG_PRINT("Volumio: readNextSourceItem(): ");
     DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(jsonParser.getValue());
@@ -127,7 +127,10 @@ bool Volumio::readNextSourceItem()
 bool Volumio::readNextQueueItem()
 {
   if (pushType != pushQueue)
+  {
+    DEBUG_PRINTLN("Volumio: readNextQueueItem(): ERROR, no data avaliable");
     return false;
+  }
 
   CurrentQueueItem.uri = "";
   CurrentQueueItem.service = "";
@@ -145,7 +148,7 @@ bool Volumio::readNextQueueItem()
 
   while (jsonParser.next())
   {
-    DEBUG_PRINT("Volumio: Receive: pushQueue: ");
+    DEBUG_PRINT("Volumio: readNextQueueItem(): ");
     DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(jsonParser.getValue());
@@ -187,7 +190,10 @@ bool Volumio::readNextQueueItem()
 bool Volumio::readNextLibraryItem()
 {
   if (pushType != pushBrowseLibrary)
+  {
+    DEBUG_PRINTLN("Volumio: readNextLibraryItem(): ERROR, no data avaliable");
     return false;
+  }
 
   CurrentLibraryItem.service = "";
   CurrentLibraryItem.type = "";
@@ -203,7 +209,7 @@ bool Volumio::readNextLibraryItem()
 
   while (jsonParser.next())
   {
-    DEBUG_PRINT("Volumio: Receive: pushBrowseLibrary: ");
+    DEBUG_PRINT("Volumio: readNextLibraryItem(): ");
     DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(jsonParser.getValue());
@@ -269,7 +275,6 @@ bool Volumio::readLibraryPrev()
     return false;
 
   if (jsonParser.next())
-  //if (Parser.Count == 4)
   {
     DEBUG_PRINT("Volumio: Receive: pushBrowseLibrary: #### ");
     DEBUG_PRINT(jsonParser.getPath());
@@ -304,7 +309,10 @@ bool Volumio::readLibraryPrev()
 bool Volumio::readState()
 {
   if (pushType != pushState)
+  {
+    DEBUG_PRINTLN("Volumio: readState(): ERROR, no data avaliable");
     return false;
+  }
 
   while (jsonParser.next())
   {
@@ -357,7 +365,7 @@ bool Volumio::readState()
     if (jsonParser.getNode(2) == "Streaming")
       State.Streaming = jsonParser.getValue();
 
-    DEBUG_PRINT("Volumio: Receive: pushState: ");
+    DEBUG_PRINT("Volumio: readState(): ");
     DEBUG_PRINT(jsonParser.getNode(2));
     DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(jsonParser.getValue());
@@ -368,12 +376,14 @@ bool Volumio::readState()
 
 void Volumio::process()
 {
-  //cleanup a bit
-//  while (jsonParser.next())
- //   ;
+  //cleanup, just in case application didnt read all data
+  if (pushType != pushNone)
+    while (jsonParser.next())
+      ;
 
   unsigned long now = millis();
 
+  //Calculate seek state if in play
   if (State.status == "play")
     State.seek += (now - lastTime);
 
@@ -389,7 +399,7 @@ void Volumio::process()
     //Process data as long as data generates lines
     if (jsonParser.next())
     {
-      DEBUG_PRINT("Volumio: Process: Receive: ");
+      DEBUG_PRINT("Volumio: process(): Receive: ");
       DEBUG_PRINTLN(jsonParser.getValue());
 
       if (jsonParser.getValue() == "pushToastMessage")
