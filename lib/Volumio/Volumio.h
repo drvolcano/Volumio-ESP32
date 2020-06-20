@@ -126,6 +126,7 @@ public:
     pushQueue,
     pushBrowseLibrary,
     pushToastMessage,
+    pushMultiRoomDevices
   };
 
   //State of system

@@ -32,9 +32,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 bool SocketIO::connect(String hostname, int portnr)
 {
+  DEBUG_PRINT("SocketIO: connect(): hostname = ");
+  DEBUG_PRINTLN(hostname);
+  DEBUG_PRINT("SocketIO: connect(): portnr = ");
+  DEBUG_PRINTLN(portnr);
+
   //Connect to WiFi
   if (!client.connect(hostname.c_str(), portnr))
+  {
+    DEBUG_PRINTLN("SocketIO: connect(): ERROR, could not connect to host");
     return false;
+  }
 
   mem_hostname = hostname;
   mem_portnr = portnr;
@@ -46,10 +54,15 @@ bool SocketIO::connect(String hostname, int portnr)
 
   //Wait for response
   if (!waitForData(3000))
+  {
+    DEBUG_PRINTLN("SocketIO: connect(): ERROR, no response");
     return false;
+  }
 
   if (!readLine().startsWith("HTTP/1.1 200"))
   {
+    DEBUG_PRINTLN("SocketIO: connect(): ERROR, HTTP/1.1 200 from host");
+
     while (client.available())
       readLine();
 
@@ -62,29 +75,33 @@ bool SocketIO::connect(String hostname, int portnr)
     if (readLine().length() == 0)
       break;
 
-  DEBUG_PRINTLN(F(""));
+  DEBUG_PRINTLN("");
+
+
+  for (int i = 0; i < 4; i++)
+    DEBUG_PRINTLN("C:" + String(client.read()));
 
   //Load string into JSON-parser
-  Parser.initialize(readLine());
+  parser.initialize(readLine());
 
-  while (Parser.next())
+  while (parser.next())
   {
-    DEBUG_PRINT("SocketIO: JSON: ");
-    DEBUG_PRINT(Parser.getNode(1));
+    DEBUG_PRINT("SocketIO: connect(): JSON: ");
+    DEBUG_PRINT(parser.getNode(1));
     DEBUG_PRINT(" = ");
-    DEBUG_PRINTLN(Parser.getValue());
+    DEBUG_PRINTLN(parser.getValue());
 
-    if (Parser.getNode(1) == "sid")
-      sid = Parser.getValue();
+    if (parser.getNode(1) == "sid")
+      sid = parser.getValue();
 
-    if (Parser.getNode(1) == "upgrades")
+    if (parser.getNode(1) == "upgrades")
       ;
 
-    if (Parser.getNode(1) == "pingInterval")
-      keepAliveInterval = Parser.getValue().toInt();
+    if (parser.getNode(1) == "pingInterval")
+      pingInterval = parser.getValue().toInt();
 
-    if (Parser.getNode(1) == "pingTimeout")
-      ;
+    if (parser.getNode(1) == "pingTimeout")
+      pingTimeout = parser.getValue().toInt();
   }
 
   //Read rest of message
@@ -107,10 +124,15 @@ bool SocketIO::connect(String hostname, int portnr)
   DEBUG_PRINTLN(F(""));
 
   if (!waitForData(3000))
+  {
+    DEBUG_PRINTLN("SocketIO: connect(): ERROR, no response");
     return false;
+  }
 
   if (!readLine().startsWith("HTTP/1.1 101"))
   {
+    DEBUG_PRINTLN("SocketIO: connect(): ERROR, HTTP/1.1 101 from host");
+
     while (client.available())
       readLine();
     client.stop();
@@ -122,7 +144,7 @@ bool SocketIO::connect(String hostname, int portnr)
 
   DEBUG_PRINTLN("");
 
-  sendMessage("52");
+  sendMessage(String(engineIo_upgrade));
 
   return true;
 }
@@ -134,11 +156,13 @@ bool SocketIO::getConnected()
 
 void SocketIO::disconnect()
 {
+  DEBUG_PRINTLN("SocketIO: disconnect()");
   client.stop();
 }
 
 void SocketIO::finalize()
 {
+  DEBUG_PRINTLN("SocketIO: finalize()");
 }
 
 char SocketIO::readChar()
@@ -148,7 +172,7 @@ char SocketIO::readChar()
   {
     if (!inflaterInitialized)
     {
-      DEBUG_PRINTLN("SocketIO: Receive: Inflate");
+      DEBUG_PRINTLN("SocketIO: readChar(): Inflate");
       DEBUG_PRINTLN("");
 
       inflater.initialize(&client, len);
@@ -163,7 +187,7 @@ char SocketIO::readChar()
       inflater.finalize();
 
       DEBUG_PRINTLN("");
-      DEBUG_PRINTLN("SocketIO: Receive: END");
+      DEBUG_PRINTLN("SocketIO: readChar(): END");
       DEBUG_PRINTLN("");
       return 0;
     }
@@ -176,7 +200,7 @@ char SocketIO::readChar()
     if (len == 0)
     {
       DEBUG_PRINTLN("");
-      DEBUG_PRINTLN("SocketIO: Receive: END");
+      DEBUG_PRINTLN("SocketIO: readChar(): END");
       DEBUG_PRINTLN("");
       return 0;
     }
@@ -192,29 +216,40 @@ char SocketIO::readChar()
   }
 }
 
-bool SocketIO::receive()
+bool SocketIO::process()
 {
   unsigned long now = millis();
 
-  if (now > lastKeepAlive + keepAliveInterval)
+  //Keep connection open
+  if (now > lastPing + pingInterval)
   {
-    lastKeepAlive = now;
+    lastPing = now;
 
-    DEBUG_PRINTLN("SocketIO: Send: Ping (keep alive)");
-    sendMessage("2");
+    DEBUG_PRINTLN("SocketIO: process(): Ping (keep alive)");
+    sendMessage(String(engineIo_ping));
   }
 
+  //Reconnect if necessary
   if (!client.connected())
   {
+    DEBUG_PRINTLN("SocketIO: process(): client not connected, trying to reconnect");
+
     if (!client.connect(mem_hostname.c_str(), mem_portnr))
+    {
+      DEBUG_PRINTLN("SocketIO: process(): ERROR, could not connected");
       return 0;
+    }
   }
 
+  //CHeck if client has data
   if (!client.available())
-  {
     return 0;
-  }
 
+  return Process2();
+}
+
+bool SocketIO::Process2()
+{
   //Step of header readout
   int step = step_header;
 
@@ -234,14 +269,14 @@ bool SocketIO::receive()
     c = readChar();
 
     if (c == 0 && step != step_length2)
-    {   
-      DEBUG_PRINTLN("SocketIO: Receive: char = 0 ");
-      return 1;
+    {
+      DEBUG_PRINTLN("SocketIO: process(): receiving: char = 0 ");
+      return 0;
     }
 
     switch (step)
     {
-    //Wait for hader character (0x81)
+    //Wait for hader character
     case step_header:
       if (true)
       {
@@ -255,11 +290,11 @@ bool SocketIO::receive()
 
         step = step_length;
 
-        DEBUG_PRINT("SocketIO: Receive: Header: ");
+        DEBUG_PRINT("SocketIO: process(): receiving: Header = ");
         DEBUG_PRINTLN((uint8_t)c);
-        DEBUG_PRINT("SocketIO: Receive: FIN: ");
+        DEBUG_PRINT("SocketIO: process(): receiving: FIN = ");
         DEBUG_PRINTLN(FIN);
-        DEBUG_PRINT("SocketIO: Receive: RSV1: ");
+        DEBUG_PRINT("SocketIO: process(): receiving: RSV1 = ");
         DEBUG_PRINT(RSV1);
 
         if (compressed)
@@ -267,11 +302,11 @@ bool SocketIO::receive()
         else
           DEBUG_PRINTLN(" (uncompressed)");
 
-        DEBUG_PRINT("SocketIO: Receive: RSV2: ");
+        DEBUG_PRINT("SocketIO: process(): receiving: RSV2 = ");
         DEBUG_PRINTLN(RSV2);
-        DEBUG_PRINT("SocketIO: Receive: RSV3: ");
+        DEBUG_PRINT("SocketIO: process(): receiving: RSV3 = ");
         DEBUG_PRINTLN(RSV3);
-        DEBUG_PRINT("SocketIO: Receive: OPCODE: ");
+        DEBUG_PRINT("SocketIO: process(): receiving: OPCODE = ");
         DEBUG_PRINTLN(OPCODE);
       }
 
@@ -283,31 +318,31 @@ bool SocketIO::receive()
 
       if (masked)
       {
-        DEBUG_PRINTLN("SocketIO: Receive: Masked");
+        DEBUG_PRINTLN("SocketIO: process(): receiving: Masked");
         c -= message_masked;
       }
       else
-        DEBUG_PRINTLN("SocketIO: Receive: Unmasked");
+        DEBUG_PRINTLN("SocketIO: process(): receiving: Unmasked");
 
       switch (c)
       {
       case message_len_16bit:
         lencnt = 2;
         len = 0;
-        DEBUG_PRINT("SocketIO: Receive: Paylod data len (16 bit) = ");
+        DEBUG_PRINT("SocketIO: process(): receiving: Paylod data len (16 bit) = ");
         step = step_length2;
         break;
 
       case message_len_64bit:
         lencnt = 8;
         len = 0;
-        DEBUG_PRINT("SocketIO: Receive: Paylod data len (64 bit) = ");
+        DEBUG_PRINT("SocketIO: process(): receiving: Paylod data len (64 bit) = ");
         step = step_length2;
         break;
 
       default:
         lencnt = 0;
-        DEBUG_PRINT("SocketIO: Receive: Payload data len (8 bit) = ");
+        DEBUG_PRINT("SocketIO: process(): receiving: Payload data len (8 bit) = ");
         len = c;
         DEBUG_PRINTLN(len);
 
@@ -343,7 +378,7 @@ bool SocketIO::receive()
 
     case step_engineIo:
 
-      DEBUG_PRINT("SocketIO: Receive: engineIo: ");
+      DEBUG_PRINT("SocketIO: process(): receiving: engineIo = ");
       DEBUG_PRINT(c);
       DEBUG_PRINT(" (");
 
@@ -388,7 +423,7 @@ bool SocketIO::receive()
 
     case step_socketIo:
 
-      DEBUG_PRINT("SocketIO: Receive: socketIo: ");
+      DEBUG_PRINT("SocketIO: process(): receiving: socketIo = ");
       DEBUG_PRINT(c);
       DEBUG_PRINT(" (");
 
@@ -427,12 +462,14 @@ bool SocketIO::receive()
       break;
     }
   }
-
   return 0;
 }
 
 bool SocketIO::waitForData(unsigned long delay)
 {
+  DEBUG_PRINT("SocketIO: waitForData(): ");
+  DEBUG_PRINTLN(delay);
+
   unsigned long start = millis();
   while (!client.available() && (millis() < (start + delay)))
     ;
@@ -443,7 +480,7 @@ bool SocketIO::waitForData(unsigned long delay)
 void SocketIO::writeLine(String line)
 {
   client.println(line);
-  DEBUG_PRINT("SocketIO: Send: ");
+  DEBUG_PRINT("SocketIO: writeLine(): ");
   DEBUG_PRINTLN(line);
 }
 
@@ -499,13 +536,16 @@ String SocketIO::readLine()
   while (client.available())
   {
     char c = client.read();
-    if (c == 0 || c == 255 || c == '\r' || c == '\n')
+    if (c == '\n')
       break;
 
-    line += c;
+    if (c == 0 || c == 255 || c == '\r' || c == '\n')
+      ;
+    else
+      line += c;
   }
 
-  DEBUG_PRINT("SocketIO: Receive: ");
+  DEBUG_PRINT("SocketIO: readLine(): ");
   DEBUG_PRINTLN(line);
 
   return line;
@@ -526,18 +566,18 @@ void SocketIO::sendMessage(String message)
   for (int i = 0; i < msglength; i++)
     masked[i] = message[i] ^ mask[i % 4];
 
-  client.print((char)(message_header)); //has to be sent for proper communication
+  client.print((char)(message_header));
 
   //Depending on the size of the message
   if (msglength <= 125)
   {
     client.print((char)(msglength + message_masked)); //size of the message + 128 because message has to be masked
-    DEBUG_PRINT("SocketIO: Send: Payload data len (8 bit) = ");
+    DEBUG_PRINT("SocketIO: sendMessage(): Payload data len (8 bit) = ");
   }
   else if (msglength >= 126 && msglength <= 65535)
   {
     client.print((char)(message_len_16bit + message_masked));
-    DEBUG_PRINT("SocketIO: Send: Paylod data len (16 bit) = ");
+    DEBUG_PRINT("SocketIO: sendMessage(): Paylod data len (16 bit) = ");
     for (int i = 0; i < 2; i++)
     {
       char temp = (char)((msglength >> (8 * (2 - 1 - i))) & 255);
@@ -547,7 +587,7 @@ void SocketIO::sendMessage(String message)
   else
   {
     client.print((char)(message_len_64bit + message_masked));
-    DEBUG_PRINT("SocketIO: Send: Paylod data len (64 bit) = ");
+    DEBUG_PRINT("SocketIO: sendMessage(): Paylod data len (64 bit) = ");
     for (int i = 0; i < 8; i++)
     {
       char temp = (char)((msglength >> (8 * (8 - 1 - i))) & 255);
@@ -556,7 +596,7 @@ void SocketIO::sendMessage(String message)
   }
 
   DEBUG_PRINTLN(msglength);
-  DEBUG_PRINT("SocketIO: Send: Message = ");
+  DEBUG_PRINT("SocketIO: sendMessage(): Message = ");
   DEBUG_PRINTLN(message);
   DEBUG_PRINTLN("");
 
@@ -566,12 +606,20 @@ void SocketIO::sendMessage(String message)
 
 void SocketIO::sendJSON(String command, String data)
 {
-  String message = "42[\"" + command + "\"";
+  DEBUG_PRINT("SocketIO: sendJSON(): command = ");
+  DEBUG_PRINTLN(command);
+  DEBUG_PRINT("SocketIO: sendJSON(): data = ");
+  DEBUG_PRINTLN(data);
+
+  String message = String(engineIo_message) + String(socketIo_event) + "[\"" + command + "\"";
 
   if (data != "")
     message += "," + data;
 
   message += "]";
+
+  DEBUG_PRINT("SocketIO: sendJSON(): message = ");
+  DEBUG_PRINTLN(message);
 
   sendMessage(message);
 }

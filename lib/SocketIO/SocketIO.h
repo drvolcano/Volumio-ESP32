@@ -63,7 +63,7 @@ public:
   void sendMessage(String message);
   void sendJSON(String RID, String JSON = "");
 
-  bool receive();
+  bool process();
   void finalize();
   char readChar();
 
@@ -72,12 +72,14 @@ private:
   String readLine();
   void writeLine(String line);
   String genKey();
-
+  bool Process2();
   String mem_hostname;
   int mem_portnr;
 
-  unsigned long lastKeepAlive = 0;
-  long keepAliveInterval = 5000; //ms
+  unsigned long lastPing = 0;
+  long pingInterval = 5000; //ms
+  long pingTimeout = 10000; //ms
+  
 
   WiFiClient client;
   Inflate inflater;
@@ -85,7 +87,7 @@ private:
   char *dataptr;
 
   String sid;
-  JSON Parser;
+  JSON parser;
 
   //Length of data
   unsigned long len = 0;

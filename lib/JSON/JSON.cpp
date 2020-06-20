@@ -94,7 +94,7 @@ void JSON::initialize(CharStream *stream)
   value = false;
   lastwaspop = false;
 
-  DEBUG_PRINTLN("JSON: initialize(CharSTream *Stream)");
+  DEBUG_PRINTLN("JSON: initialize(CharStream *Stream)");
 }
 
 void JSON::initialize(String Message)

@@ -391,7 +391,7 @@ void Volumio::process()
 
   pushType = pushNone;
 
-  if (socketIoClient.receive())
+  if (socketIoClient.process())
   {
     //link messagstream to JSON-parser
     jsonParser.initialize(&socketIoClient);
@@ -422,6 +422,8 @@ void Volumio::process()
         pushType = pushQueue;
       else if (jsonParser.getValue() == "pushState")
         pushType = pushState;
+      else if (jsonParser.getValue() == "pushMultiRoomDevices")
+        pushType = pushMultiRoomDevices;
       else
       {
         while (jsonParser.next())
