@@ -146,7 +146,7 @@ int Inflate::readBits(int cnt)
 
 void Inflate::finalize()
 {
-  DEBUG_PRINT("Inflate: bytes to terminate = ");
+  DEBUG_PRINT("Inflate: finalize(): bytes to terminate = ");
   DEBUG_PRINTLN(totalBytes - abtualByte);
 
   while (abtualByte < totalBytes)
@@ -276,15 +276,15 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
   bcnt = 0;
   TEMP = 0;
 
-  DEBUG_PRINT("Inflate: count = ");
+  DEBUG_PRINT("Inflate: initialize(): count = ");
   DEBUG_PRINTLN(totalBytes);
 
   BFINAL = readBits(1) != 0;
   BTYPE = readBits(2);
 
-  DEBUG_PRINT("Inflate: BFINAL = ");
+  DEBUG_PRINT("Inflate: initialize(): BFINAL = ");
   DEBUG_PRINTLN(BFINAL);
-  DEBUG_PRINT("Inflate: BTYPE = ");
+  DEBUG_PRINT("Inflate: initialize(): BTYPE = ");
   DEBUG_PRINT(BTYPE);
 
   switch (BTYPE)
@@ -309,14 +309,14 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
   //to be done
   if (BTYPE == BTYPE_ERROR)
   {
-    DEBUG_PRINT("Inflate: BTYPE_ERROR not programmed ");
+    DEBUG_PRINT("Inflate: initialize(): BTYPE_ERROR not programmed ");
     return;
   }
 
   //to be done
   if (BTYPE == BTYPE_NONE)
   {
-    DEBUG_PRINT("Inflate: BTYPE_NONE not programmed ");
+    DEBUG_PRINT("Inflate: initialize(): BTYPE_NONE not programmed ");
     return;
   }
 
@@ -355,11 +355,11 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
     HDIST = readBits(5) + 1;
     HCLEN = readBits(4) + 4;
 
-    DEBUG_PRINT("Inflate: HLIT = ");
+    DEBUG_PRINT("Inflate: initialize(): HLIT = ");
     DEBUG_PRINTLN(HLIT);
-    DEBUG_PRINT("Inflate: HDIST = ");
+    DEBUG_PRINT("Inflate: initialize(): HDIST = ");
     DEBUG_PRINTLN(HDIST);
-    DEBUG_PRINT("Inflate: HCLEN = ");
+    DEBUG_PRINT("Inflate: initialize(): HCLEN = ");
     DEBUG_PRINTLN(HCLEN);
 
     lenpos = 0;
@@ -401,7 +401,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
       lengths[i] = 0;
     }
 
-    DEBUG_PRINT("Inflate: Lengths = {");
+    DEBUG_PRINT("Inflate: initialize(): Lengths = {");
 
     //Read lengths
     for (int i = 0; i < HCLEN; i++)
@@ -416,7 +416,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
 
     DEBUG_PRINTLN("}");
 
-    DEBUG_PRINT("Inflate: Len Counts = {");
+    DEBUG_PRINT("Inflate: initialize(): Len Counts = {");
 
     //Count, how often we have lengths
     for (int i = 0; i < 19; i++)
@@ -432,7 +432,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
     }
     DEBUG_PRINTLN("}");
 
-    DEBUG_PRINT("Inflate: CLEN: Startcodes = {");
+    DEBUG_PRINT("Inflate: initialize(): CLEN: Startcodes = {");
 
     //Calculate start codes for buildup
     for (int i = 1; i < 8; i++)
@@ -447,7 +447,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
 
     DEBUG_PRINTLN("}");
 
-    DEBUG_PRINT("Inflate: CLEN: Codes = {");
+    DEBUG_PRINT("Inflate: initialize(): CLEN: Codes = {");
 
     //Generate codes
     for (int n = 0; n < 19; n++)
@@ -466,7 +466,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
     }
     DEBUG_PRINTLN("}");
 
-    DEBUG_PRINT("Inflate: CLEN: Data = {");
+    DEBUG_PRINT("Inflate: initialize(): CLEN: Data = {");
 
     while (lenpos < HLIT + HDIST)
     {
@@ -543,7 +543,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
 
     nextcode_lit[0] = 0;
 
-    DEBUG_PRINT("Inflate: LIT: Startcodes = {");
+    DEBUG_PRINT("Inflate: initialize(): LIT: Startcodes = {");
 
     //calculate start codes
     for (int i = 1; i < 16; i++)
@@ -558,7 +558,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
 
     DEBUG_PRINTLN("}");
 
-    DEBUG_PRINT("Inflate: LIT: Codes = {");
+    DEBUG_PRINT("Inflate: initialize(): LIT: Codes = {");
 
     for (int n = 0; n < HLIT; n++)
     {
@@ -583,7 +583,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
 
     nextcode_dist[0] = 0;
 
-    DEBUG_PRINT("Inflate: DIST: Startcodes = {");
+    DEBUG_PRINT("Inflate: initialize(): DIST: Startcodes = {");
 
     //calculate start codes
     for (int i = 1; i < 16; i++)
@@ -598,7 +598,7 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
 
     DEBUG_PRINTLN("}");
 
-    DEBUG_PRINT("Inflate: DIST: Codes = {");
+    DEBUG_PRINT("Inflate: initialize(): DIST: Codes = {");
 
     for (int n = 0; n < HDIST; n++)
     {
