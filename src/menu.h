@@ -22,6 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "define_icons.h"
 #include "define_text.h"
 
+#include "AppDebug.h"
+#ifdef DEBUG_MENU
+#define DEBUG_PRINTLN(x) Serial.println(x)
+#define DEBUG_PRINT(x) Serial.print(x)
+#else
+#define DEBUG_PRINTLN(x)
+#define DEBUG_PRINT(x)
+#endif
+
 int messageindex = 0;
 String messagebuffer[4];
 
@@ -37,15 +46,13 @@ struct MenuStruct
 };
 
 struct StackStruct
-{    
+{
   String Text;
   String Data;
   MenuItemType Type;
   int Position;
   int Offset;
 };
-
-
 
 bool restore = false;
 
@@ -54,8 +61,6 @@ int MenuPosition = 0;
 
 StackStruct Stack[10];
 int stack_pos = 0;
-
-
 
 void GenMenuItem(String Icon, String Text, MenuItemType Type, String Data = "")
 {
@@ -79,6 +84,8 @@ void GenMenuEnd()
 
 void MenuMain()
 {
+  DEBUG_PRINTLN("Main: MenuMain()");
+
   stack_pos = 0;
 
   GenMenuStart();
@@ -90,12 +97,12 @@ void MenuMain()
   GenMenuItem(ICON_STOP, TEXT_MENU_DARK, MENU_DARK);
 
   GenMenuEnd();
-
- 
 }
 
 void MenuPlayback()
 {
+  DEBUG_PRINTLN("Main: MenuPlayback()");
+
   GenMenuStart();
   GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
   GenMenuItem(ICON_PREV, TEXT_PLAYBACK_PREV, MENU_PLAYBACK_PREV);
@@ -111,6 +118,8 @@ void MenuPlayback()
 
 void ContextMenuSong(String data)
 {
+  DEBUG_PRINTLN("Main: ContextMenuSong()");
+
   GenMenuStart();
   GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
   GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
@@ -124,6 +133,8 @@ void ContextMenuSong(String data)
 
 void ContextMenuWebradio(String data)
 {
+  DEBUG_PRINTLN("Main: ContextMenuWebradio()");
+
   GenMenuStart();
   GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
   GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
@@ -137,6 +148,8 @@ void ContextMenuWebradio(String data)
 
 void ContextMenuQueue(int index)
 {
+  DEBUG_PRINTLN("Main: ContextMenuQueue()");
+
   GenMenuStart();
   GenMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
   GenMenuItem(ICON_BACK, Stack[stack_pos - 2].Text, MENU_BACK);
@@ -148,10 +161,13 @@ void ContextMenuQueue(int index)
 
 void MenuSystem()
 {
+  DEBUG_PRINTLN("Main: MenuSystem()");
 }
 
 void MenuPush()
 {
+  DEBUG_PRINTLN("Main: MenuPush()");
+
   Stack[stack_pos].Text = Menu[MenuPosition].Text;
   Stack[stack_pos].Type = Menu[MenuPosition].Type;
   Stack[stack_pos].Data = Menu[MenuPosition].Data;
@@ -163,6 +179,8 @@ void MenuPush()
 
 void MenuPop()
 {
+  DEBUG_PRINTLN("Main: MenuPop()");
+
   if (stack_pos > 0)
     stack_pos--;
 

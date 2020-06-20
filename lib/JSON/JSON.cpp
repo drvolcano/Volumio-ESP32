@@ -130,16 +130,17 @@ bool JSON::next()
     if (fromStream)
     {
       c = charStream->readChar();
+      if (c == 0 || c == -1)
+      {  
+      //  DEBUG_PRINT("<END>");
+        break;
+      }
 
       DEBUG_PRINT(c);
-
-      if (c == 0)
-        break;
     }
     else
     {
       c = buffer[index];
-      // DEBUG_PRINT("JSON: ");
       DEBUG_PRINT(c);
     }
 
