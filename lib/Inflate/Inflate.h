@@ -26,14 +26,14 @@ class Inflate : public CharStream
 {
 
 public:
-  void initialize(WiFiClient *client, int count);
+  void initialize(Stream *dataStream, int count);
   char readChar();
   void finalize();
   bool getDone() { return done; }
 
 private:
   int readBits(int cnt);
-  WiFiClient *source;
+  Stream *stream;
   bool done = false;
   int totalBytes = 0;
   int abtualByte = 0;

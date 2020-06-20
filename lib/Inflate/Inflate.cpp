@@ -131,7 +131,7 @@ int Inflate::readBits(int cnt)
   {
     if (bcnt == 0)
     {
-      TEMP = (*source).read();
+      TEMP = (*stream).read();
       abtualByte++;
       bcnt = 8;
     }
@@ -151,7 +151,7 @@ void Inflate::finalize()
 
   while (abtualByte < totalBytes)
   {
-    (*source).read();
+    (*stream).read();
     abtualByte++;
   }
 }
@@ -266,11 +266,11 @@ char Inflate::readChar()
   return distbuffer[(RESPTR++) % LEN_DISTBUFFER];
 }
 
-void Inflate::initialize(WiFiClient *wifiClient, int byteCount)
+void Inflate::initialize(Stream *dataStream, int byteCount)
 {
   totalBytes = byteCount;
   abtualByte = 0;
-  source = wifiClient;
+  stream = dataStream;
   done = false;
   RESPTR = 0;
   bcnt = 0;
