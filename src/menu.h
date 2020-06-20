@@ -202,6 +202,9 @@ void menuPop()
 
   menuPosition = menuStack[menuStackIndex].Position;
   menuOffset = menuStack[menuStackIndex].Offset;
+  Menu[menuPosition].Text = menuStack[menuStackIndex].Text;
+  Menu[menuPosition].Type = menuStack[menuStackIndex].Type;
+  Menu[menuPosition].Data = menuStack[menuStackIndex].Data;
 
   DEBUG_PRINT(" --> ");
   DEBUG_PRINTLN(menuStackIndex);
