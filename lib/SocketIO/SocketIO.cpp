@@ -21,9 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "SocketIO.h"
 
-//Uncomment line below to enable debugging messages on COM-port
-//#define DEBUG_SOCKETIO
-
+#include "LibDebug.h"
 #ifdef DEBUG_SOCKETIO
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)
@@ -235,8 +233,11 @@ bool SocketIO::receive()
   {
     c = readChar();
 
-    if (c == 0)
+    if (c == 0 && step != step_length2)
+    {   
+      DEBUG_PRINTLN("SocketIO: Receive: char = 0 ");
       return 1;
+    }
 
     switch (step)
     {

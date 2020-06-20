@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Inflate.h"
 
-//Uncomment line below to enable debugging messages on COM-port
-//#define DEBUG_INFLATE
-
+#include "LibDebug.h"
 #ifdef DEBUG_INFLATE
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)

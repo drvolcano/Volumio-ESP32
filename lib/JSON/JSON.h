@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
+
 #include "Arduino.h"
 #include "CharStream.h"
 
@@ -27,35 +28,35 @@ public:
   void initialize(String Message);
   void initialize(CharStream *stream);
   bool next();
-  String getValue() { return Value; }
+  String getValue() { return actualValue; }
   String getPath();
-  String getNode(int i) { return Nodes[i]; }
-  int getLevel() { return Count; }
-  int getBlockEnd() { return Popped; }
+  String getNode(int i) { return nodes[i]; }
+  int getLevel() { return nodeCount; }
+  int getBlockEnd() { return popped; }
 
 private:
 
 #define Type_None 0
 #define Type_Class 1
 #define Type_Array 2
-  bool Popped;
-  int Count;
-  int NodeType[10];
-  String Value;
+  bool popped;
+  int nodeCount;
+  int nodeType[10];
+  String actualValue;
   bool fromStream = false;
   CharStream *charStream;
-  String Nodes[10];
+  String nodes[10];
   String stack[10];
-  int stacktype[10];
-  int stackpos = 0;
+  int stackType[10];
+  int stackIndex = 0;
   bool lastwaspop = false;
-  void Push();
-  void Pop();
-  void Print();
+  void stackPush();
+  void stackPop();
+  void generateOutput();
   bool text = false;
   bool value = false;
   String textValue = "";
-  String Buffer;
-  int Index = 0;
+  String buffer;
+  int index = 0;
   int aryindex = 0;
 };

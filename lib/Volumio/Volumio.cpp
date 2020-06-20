@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Volumio.h"
 
-//Uncomment line below to enable debugging messages on COM-port
-//#define DEBUG_VOLUMIO
-
+#include "LibDebug.h"
 #ifdef DEBUG_VOLUMIO
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)
@@ -371,8 +369,8 @@ bool Volumio::readState()
 void Volumio::process()
 {
   //cleanup a bit
-  while (jsonParser.next())
-    ;
+//  while (jsonParser.next())
+ //   ;
 
   unsigned long now = millis();
 

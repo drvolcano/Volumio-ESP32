@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DigitalPin.h"
 
+#include "LibDebug.h"
+
 void DigitalPin::begin(uint8_t pinNumber, uint8_t Mode)
 {
   pinNr = pinNumber;

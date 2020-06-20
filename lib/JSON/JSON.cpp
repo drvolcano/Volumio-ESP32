@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "JSON.h"
 
-//#define DEBUG_JSON
-
+#include "LibDebug.h"
 #ifdef DEBUG_JSON
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)
@@ -29,104 +28,100 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
-void JSON::Push()
+void JSON::stackPush()
 {
-  DEBUG_PRINTLN("");
-  DEBUG_PRINTLN("JSON: Push()");
-  DEBUG_PRINT("JSON: ");
-  stackpos++;
+  DEBUG_PRINTLN(" --> Push()");
+  DEBUG_PRINT("JSON: Read: ");
+  stackIndex++;
 }
 
-void JSON::Pop()
+void JSON::stackPop()
 {
-  DEBUG_PRINTLN("");
-  DEBUG_PRINTLN("JSON: Pop()");
-  DEBUG_PRINT("JSON: ");
-  stack[stackpos] = "";
-  stacktype[stackpos] = 0;
-  stackpos--;
-  Popped = true;
+  DEBUG_PRINTLN(" --> Pop()");
+  DEBUG_PRINT("JSON: Read: ");
+  stack[stackIndex] = "";
+  stackType[stackIndex] = 0;
+  stackIndex--;
+  popped = true;
 }
 
 String JSON::getPath()
 {
-
   String result = "";
 
-  for (int j = 0; j <= Count; j++)
+  for (int j = 0; j <= nodeCount; j++)
   {
-    if (NodeType[j] == Type_Class)
+    if (nodeType[j] == Type_Class)
       result += ".";
 
-    if (NodeType[j] == Type_Array)
+    if (nodeType[j] == Type_Array)
       result += "[";
 
-    result += Nodes[j];
+    result += nodes[j];
 
-    if (NodeType[j] == Type_Array)
+    if (nodeType[j] == Type_Array)
       result += "]";
   }
 
   return result;
 }
 
-void JSON::Print()
+void JSON::generateOutput()
 {
-
-  Count = stackpos;
+  nodeCount = stackIndex;
 
   for (int j = 0; j < 10; j++)
   {
-    Nodes[j] = stack[j];
-    NodeType[j] = stacktype[j];
+    nodes[j] = stack[j];
+    nodeType[j] = stackType[j];
 
-    if (j > stackpos)
-      Nodes[j] = "";
+    if (j > stackIndex)
+      nodes[j] = "";
   }
 
-  Value = textValue;
+  actualValue = textValue;
 }
 
 void JSON::initialize(CharStream *stream)
 {
   charStream = stream;
   fromStream = true;
-  Buffer = "";
-  stackpos = 0;
-  Index = 0;
-  Value = "";
+  buffer = "";
+  stackIndex = 0;
+  index = 0;
+  actualValue = "";
   text = false;
   value = false;
   lastwaspop = false;
 
-  DEBUG_PRINTLN("JSON: Connect to Stream ");
+  DEBUG_PRINTLN("JSON: initialize(CharSTream *Stream)");
 }
 
 void JSON::initialize(String Message)
 {
   fromStream = false;
-  Buffer = Message;
-  stackpos = 0;
-  Index = 0;
-  Value = "";
+  buffer = Message;
+  stackIndex = 0;
+  index = 0;
+  actualValue = "";
   text = false;
   value = false;
   lastwaspop = false;
 
-  DEBUG_PRINT("JSON: Load: ");
+  DEBUG_PRINT("JSON: initialize(String Message): ");
   DEBUG_PRINTLN(Message);
 }
 
 bool JSON::next()
 {
   DEBUG_PRINTLN("JSON: next()");
-  DEBUG_PRINT("JSON: ");
- 
-  Popped = false;
+  DEBUG_PRINT("JSON: Read: ");
 
-  Value = "";
+  popped = false;
 
-  while (Index < Buffer.length() || fromStream)
+  actualValue = "";
+
+  while (index < buffer.length() || fromStream)
   {
     bool doreturn;
 
@@ -143,12 +138,12 @@ bool JSON::next()
     }
     else
     {
-      c = Buffer[Index];
+      c = buffer[index];
       // DEBUG_PRINT("JSON: ");
       DEBUG_PRINT(c);
     }
 
-    Index++;
+    index++;
 
     if (text)
       if (c == '"')
@@ -156,25 +151,25 @@ bool JSON::next()
       else if (value)
         textValue += c;
       else
-        stack[stackpos] += c;
+        stack[stackIndex] += c;
     else
       switch (c)
       {
       case '{':
 
-        Push();
+        stackPush();
         value = false;
-        stacktype[stackpos] = Type_Class;
+        stackType[stackIndex] = Type_Class;
         break;
 
       case '[':
 
-        Push();
+        stackPush();
         value = true;
         textValue = "";
-        stacktype[stackpos] = Type_Array;
+        stackType[stackIndex] = Type_Array;
         aryindex = 0;
-        stack[stackpos] = String(aryindex);
+        stack[stackIndex] = String(aryindex);
         break;
 
       case '}':
@@ -182,15 +177,20 @@ bool JSON::next()
         doreturn = value;
 
         if (doreturn)
-          Print();
+          generateOutput();
 
         value = false;
-        Pop();
+        stackPop();
         lastwaspop = true;
 
         if (doreturn)
         {
           DEBUG_PRINTLN("");
+          DEBUG_PRINT("JSON: Result: ");
+          DEBUG_PRINT(getPath());
+          DEBUG_PRINT(" = ");
+          DEBUG_PRINTLN(getValue());
+
           return true;
         }
         break;
@@ -199,16 +199,21 @@ bool JSON::next()
         doreturn = value;
 
         if (doreturn)
-          Print();
+          generateOutput();
 
         value = false;
         textValue = "";
-        Pop();
+        stackPop();
         lastwaspop = true;
 
         if (doreturn)
         {
           DEBUG_PRINTLN("");
+          DEBUG_PRINT("JSON: Result: ");
+          DEBUG_PRINT(getPath());
+          DEBUG_PRINT(" = ");
+          DEBUG_PRINTLN(getValue());
+
           return true;
         }
         break;
@@ -219,20 +224,25 @@ bool JSON::next()
         break;
 
       case ',':
-        value = (stacktype[stackpos] == Type_Array);
+        value = (stackType[stackIndex] == Type_Array);
         doreturn = !lastwaspop;
 
         if (doreturn)
-          Print();
+          generateOutput();
 
-        if (stacktype[stackpos] == Type_Array)
-          stack[stackpos] = String(++aryindex);
+        if (stackType[stackIndex] == Type_Array)
+          stack[stackIndex] = String(++aryindex);
         else
-          stack[stackpos] = "";
+          stack[stackIndex] = "";
 
         if (doreturn)
         {
           DEBUG_PRINTLN("");
+          DEBUG_PRINT("JSON: Result: ");
+          DEBUG_PRINT(getPath());
+          DEBUG_PRINT(" = ");
+          DEBUG_PRINTLN(getValue());
+
           return true;
         }
         break;
@@ -252,5 +262,7 @@ bool JSON::next()
       }
   }
   DEBUG_PRINTLN("");
+  DEBUG_PRINTLN("JSON: END");
+
   return false;
 }

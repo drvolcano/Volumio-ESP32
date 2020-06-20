@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*#################################################################*/
 
 #include "Encoder.h"
-#include "Arduino.h"
+
+#include "LibDebug.h"
 
 void Encoder::begin(uint8_t PinA, uint8_t PinB, uint8_t Mode)
 {
