@@ -519,6 +519,8 @@ void setup()
   display.begin();
   display.enableUTF8Print();
 
+  UI.initialize(&display);
+
   //Initialize serial port for debugging
   Serial.begin(115200);
   delay(10);
@@ -1146,23 +1148,11 @@ void loop()
         {
 
           float SeekPercent = (float)volumio.State.seek / (float)volumio.State.duration / 1000.0;
-
-          float barlen = SeekPercent * (DisplayWidth - 4);
           float barBoxHeight = 8;
-          float barHeight = 4;
-
+    
           int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
 
-          display.setColorIndex(0);
-          display.drawRBox(0, posy, DisplayWidth, barBoxHeight, 0);
-          display.setColorIndex(1);
-
-          display.drawRFrame(0, posy, DisplayWidth, barBoxHeight, 0);
-
-          if (int(barlen) > 0)
-            display.drawRBox(2, posy + (barBoxHeight - barHeight) / 2, int(barlen), barHeight, 0);
-
-          display.setFont(StatusTextFont);
+          UI.drawProgressBar(0, posy, DisplayWidth, 0, SeekPercent);
 
           int trackMin = volumio.State.duration / 60;
           int trackSec = volumio.State.duration % 60;

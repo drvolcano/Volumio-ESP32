@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "define_text.h"
 #include "define_logo.h"
 #include "menu.h"
+#include "UiElements.h"
 
 /*#################################################################*\
 |* COM
@@ -59,6 +60,7 @@ DigitalPin LeftSwitch;
 DigitalPin RightSwitch;
 
 Volumio volumio;
+UiElements UI;
 
 /*#################################################################*\
 |* Volume
