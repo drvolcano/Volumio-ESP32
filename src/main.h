@@ -24,10 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Encoder.h"
 #include "config.h"
 #include "define_icons.h"
-#include "define_text.h"
 #include "define_logo.h"
 #include "menu.h"
 #include "UiElements.h"
+#include "Locale/Locale.h"
+//#include "Language.h"
 
 /*#################################################################*\
 |* COM
@@ -41,16 +42,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*#################################################################*/
 
 /*
-TouchPin TouchPin0;
-TouchPin TouchPin1;
-TouchPin TouchPin2;
-TouchPin TouchPin3;
-TouchPin TouchPin4;
-TouchPin TouchPin5;
-TouchPin TouchPin6;
-TouchPin TouchPin7;
-TouchPin TouchPin8;
-TouchPin TouchPin9;
+TouchPin touchPin0;
+TouchPin touchPin1;
+TouchPin touchPin2;
+TouchPin touchPin3;
+TouchPin touchPin4;
+TouchPin touchPin5;
+TouchPin touchPin6;
+TouchPin touchPin7;
+TouchPin touchPin8;
+TouchPin touchPin9;
 */
 
 Encoder leftEncoder;

@@ -73,28 +73,28 @@ String WiFiStatusString()
   switch (WiFi.status())
   {
   case WL_CONNECTED:
-    text = TEXT_WL_CONNECTED;
+    text = "WL_CONNECTED";
     break;
   case WL_NO_SHIELD:
-    text = TEXT_WL_NO_SHIELD;
+    text = "WL_CONNECTED";
     break;
   case WL_IDLE_STATUS:
-    text = TEXT_WL_IDLE_STATUS;
+    text = "WL_IDLE_STATUS";
     break;
   case WL_NO_SSID_AVAIL:
-    text = TEXT_WL_NO_SSID_AVAIL;
+    text = "WL_NO_SSID_AVAIL";
     break;
   case WL_SCAN_COMPLETED:
-    text = TEXT_WL_SCAN_COMPLETED;
+    text = "WL_SCAN_COMPLETED";
     break;
   case WL_CONNECT_FAILED:
-    text = TEXT_WL_CONNECT_FAILED;
+    text = "WL_CONNECT_FAILED";
     break;
   case WL_CONNECTION_LOST:
-    text = TEXT_WL_CONNECTION_LOST;
+    text = "WL_CONNECTION_LOST";
     break;
   case WL_DISCONNECTED:
-    text = TEXT_WL_DISCONNECTED;
+    text = "WL_DISCONNECTED";
     break;
   default:
     text = "???";
@@ -168,7 +168,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     menuPush();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     waitForSourceUpdate = true;
     volumio.getBrowseSources();
     break;
@@ -178,7 +178,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     menuPush();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
     waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
@@ -189,7 +189,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     menuPush();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
     waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
@@ -200,7 +200,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     menuPush();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
     waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
@@ -218,7 +218,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     menuPush();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
     waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
@@ -236,7 +236,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     menuPush();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
     waitForLibraryUpdate = true;
     volumio.browseLibrary(data);
@@ -447,8 +447,8 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     menuPush();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    genMenuItem(ICON_CLEAR, TEXT_CLEAR, MENU_QUEUE_CLEAR);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
+    genMenuItem(ICON_CLEAR, locale.TRACK_INFO_BAR.CLEAR_QUEUE, MENU_QUEUE_CLEAR);
     WaitForQueueUpdate = true;
     volumio.getQueue();
     break;
@@ -458,8 +458,8 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINTLN(data);
     volumio.clearQueue();
     genMenuStart();
-    genMenuItem(ICON_HOME, TEXT_HOME, MENU_HOME);
-    genMenuItem(ICON_CLEAR, TEXT_CLEAR, MENU_QUEUE_CLEAR);
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
+    genMenuItem(ICON_CLEAR,  locale.TRACK_INFO_BAR.CLEAR_QUEUE, MENU_QUEUE_CLEAR);
     WaitForQueueUpdate = true;
     volumio.getQueue();
     break;
@@ -515,6 +515,8 @@ void menuAction(MenuItemType type, String data)
 
 void setup()
 {
+  locale = Locale_en();
+
   //Initialize display
   display.begin();
   display.enableUTF8Print();
@@ -583,7 +585,7 @@ void loop()
     DEBUG_PRINT("WiFi: Status: ");
     DEBUG_PRINTLN(WiFiStatusString());
 
-    DisplayMessage(TEXT_CONNECT_WLAN);
+    DisplayMessage(locale.ESP.ConnectWiFi);
 
     int i = 0;
 
@@ -592,7 +594,7 @@ void loop()
       WiFi.disconnect();
 
       i++;
-      DisplayMessage("connect WiFi " + String(i));
+    //  DisplayMessage("connect WiFi " + String(i));
 
       DEBUG_PRINT("WiFi: Connecting to ");
       DEBUG_PRINTLN(ssid);
@@ -600,13 +602,13 @@ void loop()
       int laswtifistate = WiFi.status();
 
       WiFi.disconnect();
-      WiFi.begin(ssid, password);
+      WiFi.begin(ssid.c_str(), password.c_str());
 
       for (int i = 0; i < 10; i++)
       {
         DEBUG_PRINT("WiFi: Status: ");
         DEBUG_PRINTLN(WiFiStatusString());
-        DisplayMessage(WiFiStatusString());
+     //   DisplayMessage(WiFiStatusString());
 
         if (WiFi.status() == WL_CONNECTED)
           break;
@@ -620,14 +622,14 @@ void loop()
 
     DEBUG_PRINT("WiFi: IP address: ");
     DEBUG_PRINTLN(WiFi.localIP());
-    DisplayMessage("IP:" + WiFi.localIP().toString());
+  //  DisplayMessage("IP:" + WiFi.localIP().toString());
     DEBUG_PRINTLN();
   }
 
   //Check if Volumi (SocketIO) is connected. If not --> reconnect
   while (!volumio.getConnected())
   {
-    DisplayMessage(TEXT_CONNECT_VOLUMIO);
+    DisplayMessage(locale.ESP.ConnectVolumio);
 
     volumio.connect(host, port);
 
@@ -727,9 +729,9 @@ void loop()
         DEBUG_PRINT(": ");
         DEBUG_PRINTLN(volumio.LibraryInfo.uri);
 
-        genMenuItem(ICON_PLAY, TEXT_BROWSE_FOLDER_PLAY, MENU_BROWSE_FOLDER_PLAY, volumio.LibraryInfo.uri);
-        genMenuItem(ICON_LIST, TEXT_BROWSE_FOLDER_ADDTOQUEUE, MENU_BROWSE_FOLDER_ADDTOQUEUE, volumio.LibraryInfo.uri);
-        genMenuItem(ICON_LIST, TEXT_BROWSE_FOLDER_CLEARANDPLAY, MENU_BROWSE_FOLDER_CLEARANDPLAY, volumio.LibraryInfo.uri);
+        genMenuItem(ICON_PLAY, locale.BROWSER.PLAY, MENU_BROWSE_FOLDER_PLAY, volumio.LibraryInfo.uri);
+        genMenuItem(ICON_LIST, locale.BROWSER.ADD_TO_QUEUE, MENU_BROWSE_FOLDER_ADDTOQUEUE, volumio.LibraryInfo.uri);
+        genMenuItem(ICON_LIST, locale.BROWSER.CLEAR_AND_PLAY, MENU_BROWSE_FOLDER_CLEARANDPLAY, volumio.LibraryInfo.uri);
       }
 
       GenMenuEnd();
