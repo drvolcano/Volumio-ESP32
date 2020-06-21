@@ -42,9 +42,8 @@ struct StateStruct
     String disableVolumeControl;
     String stream;
     String updatedb;
-    String _volatile ;
+    String _volatile;
     String service;
-
 };
 
 struct LibraryPrevStruct
@@ -131,4 +130,18 @@ struct MultroomDeviceStruct
     String type;
     String volumeAvailable;
     MultroomStateStruct state;
+};
+
+struct UiSettingsBackgroundStruct
+{
+    String title;
+    String path;
+};
+
+struct UiSettingsStruct
+{
+    UiSettingsBackgroundStruct background;
+    String language;
+    String theme;
+    String playMethod;
 };

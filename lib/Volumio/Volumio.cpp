@@ -434,7 +434,7 @@ bool Volumio::readMultiRoomDevice()
   {
     DEBUG_PRINT("Volumio: readMultiRoomDevice(): ");
     DEBUG_PRINT(jsonParser.getPath());
-    DEBUG_PRINT(" =");
+    DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(jsonParser.getValue());
 
     if (jsonParser.getNode() == "id")
@@ -473,12 +473,58 @@ bool Volumio::readMultiRoomDevice()
   return false;
 }
 
+bool Volumio::readUiSettings()
+{
+  if (pushType != pushUiSettings)
+  {
+    DEBUG_PRINTLN("Volumio: readUiSettings(): ERROR, no data avaliable");
+    return false;
+  }
+
+  CurrentUiSettings.background.title = "";
+  CurrentUiSettings.background.path = "";
+  CurrentUiSettings.language = "";
+  CurrentUiSettings.playMethod = "";
+  CurrentUiSettings.theme = "";
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readUiSettings(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getNode() == "title")
+      CurrentUiSettings.background.title = jsonParser.getValue();
+    else if (jsonParser.getNode() == "path")
+      CurrentUiSettings.background.path = jsonParser.getValue();
+    else if (jsonParser.getNode() == "language")
+      CurrentUiSettings.language = jsonParser.getValue();
+    else if (jsonParser.getNode() == "theme")
+      CurrentUiSettings.theme = jsonParser.getValue();
+    else if (jsonParser.getNode() == "playMethod")
+      CurrentUiSettings.playMethod = jsonParser.getValue();
+
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+  }
+
+  return false;
+}
+
 void Volumio::process()
 {
   //cleanup, just in case application didnt read all data
   if (pushType != pushNone)
     while (jsonParser.next())
-      ;
+    {
+      DEBUG_PRINT("Volumio: process(): unhandled: ");
+      DEBUG_PRINT(jsonParser.getPath());
+      DEBUG_PRINT(" = ");
+      DEBUG_PRINTLN(jsonParser.getValue());
+    }
 
   unsigned long now = millis();
 
@@ -498,7 +544,7 @@ void Volumio::process()
     //Process data as long as data generates lines
     if (jsonParser.next())
     {
-      DEBUG_PRINT("Volumio: process(): Receive:");
+      DEBUG_PRINT("Volumio: process(): Receive: ");
       DEBUG_PRINTLN(jsonParser.getValue());
 
       if (jsonParser.getValue() == "pushToastMessage")
@@ -523,15 +569,10 @@ void Volumio::process()
         pushType = pushState;
       else if (jsonParser.getValue() == "pushMultiRoomDevices")
         pushType = pushMultiRoomDevices;
+      else if (jsonParser.getValue() == "pushUiSettings")
+        pushType = pushUiSettings;
       else
-      {
-        while (jsonParser.next())
-        {
-          DEBUG_PRINT(jsonParser.getPath());
-          DEBUG_PRINT(" =");
-          DEBUG_PRINTLN(jsonParser.getValue());
-        }
-      }
+        pushType = pushUnknown;
     }
   }
 }

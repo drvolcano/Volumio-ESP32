@@ -459,7 +459,7 @@ void menuAction(MenuItemType type, String data)
     volumio.clearQueue();
     genMenuStart();
     genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
-    genMenuItem(ICON_CLEAR,  locale.TRACK_INFO_BAR.CLEAR_QUEUE, MENU_QUEUE_CLEAR);
+    genMenuItem(ICON_CLEAR, locale.TRACK_INFO_BAR.CLEAR_QUEUE, MENU_QUEUE_CLEAR);
     WaitForQueueUpdate = true;
     volumio.getQueue();
     break;
@@ -594,7 +594,7 @@ void loop()
       WiFi.disconnect();
 
       i++;
-    //  DisplayMessage("connect WiFi " + String(i));
+      //  DisplayMessage("connect WiFi " + String(i));
 
       DEBUG_PRINT("WiFi: Connecting to ");
       DEBUG_PRINTLN(ssid);
@@ -608,7 +608,7 @@ void loop()
       {
         DEBUG_PRINT("WiFi: Status: ");
         DEBUG_PRINTLN(WiFiStatusString());
-     //   DisplayMessage(WiFiStatusString());
+        //   DisplayMessage(WiFiStatusString());
 
         if (WiFi.status() == WL_CONNECTED)
           break;
@@ -622,7 +622,7 @@ void loop()
 
     DEBUG_PRINT("WiFi: IP address: ");
     DEBUG_PRINTLN(WiFi.localIP());
-  //  DisplayMessage("IP:" + WiFi.localIP().toString());
+    //  DisplayMessage("IP:" + WiFi.localIP().toString());
     DEBUG_PRINTLN();
   }
 
@@ -638,6 +638,7 @@ void loop()
     else
     {
       volumio.getState();
+      volumio.getUiSettings();
 
       menuMain();
     }
@@ -808,6 +809,23 @@ void loop()
 
     while (volumio.readMultiRoomDevice())
       ;
+
+    break;
+
+  case Volumio::pushUiSettings:
+    DEBUG_PRINTLN("Main: Volumio: pushUiSettings");
+
+    volumio.readUiSettings();
+
+    DEBUG_PRINT("Main: language = ");
+    DEBUG_PRINTLN(volumio.CurrentUiSettings.language);
+
+    if (volumio.CurrentUiSettings.language == "de")
+      locale = Locale_de();
+    else
+      locale = Locale_en();
+
+    menuMain();
 
     break;
 

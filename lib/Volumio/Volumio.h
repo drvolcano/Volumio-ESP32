@@ -32,7 +32,9 @@ public:
     pushQueue,
     pushBrowseLibrary,
     pushToastMessage,
-    pushMultiRoomDevices
+    pushMultiRoomDevices,
+    pushUiSettings,
+    pushUnknown
   };
 
   //Pushed states
@@ -44,6 +46,7 @@ public:
   QueueItemStruct CurrentQueueItem;
   ToastStruct CurrentToastItem;
   MultroomDeviceStruct CurrentMultiRoomDevice;
+  UiSettingsStruct CurrentUiSettings;
 
   //New State received
   PushType getPushType() { return pushType; };
@@ -62,6 +65,7 @@ public:
   bool readPushToastMessage();
   bool readState();
   bool readMultiRoomDevice();
+  bool readUiSettings();
 
   //Commands
   void getState();
