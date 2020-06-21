@@ -53,14 +53,14 @@ TouchPin TouchPin8;
 TouchPin TouchPin9;
 */
 
-Encoder LeftEncoder;
-Encoder RightEncoder;
+Encoder leftEncoder;
+Encoder rightEncoder;
 
-DigitalPin LeftSwitch;
-DigitalPin RightSwitch;
+DigitalPin leftSwitch;
+DigitalPin rightSwitch;
 
 Volumio volumio;
-UiElements UI;
+UiElements ui;
 
 /*#################################################################*\
 |* Volume
@@ -68,34 +68,31 @@ UiElements UI;
 
 int startvolume = 0;
 int startcnt = 0;
-
 int newvolume = 0;
 long laststop = 0;
 long lastsetvolume = 0;
 long lastsendvolume = 0;
-long lastinput =0;
-
+long lastinput = 0;
 bool waitvolumechange = false;
 
 /*#################################################################*\
 |* Display
 \*#################################################################*/
 
-bool volumedisplay = false;
+bool volumeDisplay = false;
 bool statusDisplay = true;
-bool ToastDisplay= false;
-long ToastStart = 0;
-bool NoDisplay= false;
+bool toastDisplay = false;
+long toastStart = 0;
+bool noDisplay = false;
 
 long lastscroll = 0;
-int scrollbuffer= 0;
-long lastscreenshot =0;
-long lastmenuchange =0;
-
+int scrollbuffer = 0;
+long lastscreenshot = 0;
+long lastmenuchange = 0;
 
 u8g2_uint_t line1_offset; // current offset for the scrolling text
 u8g2_uint_t line2_offset; // current offset for the scrolling text
-u8g2_uint_t item_offset; // current offset for the scrolling text
+u8g2_uint_t item_offset;  // current offset for the scrolling text
 
 u8g2_uint_t line1_width;
 u8g2_uint_t line2_width;

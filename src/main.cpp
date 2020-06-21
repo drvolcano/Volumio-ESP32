@@ -106,25 +106,25 @@ String WiFiStatusString()
 //Interrupt: left encoder Pin A changed
 void IRAM_ATTR ISR_LeftEncoder_A()
 {
-  LeftEncoder.A_CHANGED();
+  leftEncoder.A_CHANGED();
 }
 
 //Interrupt: left encoder Pin B changed
 void IRAM_ATTR ISR_LeftEncoder_B()
 {
-  LeftEncoder.B_CHANGED();
+  leftEncoder.B_CHANGED();
 }
 
 //Interrupt: right encoder Pin A changed
 void IRAM_ATTR ISR_RightEncoder_A()
 {
-  RightEncoder.A_CHANGED();
+  rightEncoder.A_CHANGED();
 }
 
 //Interrupt: right encoder Pin B changed
 void IRAM_ATTR ISR_RightEncoder_B()
 {
-  RightEncoder.B_CHANGED();
+  rightEncoder.B_CHANGED();
 }
 
 void menuAction(MenuItemType type, String data)
@@ -134,7 +134,7 @@ void menuAction(MenuItemType type, String data)
   waitForSourceUpdate = false;
   WaitForQueueUpdate = false;
   waitForLibraryUpdate = false;
-  restore = false;
+  restoreMenuPosition = false;
 
   switch (type)
   {
@@ -142,7 +142,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_HOME");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    restore = true;
+    restoreMenuPosition = true;
     menuMain();
     break;
   case MENU_BACK:
@@ -153,7 +153,7 @@ void menuAction(MenuItemType type, String data)
     //Same effect as jumping one up, but minimizes stack size because only action, not full menu can be stored
     menuPop();
     menuPop();
-    restore = true;
+    restoreMenuPosition = true;
     menuAction(menuStack[menuStackIndex].Type, menuStack[menuStackIndex].Data);
     break;
   case MENU_STATUS:
@@ -508,7 +508,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_DARK");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    NoDisplay = true;
+    noDisplay = true;
     break;
   }
 }
@@ -519,7 +519,7 @@ void setup()
   display.begin();
   display.enableUTF8Print();
 
-  UI.initialize(&display);
+  ui.initialize(&display);
 
   //Initialize serial port for debugging
   Serial.begin(115200);
@@ -533,20 +533,20 @@ void setup()
   WiFi.mode(WIFI_STA);
 
   //Initialize left encoder
-  LeftEncoder.begin(PIN_LeftEncoder_CLK, PIN_LeftEncoder_DT, INPUT_PULLUP);
+  leftEncoder.begin(PIN_LeftEncoder_CLK, PIN_LeftEncoder_DT, INPUT_PULLUP);
   attachInterrupt(PIN_LeftEncoder_CLK, ISR_LeftEncoder_A, CHANGE);
   attachInterrupt(PIN_LeftEncoder_DT, ISR_LeftEncoder_B, CHANGE);
 
   //Initialize right encoder
-  RightEncoder.begin(PIN_RightEncoder_CLK, PIN_RightEncoder_DT, INPUT_PULLUP);
+  rightEncoder.begin(PIN_RightEncoder_CLK, PIN_RightEncoder_DT, INPUT_PULLUP);
   attachInterrupt(PIN_RightEncoder_CLK, ISR_RightEncoder_A, CHANGE);
   attachInterrupt(PIN_RightEncoder_DT, ISR_RightEncoder_B, CHANGE);
 
   //Initialize push button of left encoder
-  LeftSwitch.begin(PIN_LeftEncoder_SW, INPUT_PULLUP);
+  leftSwitch.begin(PIN_LeftEncoder_SW, INPUT_PULLUP);
 
   //Initialize push button of right encoder
-  RightSwitch.begin(PIN_RightEncoder_SW, INPUT_PULLUP);
+  rightSwitch.begin(PIN_RightEncoder_SW, INPUT_PULLUP);
 
   //Capacitive touch pins
   //actually not used
@@ -667,10 +667,10 @@ void loop()
 
       GenMenuEnd();
 
-      if (restore && false)
+      if (restoreMenuPosition && false)
       {
-        restore = false;
-        LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+        restoreMenuPosition = false;
+        leftEncoder.setValue(menuStack[menuStackIndex].Position);
         menuOffset = menuStack[menuStackIndex].Offset;
       }
     }
@@ -734,10 +734,10 @@ void loop()
 
       GenMenuEnd();
 
-      if (restore && false)
+      if (restoreMenuPosition && false)
       {
-        restore = false;
-        LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+        restoreMenuPosition = false;
+        leftEncoder.setValue(menuStack[menuStackIndex].Position);
         menuOffset = menuStack[menuStackIndex].Offset;
       }
     }
@@ -766,10 +766,10 @@ void loop()
 
       GenMenuEnd();
 
-      if (restore && false)
+      if (restoreMenuPosition && false)
       {
-        restore = false;
-        LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+        restoreMenuPosition = false;
+        leftEncoder.setValue(menuStack[menuStackIndex].Position);
         menuOffset = menuStack[menuStackIndex].Offset;
       }
     }
@@ -785,8 +785,10 @@ void loop()
 
     if (volumio.readPushToastMessage())
     {
-      ToastDisplay = true;
-      ToastStart = now;
+      if (durationShowToast > 0)
+        toastDisplay = true;
+
+      toastStart = now;
     }
 
     break;
@@ -832,23 +834,23 @@ void loop()
   |* Left switch - navigate through menu
   \*#################################################################*/
 
-  LeftSwitch.process();
+  leftSwitch.process();
 
-  if (LeftSwitch.getPressed())
+  if (leftSwitch.getPressed())
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
     lastmenuchange = now;
 
     //Activate display if not switched on
-    if (NoDisplay)
-      NoDisplay = false;
+    if (noDisplay)
+      noDisplay = false;
     else
     {
       //Cancel display of toast message if displayed
-      if (ToastDisplay)
+      if (toastDisplay)
       {
-        ToastDisplay = false;
+        toastDisplay = false;
       }
       //Switch to menu if status is displayed
       else if (statusDisplay)
@@ -867,16 +869,16 @@ void loop()
   |* Right switch - toggle play/pause (play/stop on radio)
   \*#################################################################*/
 
-  RightSwitch.process();
+  rightSwitch.process();
 
-  if (RightSwitch.getReleased())
+  if (rightSwitch.getReleased())
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
 
     //Activate display if not switched on
-    if (NoDisplay)
-      NoDisplay = false;
+    if (noDisplay)
+      noDisplay = false;
     //Toggler play/pause
     else
       volumio.toggle();
@@ -886,9 +888,9 @@ void loop()
   |* Left rotary encoder - scroll through menu
   \*#################################################################*/
 
-  LeftEncoder.process();
+  leftEncoder.process();
 
-  if (LeftEncoder.getChanged())
+  if (leftEncoder.getChanged())
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
@@ -902,22 +904,21 @@ void loop()
   }
   else
   {
-
-    if (restore && !waitForLibraryUpdate && !WaitForQueueUpdate && !waitForSourceUpdate)
+    if (restoreMenuPosition && !waitForLibraryUpdate && !WaitForQueueUpdate && !waitForSourceUpdate)
     {
-      restore = false;
-      LeftEncoder.setValue(menuStack[menuStackIndex].Position);
+      restoreMenuPosition = false;
+      leftEncoder.setValue(menuStack[menuStackIndex].Position);
       menuOffset = menuStack[menuStackIndex].Offset;
     }
 
     //Limit encoder value to menu length
-    if (LeftEncoder.getValue() > (MenuLength - 1))
-      LeftEncoder.setValue(MenuLength - 1);
-    if (LeftEncoder.getValue() < 0)
-      LeftEncoder.setValue(0);
+    if (leftEncoder.getValue() > (MenuLength - 1))
+      leftEncoder.setValue(MenuLength - 1);
+    if (leftEncoder.getValue() < 0)
+      leftEncoder.setValue(0);
 
     //Position of menu = encoder-value
-    menuPosition = LeftEncoder.getValue();
+    menuPosition = leftEncoder.getValue();
 
     //Scroll menu when encoder reaches lower end of screen
     if (menuPosition >= MenuVisibleItems + menuOffset - 1)
@@ -932,31 +933,30 @@ void loop()
   |* Right rotary encoder - volume up/down
   \*#################################################################*/
 
-  RightEncoder.process();
+  rightEncoder.process();
 
-  if (RightEncoder.getChanged())
+  if (rightEncoder.getChanged())
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
 
     //Show volume progress bar
-    volumedisplay = true;
+    volumeDisplay = true;
     lastsetvolume = now;
 
-    newvolume = startvolume - ((RightEncoder.getValue() - startcnt));
+    newvolume = startvolume - ((rightEncoder.getValue() - startcnt));
 
-    if (newvolume < VolumeMinimum)
-      newvolume = VolumeMinimum;
+    if (newvolume < volumeMinimum)
+      newvolume = volumeMinimum;
 
-    if (newvolume > VolumeMaximum)
-      newvolume = VolumeMaximum;
+    if (newvolume > volumeMaximum)
+      newvolume = volumeMaximum;
   }
 
-  if (volumedisplay)
+  if (volumeDisplay)
   {
     if (volumio.State.volume != newvolume)
-      //  if (!waitvolumechange)
-      if (now > lastsendvolume + VolumeSetDelay)
+      if (now > lastsendvolume + volumeSetInterval)
       {
         waitvolumechange = true;
         volumio.volume(newvolume);
@@ -966,10 +966,9 @@ void loop()
   //Memorize start values when volume update not in progress
   else
   {
-    startcnt = RightEncoder.getValue();
+    startcnt = rightEncoder.getValue();
     startvolume = volumio.State.volume;
     lastsendvolume = 0;
-    //    waitvolumechange = false;
   }
 
   /*#################################################################*\
@@ -978,28 +977,28 @@ void loop()
 
   //After some time without action automatically go back to status display
   if (delayBackStatus > 0)
-    if (now - lastinput > delayBackStatus && volumio.State.status != "")
+    if (now > lastinput + delayBackStatus && volumio.State.status != "")
       statusDisplay = true;
 
   //After some time without action automatically switch off display
   if (delayDisplayOff > 0)
-    if (now - lastinput > delayDisplayOff && volumio.State.status != "")
-      NoDisplay = true;
+    if (now > lastinput + delayDisplayOff && volumio.State.status != "")
+      noDisplay = true;
 
   //After some time without action automatically switch off display, when in stop
   if (delayDisplayOffWhenNotPlay > 0)
-    if (now - lastinput > delayDisplayOffWhenNotPlay && volumio.State.status != "" && volumio.State.status != "play")
-      NoDisplay = true;
+    if (now > lastinput + delayDisplayOffWhenNotPlay && volumio.State.status != "" && volumio.State.status != "play")
+      noDisplay = true;
 
   //Duration of toast display
-  if (ToastDisplay)
-    if (now > ToastStart + ToastDuration)
-      ToastDisplay = false;
+  if (toastDisplay)
+    if (now > toastStart + durationShowToast)
+      toastDisplay = false;
 
   //Close progressbar after given time
-  if (volumedisplay)
-    if ((now - lastsetvolume) > VolumeDuration)
-      volumedisplay = false;
+  if (volumeDisplay)
+    if (now > lastsetvolume + durationShowVolume)
+      volumeDisplay = false;
 
   /*#################################################################*\
   |* Display
@@ -1012,14 +1011,14 @@ void loop()
   do
   {
     //Display off
-    if (NoDisplay)
+    if (noDisplay)
     {
     }
     //Display on
     else
     {
       //Display toast message from Volumio
-      if (ToastDisplay)
+      if (toastDisplay)
       {
         display.setFont(ToastTextFont);
         int y = 0;
@@ -1069,7 +1068,7 @@ void loop()
             display.drawUTF8(0, 13 + MenuItemHeight * y++, block.c_str());
           }
 
-          display.drawLine(0, 63, (int)(DisplayWidth * ((float)(ToastStart + ToastDuration - now)) / (float)ToastDuration), 63);
+          display.drawLine(0, 63, (int)(DisplayWidth * ((float)(toastStart + durationShowToast - now)) / (float)durationShowToast), 63);
         }
       }
       //Display player status
@@ -1131,7 +1130,7 @@ void loop()
               display.drawUTF8(x, 48, line1.c_str());
 
               //second text
-              x += line1_width + scrollGap;
+              x += line1_width + scrollGapStatus;
             } while (x < DisplayWidth);
         }
 
@@ -1151,7 +1150,7 @@ void loop()
               display.drawUTF8(x, 48 + 16, line2.c_str());
 
               //second text
-              x += line2_width + scrollGap;
+              x += line2_width + scrollGapStatus;
             } while (x < DisplayWidth);
         }
 
@@ -1163,7 +1162,7 @@ void loop()
 
           int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
 
-          UI.drawProgressBar(4, posy, DisplayWidth - 8, 0, SeekPercent);
+          ui.drawProgressBar(4, posy, DisplayWidth - 8, 0, SeekPercent);
 
           int trackMin = volumio.State.duration / 60;
           int trackSec = volumio.State.duration % 60;
@@ -1198,7 +1197,7 @@ void loop()
               display.setFont(MenuTextFont);
               item_width = display.getUTF8Width(Menu[i + menuOffset].Text.c_str()) + MenuItemHeight;
 
-              if (item_width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu)
+              if (item_width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu || delayScrollMenu == 0)
               {
                 item_offset = 0;
                 display.setFont(MenuTextFont);
@@ -1252,10 +1251,10 @@ void loop()
       }
 
       //Display volume
-      if (volumedisplay)
+      if (volumeDisplay)
       {
         //   float VolumePercent = float(volumio.State.volume) / (float)VolumeMaximum;
-        float VolumePercent = float(newvolume) / (float)VolumeMaximum;
+        float VolumePercent = float(newvolume) / (float)volumeMaximum;
 
         float barlen = VolumePercent * (DisplayWidth - 4);
         float barBoxHeight = 8;
@@ -1294,10 +1293,10 @@ void loop()
   }
 
   //Restart scrolling when at end
-  if ((u8g2_uint_t)line1_offset < (u8g2_uint_t)-line1_width - scrollGap)
+  if ((u8g2_uint_t)line1_offset < (u8g2_uint_t)-line1_width - scrollGapStatus)
     line1_offset = 0;
 
-  if ((u8g2_uint_t)line2_offset < (u8g2_uint_t)-line2_width - scrollGap)
+  if ((u8g2_uint_t)line2_offset < (u8g2_uint_t)-line2_width - scrollGapStatus)
     line2_offset = 0;
 
   if ((u8g2_uint_t)item_offset < (u8g2_uint_t)-item_width - scrollGapMenu)
@@ -1311,7 +1310,6 @@ void loop()
   //only receiving 8 lines with empty pixels
   while (Serial.available())
   {
-
     switch (Serial.read())
     {
     //Screenshot

@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*#################################################################*/
 
 //WiFi
-char ssid[] = "FRITZ!Box 6591 Cable CW";
-char password[] = "09806196161046264509";
+String ssid = "FRITZ!Box 6591 Cable CW";
+String password = "09806196161046264509";
 
 //Volumio
-char host[] = "volumio";
+String host = "volumio";
 int port = 80;
 
 //Touch-pins
@@ -51,36 +51,43 @@ int port = 80;
 //Right encoder
 #define PIN_RightEncoder_SW 33 //blocks one touch pin
 #define PIN_RightEncoder_DT 32 //blocks one touch pin
-#define PIN_RightEncoder_CLK 35 //not good, has no pullup!
+#define PIN_RightEncoder_CLK 35 //not good, has no pullup, to be changed in future!
 
 //Min and Max possible volume on my System, standard would be 0-100
-int VolumeMinimum = 0;
-int VolumeMaximum = 40;
-long VolumeSetDelay = 300; //ms
-long VolumeDuration = 2 * 1000; //ms
+int volumeMinimum = 0;
+int volumeMaximum = 40;
 
-
-//How long toest messages are displayed
-long ToastDuration = 5 * 1000; //ms
+//How often the volume is sent to Volumio when different
+long volumeSetInterval = 300; //ms
 
 //scroll one pixel each x ms
 long ScrollInterval = 10; //ms
 
 //Gap between end and start of scrolling text
-u8g2_uint_t scrollGap = 32;//px
-
+u8g2_uint_t scrollGapStatus = 32;//px
 u8g2_uint_t scrollGapMenu = 16;//px
 
-//How long menu must stand still until scrolling starts
+
+/*#################################################################*\
+|* Delays
+\*#################################################################*/
+
+//How long volume bar is displayed after last change ( 0 deactivates function)
+long durationShowVolume = 2 * 1000; //ms
+
+//How long toest messages are displayed ( 0 deactivates toast display)
+long durationShowToast = 5 * 1000; //ms
+
+//How long menu must stand still until scrolling starts, when texts are too long (0 deactivates function)
 long delayScrollMenu = 1 * 1000; //ms
 
-//After x ms without operation go back to status display
-long delayBackStatus = 30* 1000;//ms
+//After x ms without operation go back to status display (0 deactivates function)
+long delayBackStatus = 30 * 1000;//ms
 
-//After x ms without operation switch display off, if not play
+//After x ms without operation switch display off, if not play (0 deactivates function)
 long delayDisplayOffWhenNotPlay = 60 * 1000; //ms
 
-//After x ms without operation switch display off
+//After x ms without operation switch display off (0 deactivates function)
 long delayDisplayOff = 0; //ms
 
 //###########################################################

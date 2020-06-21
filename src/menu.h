@@ -54,7 +54,7 @@ struct StackStruct
   int Offset;
 };
 
-bool restore = false;
+bool restoreMenuPosition = false;
 
 MenuStruct Menu[200];
 int menuPosition = 0;
