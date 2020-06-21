@@ -1,1 +1,0 @@
-https://github.com/volumio/Volumio2-UI/tree/development/src/app/i18n
