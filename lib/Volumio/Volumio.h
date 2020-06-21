@@ -35,9 +35,8 @@ public:
     pushMultiRoomDevices
   };
 
-  //State of system
+  //Pushed states
   StateStruct State;
-
   SourceStruct CurrentSourceItem;
   LibraryItemStruct CurrentLibraryItem;
   LibraryInfoStruct LibraryInfo;
