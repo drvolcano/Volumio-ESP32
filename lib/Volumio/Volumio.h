@@ -17,105 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
-
 #include "SocketIO.h"
+#include "Structs.h"
 
 class Volumio
 {
-
-  struct StateStruct
-  {
-    String status;
-    String position;
-    String title;
-    String artist;
-    String album;
-    String albumart;
-    String uri;
-    String trackType;
-    unsigned long seek;
-    unsigned long duration;
-    String samplerate;
-    String bitdepth;
-    String channels;
-    String random;
-    String repeat;
-    String repeatSingle;
-    String consume;
-    unsigned int volume;
-    String mute;
-    String disableVolumeControl;
-    String stream;
-    String updatedb;
-    //     String volatile ;
-    String service;
-    String Streaming;
-  };
-
-  struct LibraryPrevStruct
-  {
-
-    String uri;
-  };
-
-  struct LibraryInfoStruct
-  {
-
-    String uri;
-    String title;
-    String service;
-    String type;
-    String albumart;
-  };
-
-  struct LibraryItemStruct
-  {
-    String service;
-    String type;
-    String title;
-    String artist;
-    String album;
-    String uri;
-    String albumart;
-    String tracknumber;
-    String duration;
-    String trackType;
-    String icon;
-  };
-
-  struct QueueItemStruct
-  {
-    String uri;
-    String service;
-    String name;
-    String artist;
-    String album;
-    String type;
-    String tracknumber;
-    String albumart;
-    String duration;
-    String samplerate;
-    String bitdepth;
-    String trackType;
-    String channels;
-  };
-
-  struct SourceStruct
-  {
-    String albumart;
-    String name;
-    String uri;
-    String plugin_type;
-    String plugin_name;
-    String icon;
-  };
-
-  struct ToastStruct
-  {
-    String type;
-    String title;
-    String message;
-  };
 
 public:
   enum PushType
@@ -138,6 +44,7 @@ public:
   LibraryPrevStruct LibraryPrev;
   QueueItemStruct CurrentQueueItem;
   ToastStruct CurrentToastItem;
+  MultroomDeviceStruct CurrentMultiRoomDevice;
 
   //New State received
   PushType getPushType() { return pushType; };

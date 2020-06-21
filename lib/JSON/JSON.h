@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
-
 #include "Arduino.h"
 #include "CharStream.h"
 
@@ -31,11 +30,13 @@ public:
   String getValue() { return actualValue; }
   String getPath();
   String getNode(int i) { return nodes[i]; }
+  String getNode() { return nodes[nodeCount]; }
+  String getParent() { return nodes[nodeCount - 1]; }
+
   int getLevel() { return nodeCount; }
   int getBlockEnd() { return popped; }
 
 private:
-
 #define Type_None 0
 #define Type_Class 1
 #define Type_Array 2
