@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
+//https://github.com/volumio/volumio-graphic-resources
+//Converted myself using InkScape and Paint
+
 //Big Volumio logo
 static int logo_volumio_big_width = 105;
 static int  logo_volumio_big_height = 13;
