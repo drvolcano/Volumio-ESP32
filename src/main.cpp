@@ -798,6 +798,17 @@ void loop()
     waitvolumechange = false;
 
     break;
+
+  case Volumio::pushMultiRoomDevices:
+    DEBUG_PRINTLN("Main: Volumio: pushMultiRoomDevices");
+
+    while (volumio.readMultiRoomDevice())
+      ;
+
+    break;
+
+  case Volumio::pushNone:
+    break;
   }
 
   /*#################################################################*\
@@ -1149,10 +1160,10 @@ void loop()
 
           float SeekPercent = (float)volumio.State.seek / (float)volumio.State.duration / 1000.0;
           float barBoxHeight = 8;
-    
+
           int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
 
-          UI.drawProgressBar(4, posy, DisplayWidth-8, 0, SeekPercent);
+          UI.drawProgressBar(4, posy, DisplayWidth - 8, 0, SeekPercent);
 
           int trackMin = volumio.State.duration / 60;
           int trackSec = volumio.State.duration % 60;

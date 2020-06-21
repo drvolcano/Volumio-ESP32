@@ -155,6 +155,7 @@ public:
   bool readLibraryPrev();
   bool readPushToastMessage();
   bool readState();
+  bool readMultiRoomDevice();
 
   //Commands
   void getState();

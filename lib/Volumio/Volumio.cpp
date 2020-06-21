@@ -374,6 +374,28 @@ bool Volumio::readState()
   DEBUG_PRINTLN("");
 }
 
+bool Volumio::readMultiRoomDevice()
+{
+  if (pushType != pushMultiRoomDevices)
+  {
+    DEBUG_PRINTLN("Volumio: readMultiRoomDevice(): ERROR, no data avaliable");
+    return false;
+  }
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readMultiRoomDevice(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getBlockEnd())
+      return true;
+  }
+
+  return false;
+}
+
 void Volumio::process()
 {
   //cleanup, just in case application didnt read all data
