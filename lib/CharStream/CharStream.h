@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+//prototype for char stream classes (Inflate)
 class CharStream
 {
   public:
