@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "SocketIO.h"
 
 #include "LibDebug.h"
-#ifdef DEBUG_SOCKETIO
+#if (DEBUGLEVEL_SOCKETIO >= 1)
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)
 #else
@@ -47,8 +47,13 @@ bool SocketIO::connect(String hostname, int portnr)
   mem_hostname = hostname;
   mem_portnr = portnr;
 
-  writeLine("GET /socket.io/?transport=polling HTTP/1.1");
+  writeLine("GET /socket.io/?EIO=3&transport=polling HTTP/1.1");
   writeLine("Host: " + hostname);
+  //writeLine("Connection: keep-alive");
+  //writeLine("Accept: */*");
+  //writeLine("Origin: ");
+  //writeLine("Referer: ");
+
   writeLine("");
   DEBUG_PRINTLN(F(""));
 
@@ -77,7 +82,7 @@ bool SocketIO::connect(String hostname, int portnr)
 
   DEBUG_PRINTLN("");
 
-
+  //read 00 09 07 FF
   for (int i = 0; i < 4; i++)
     DEBUG_PRINTLN("C:" + String(client.read()));
 
@@ -112,13 +117,17 @@ bool SocketIO::connect(String hostname, int portnr)
 
   String keytext = genKey();
 
-  writeLine("GET /socket.io/?transport=websocket&sid=" + sid + " HTTP/1.1");
+  writeLine("GET /socket.io/?EIO=3&transport=websocket&sid=" + sid + " HTTP/1.1");
   writeLine("Host: " + hostname);
-  writeLine("Upgrade: websocket");
   writeLine("Connection: Upgrade");
+  writeLine("Pragma: no-cache");
+  writeLine("Cache-Control: no-cache");
+  writeLine("Upgrade: websocket");
   writeLine("Sec-WebSocket-Version: 13");
-  writeLine("Sec-WebSocket-Extensions: permessage-deflate");
+  writeLine("Accept-Encoding: deflate");
+  writeLine("Cookie: io=" + sid);
   writeLine("Sec-WebSocket-Key: " + keytext); //16 byte in Base64
+  writeLine("Sec-WebSocket-Extensions: permessage-deflate");
   writeLine("");
 
   DEBUG_PRINTLN(F(""));

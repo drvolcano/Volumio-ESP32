@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "JSON.h"
 
 #include "LibDebug.h"
-#ifdef DEBUG_JSON
+#if (DEBUGLEVEL_JSON >= 1)
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)
 #else
@@ -28,21 +28,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
+#if (DEBUGLEVEL_JSON >= 2)
+#define DEBUG_PRINTLN_LVL2(x) Serial.println(x)
+#define DEBUG_PRINT_LVL2(x) Serial.print(x)
+#else
+#define DEBUG_PRINTLN_LVL2(x)
+#define DEBUG_PRINT_LVL2(x)
+#endif
+
 void JSON::stackPush()
 {
-  DEBUG_PRINTLN(" --> Push()");
-  DEBUG_PRINT("JSON: Read: ");
+  DEBUG_PRINTLN_LVL2("");
+  DEBUG_PRINT_LVL2("JSON: stackPush(): ");
+  DEBUG_PRINT_LVL2(stackIndex);
+
   stackIndex++;
+
+  DEBUG_PRINT_LVL2(" --> ");
+  DEBUG_PRINT_LVL2(stackIndex);
+  DEBUG_PRINT_LVL2("JSON: next(): read: ");
 }
 
 void JSON::stackPop()
 {
-  DEBUG_PRINTLN(" --> Pop()");
-  DEBUG_PRINT("JSON: Read: ");
+  DEBUG_PRINTLN_LVL2("");
+  DEBUG_PRINT_LVL2("JSON: stackPop(): ");
+  DEBUG_PRINT_LVL2(stackIndex);
+
   stack[stackIndex] = "";
   stackType[stackIndex] = 0;
   stackIndex--;
   popped = true;
+
+  DEBUG_PRINT_LVL2(" --> ");
+  DEBUG_PRINTLN_LVL2(stackIndex);
+  DEBUG_PRINT_LVL2("JSON: next(): read: ");
 }
 
 String JSON::getPath()
@@ -114,8 +134,8 @@ void JSON::initialize(String Message)
 
 bool JSON::next()
 {
-  DEBUG_PRINTLN("JSON: next()");
-  DEBUG_PRINT("JSON: Read: ");
+
+  DEBUG_PRINT_LVL2("JSON: next(): read: ");
 
   popped = false;
 
@@ -131,17 +151,18 @@ bool JSON::next()
     {
       c = charStream->readChar();
       if (c == 0 || c == -1)
-      {  
-      //  DEBUG_PRINT("<END>");
+      {
+        //  DEBUG_PRINT("<END>");
         break;
       }
 
-      DEBUG_PRINT(c);
+      DEBUG_PRINT_LVL2(c);
     }
     else
     {
       c = buffer[index];
-      DEBUG_PRINT(c);
+
+      DEBUG_PRINT_LVL2(c);
     }
 
     index++;
@@ -186,8 +207,8 @@ bool JSON::next()
 
         if (doreturn)
         {
-          DEBUG_PRINTLN("");
-          DEBUG_PRINT("JSON: Result: ");
+          DEBUG_PRINTLN_LVL2("");
+          DEBUG_PRINT("JSON: next(): line: ");
           DEBUG_PRINT(getPath());
           DEBUG_PRINT(" = ");
           DEBUG_PRINTLN(getValue());
@@ -209,8 +230,8 @@ bool JSON::next()
 
         if (doreturn)
         {
-          DEBUG_PRINTLN("");
-          DEBUG_PRINT("JSON: Result: ");
+          DEBUG_PRINTLN_LVL2("");
+          DEBUG_PRINT("JSON: next(): line: ");
           DEBUG_PRINT(getPath());
           DEBUG_PRINT(" = ");
           DEBUG_PRINTLN(getValue());
@@ -238,8 +259,8 @@ bool JSON::next()
 
         if (doreturn)
         {
-          DEBUG_PRINTLN("");
-          DEBUG_PRINT("JSON: Result: ");
+          DEBUG_PRINTLN_LVL2("");
+          DEBUG_PRINT("JSON: next(): line: ");
           DEBUG_PRINT(getPath());
           DEBUG_PRINT(" = ");
           DEBUG_PRINTLN(getValue());
@@ -262,8 +283,8 @@ bool JSON::next()
         break;
       }
   }
-  DEBUG_PRINTLN("");
-  DEBUG_PRINTLN("JSON: END");
+  // DEBUG_PRINTLN("");
+  DEBUG_PRINTLN("JSON: next(): END");
 
   return false;
 }

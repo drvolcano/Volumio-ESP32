@@ -20,12 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Inflate.h"
 
 #include "LibDebug.h"
-#ifdef DEBUG_INFLATE
+#if (DEBUGLEVEL_INFLATE >= 1)
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)
 #else
 #define DEBUG_PRINTLN(x)
 #define DEBUG_PRINT(x)
+#endif
+
+#if (DEBUGLEVEL_INFLATE >= 2)
+#define DEBUG_PRINTLN_LVL2(x) Serial.println(x)
+#define DEBUG_PRINT_LVL2(x) Serial.print(x)
+#else
+#define DEBUG_PRINTLN_LVL2(x)
+#define DEBUG_PRINT_LVL2(x)
 #endif
 
 #define BTYPE_NONE 0
@@ -193,8 +201,8 @@ char Inflate::readChar()
     //End
     if (res2 == 256)
     {
-      DEBUG_PRINTLN("}");
-      DEBUG_PRINTLN("");
+
+      DEBUG_PRINTLN_LVL2("");
       done = true;
       return -1;
     }
@@ -262,7 +270,7 @@ char Inflate::readChar()
       }
     }
   }
-
+  DEBUG_PRINT_LVL2(distbuffer[(RESPTR) % LEN_DISTBUFFER]);
   return distbuffer[(RESPTR++) % LEN_DISTBUFFER];
 }
 

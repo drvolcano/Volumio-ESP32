@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Volumio.h"
 
 #include "LibDebug.h"
-#ifdef DEBUG_VOLUMIO
+#if (DEBUGLEVEL_VOLUMIO >= 1)
 #define DEBUG_PRINTLN(x) Serial.println(x)
 #define DEBUG_PRINT(x) Serial.print(x)
 #else
@@ -276,7 +276,7 @@ bool Volumio::readLibraryPrev()
 
   if (jsonParser.next())
   {
-    DEBUG_PRINT("Volumio: Receive: pushBrowseLibrary: #### ");
+    DEBUG_PRINT("Volumio: readLibraryPrev(): ");
     DEBUG_PRINT(jsonParser.getPath());
     DEBUG_PRINT(" = ");
     DEBUG_PRINTLN(jsonParser.getValue());
