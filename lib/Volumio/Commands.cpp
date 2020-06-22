@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
+
+//https://github.com/volumio/Volumio2/blob/30c2235f4ea7f07893e8ca54dc9b02f81829a658/app/plugins/user_interface/websocket/index.js
+
 void Volumio::getState()
 {
   DEBUG_PRINTLN("Volumio: getState()");
@@ -208,3 +211,18 @@ void Volumio::getPlaylistIndex()
   DEBUG_PRINTLN("Volumio: getPlaylistIndex()");
   socketIoClient.sendJSON("getPlaylistIndex");
 }
+
+void Volumio::getMenuItems()
+{
+  DEBUG_PRINTLN("Volumio: getMenuItems()");
+  socketIoClient.sendJSON("getMenuItems");
+}
+
+
+void Volumio::getUiConfig(String page)
+{
+  DEBUG_PRINTLN("Volumio: getUiConfig(" + page + ")");
+  socketIoClient.sendJSON("getUiConfig", "{ \"page\" : \"" + page + "\"}");
+}
+
+

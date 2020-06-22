@@ -31,6 +31,7 @@ struct StateStruct
     unsigned long duration;
     String samplerate;
     String bitdepth;
+    String Streaming;
     String channels;
     String bitrate;
     String random;
@@ -144,4 +145,91 @@ struct UiSettingsStruct
     String language;
     String theme;
     String playMethod;
+};
+
+struct DeviceInfoStruct
+{
+    String uuid;
+    String name;
+};
+
+struct SystemVersionStruct
+{
+    String systemversion;
+    String builddate;
+    String variant;
+    String hardware;
+};
+
+struct MenuItemParamsStrutc
+{
+    String pluginName;
+    String modalName;
+    String url;
+};
+
+struct MenuItemStruct
+{
+    String id;
+    String name;
+    String state;
+    MenuItemParamsStrutc params;
+};
+
+struct UiConfigSectionOnSaveStruct
+{
+    String type;
+    String endpoint;
+    String method;
+    String content[];
+};
+
+struct UiConfigSectionStruct
+{
+    String coreSection;
+    String id;
+    String element;
+    String label;
+    String icon;
+    String description;
+    String hidden;
+    String type;
+    UiConfigSectionOnSaveStruct onSave;
+};
+
+struct UiConfigContentVisibleIfStruct
+{
+    String field;
+    String value;
+};
+struct UiConfigContentOptionStruct
+{
+    String value;
+    String label;
+};
+
+struct UiConfigContentOnClickDataStruct
+{
+    String endpoint;
+    String method;
+    String data;
+};
+
+struct UiConfigContentOnClickStruct
+{
+    String type;
+    String message;
+    UiConfigContentOnClickDataStruct data;
+};
+
+struct UiConfigContentStruct
+{
+    String id;
+    String element;
+    String doc;
+    String label;
+    String value;
+    String hidden;
+    UiConfigContentVisibleIfStruct visibleIf;
+    UiConfigContentOnClickStruct onClick;
 };

@@ -194,6 +194,231 @@ bool Volumio::readNextQueueItem()
   return false;
 }
 
+bool Volumio::readNextMenuItem()
+{
+  if (pushType != pushMenuItems)
+  {
+    DEBUG_PRINTLN("Volumio: readNextMenuItem(): ERROR, no data avaliable");
+    return false;
+  }
+
+  CurrentMenuItem.id = "";
+  CurrentMenuItem.name = "";
+  CurrentMenuItem.params.pluginName = "";
+  CurrentMenuItem.params.modalName = "";
+  CurrentMenuItem.params.url = "";
+  CurrentMenuItem.state = "";
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readNextMenuItem(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getNode() == "id")
+      CurrentMenuItem.id = jsonParser.getValue();
+    else if (jsonParser.getNode() == "name")
+      CurrentMenuItem.name = jsonParser.getValue();
+    else if (jsonParser.getNode() == "pluginName")
+      CurrentMenuItem.params.pluginName = jsonParser.getValue();
+    else if (jsonParser.getNode() == "modalName")
+      CurrentMenuItem.params.modalName = jsonParser.getValue();
+    else if (jsonParser.getNode() == "url")
+      CurrentMenuItem.params.url = jsonParser.getValue();
+    else if (jsonParser.getNode() == "state")
+      CurrentMenuItem.state = jsonParser.getValue();
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+
+    if (jsonParser.getBlockEnd())
+      return true;
+  }
+
+  return false;
+}
+
+bool Volumio::readNextUiConfigSection()
+{
+  if (pushType != pushUiConfig)
+  {
+    DEBUG_PRINTLN("Volumio: readNextUiConfig(): ERROR, no data avaliable");
+    return false;
+  }
+
+  CurrentUiConfigSection.coreSection = "";
+  CurrentUiConfigSection.id = "";
+  CurrentUiConfigSection.element = "";
+  CurrentUiConfigSection.label = "";
+  CurrentUiConfigSection.icon = "";
+  CurrentUiConfigSection.description = "";
+  CurrentUiConfigSection.hidden = "";
+  CurrentUiConfigSection.type = "";
+
+  CurrentUiConfigSection.onSave.type = "";
+  CurrentUiConfigSection.onSave.endpoint = "";
+  CurrentUiConfigSection.onSave.method = "";
+  //  CurrentUiConfigSection.onSave.content;
+
+  CurrentUiConfigContent.doc = "";
+  CurrentUiConfigContent.element = "";
+  CurrentUiConfigContent.id = "";
+  CurrentUiConfigContent.label = "";
+  CurrentUiConfigContent.value = "";
+  CurrentUiConfigContent.visibleIf.value = "";
+  CurrentUiConfigContent.visibleIf.field = "";
+
+  CurrentUiConfigContent.onClick.type = "";
+  CurrentUiConfigContent.onClick.message = "";
+  CurrentUiConfigContent.onClick.data.data = "";
+  CurrentUiConfigContent.onClick.data.endpoint = "";
+  CurrentUiConfigContent.onClick.data.method = "";
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readNextUiConfig(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getLevel() == 4)
+    {
+      if (jsonParser.getNode() == "coreSection")
+        CurrentUiConfigSection.coreSection = jsonParser.getValue();
+      else if (jsonParser.getNode() == "id")
+        CurrentUiConfigSection.id = jsonParser.getValue();
+      else if (jsonParser.getNode() == "element")
+        CurrentUiConfigSection.element = jsonParser.getValue();
+      else if (jsonParser.getNode() == "label")
+        CurrentUiConfigSection.label = jsonParser.getValue();
+      else if (jsonParser.getNode() == "icon")
+        CurrentUiConfigSection.icon = jsonParser.getValue();
+      else if (jsonParser.getNode() == "description")
+        CurrentUiConfigSection.description = jsonParser.getValue();
+      else if (jsonParser.getNode() == "hidden")
+        CurrentUiConfigSection.hidden = jsonParser.getValue();
+      else if (jsonParser.getNode() == "type")
+        CurrentUiConfigSection.type = jsonParser.getValue();
+      else
+      {
+        DEBUG_PRINTLN("UNKNOWN ITEM!");
+      }
+    }
+    else if (jsonParser.getLevel() == 5 && jsonParser.getParent() == "onSave")
+    {
+      if (jsonParser.getNode() == "type")
+        CurrentUiConfigSection.onSave.type = jsonParser.getValue();
+      else if (jsonParser.getNode() == "endpoint")
+        CurrentUiConfigSection.onSave.endpoint = jsonParser.getValue();
+      else if (jsonParser.getNode() == "method")
+        CurrentUiConfigSection.onSave.method = jsonParser.getValue();
+      else
+      {
+        DEBUG_PRINTLN("UNKNOWN ITEM!");
+      }
+    }
+    else if (jsonParser.getNode(4) == "content")
+    {
+      if (jsonParser.getNode() == "doc")
+        CurrentUiConfigContent.doc = jsonParser.getValue();
+      else if (jsonParser.getNode() == "element")
+        CurrentUiConfigContent.element = jsonParser.getValue();
+      else if (jsonParser.getNode() == "id")
+        CurrentUiConfigContent.id = jsonParser.getValue();
+      else if (jsonParser.getNode() == "label")
+        CurrentUiConfigContent.label = jsonParser.getValue();
+      else if (jsonParser.getNode() == "value")
+        CurrentUiConfigContent.value = jsonParser.getValue();
+      else if (jsonParser.getParent() == "visibleIf" && jsonParser.getNode() == "field")
+        CurrentUiConfigContent.visibleIf.field = jsonParser.getValue();
+      else if (jsonParser.getParent() == "visibleIf" && jsonParser.getNode() == "value")
+        CurrentUiConfigContent.visibleIf.value = jsonParser.getValue();
+      else if (jsonParser.getNode() == "hidden")
+        CurrentUiConfigContent.hidden = jsonParser.getValue();
+      else if (jsonParser.getNode(6) == "onClick")
+      {
+        if (jsonParser.getNode() == "type")
+          CurrentUiConfigContent.onClick.type = jsonParser.getValue();
+        else if (jsonParser.getNode() == "message")
+          CurrentUiConfigContent.onClick.message = jsonParser.getValue();
+        else if (jsonParser.getNode() == "data")
+          CurrentUiConfigContent.onClick.data.data = jsonParser.getValue();
+        else if (jsonParser.getNode() == "endpoint")
+          CurrentUiConfigContent.onClick.data.endpoint = jsonParser.getValue();
+        else if (jsonParser.getNode() == "method")
+          CurrentUiConfigContent.onClick.data.method = jsonParser.getValue();
+        else
+        {
+          DEBUG_PRINTLN("UNKNOWN ITEM!");
+        }
+      }
+
+      else
+      {
+        DEBUG_PRINTLN("UNKNOWN ITEM!");
+      }
+    }
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+
+    if (jsonParser.getBlockEnd())
+      return true;
+  }
+
+  return false;
+}
+
+bool Volumio::readNextUiConfigContent()
+{
+  if (pushType != pushUiConfig)
+  {
+    DEBUG_PRINTLN("Volumio: readNextUiConfig(): ERROR, no data avaliable");
+    return false;
+  }
+
+  /*
+  CurrentMenuItem.id = "";
+  CurrentMenuItem.name = "";
+  CurrentMenuItem.params.pluginName = "";
+  CurrentMenuItem.params.modalName = "";
+  CurrentMenuItem.params.url = "";
+  CurrentMenuItem.state = "";
+*/
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readNextUiConfig(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+    /*
+    if (jsonParser.getNode() == "id")
+      CurrentMenuItem.id = jsonParser.getValue();
+    else if (jsonParser.getNode() == "name")
+      CurrentMenuItem.name = jsonParser.getValue();
+    else if (jsonParser.getNode() == "pluginName")
+      CurrentMenuItem.params.pluginName = jsonParser.getValue();
+    else if (jsonParser.getNode() == "modalName")
+      CurrentMenuItem.params.modalName = jsonParser.getValue();
+    else if (jsonParser.getNode() == "url")
+      CurrentMenuItem.params.url = jsonParser.getValue();
+    else if (jsonParser.getNode() == "state")
+      CurrentMenuItem.state = jsonParser.getValue();
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+*/
+    if (jsonParser.getBlockEnd())
+      return true;
+  }
+
+  return false;
+}
+
 bool Volumio::readNextLibraryItem()
 {
   if (pushType != pushBrowseLibrary)
@@ -373,6 +598,8 @@ bool Volumio::readState()
       State.samplerate = jsonParser.getValue();
     else if (jsonParser.getNode() == "bitdepth")
       State.bitdepth = jsonParser.getValue();
+    else if (jsonParser.getNode() == "Streaming")
+      State.Streaming = jsonParser.getValue();
     else if (jsonParser.getNode() == "channels")
       State.channels = jsonParser.getValue();
     else if (jsonParser.getNode() == "bitrate")
@@ -461,6 +688,10 @@ bool Volumio::readMultiRoomDevice()
       CurrentMultiRoomDevice.state.track = jsonParser.getValue();
     else if (jsonParser.getNode() == "albumart")
       CurrentMultiRoomDevice.state.albumart = jsonParser.getValue();
+    else if (jsonParser.getNode() == "debug")
+    {
+      //[1].misc.debug = true
+    }
     else
     {
       DEBUG_PRINTLN("UNKNOWN ITEM!");
@@ -481,11 +712,11 @@ bool Volumio::readUiSettings()
     return false;
   }
 
-  CurrentUiSettings.background.title = "";
-  CurrentUiSettings.background.path = "";
-  CurrentUiSettings.language = "";
-  CurrentUiSettings.playMethod = "";
-  CurrentUiSettings.theme = "";
+  UiSettings.background.title = "";
+  UiSettings.background.path = "";
+  UiSettings.language = "";
+  UiSettings.playMethod = "";
+  UiSettings.theme = "";
 
   while (jsonParser.next())
   {
@@ -495,15 +726,15 @@ bool Volumio::readUiSettings()
     DEBUG_PRINTLN(jsonParser.getValue());
 
     if (jsonParser.getNode() == "title")
-      CurrentUiSettings.background.title = jsonParser.getValue();
+      UiSettings.background.title = jsonParser.getValue();
     else if (jsonParser.getNode() == "path")
-      CurrentUiSettings.background.path = jsonParser.getValue();
+      UiSettings.background.path = jsonParser.getValue();
     else if (jsonParser.getNode() == "language")
-      CurrentUiSettings.language = jsonParser.getValue();
+      UiSettings.language = jsonParser.getValue();
     else if (jsonParser.getNode() == "theme")
-      CurrentUiSettings.theme = jsonParser.getValue();
+      UiSettings.theme = jsonParser.getValue();
     else if (jsonParser.getNode() == "playMethod")
-      CurrentUiSettings.playMethod = jsonParser.getValue();
+      UiSettings.playMethod = jsonParser.getValue();
 
     else
     {
@@ -513,6 +744,79 @@ bool Volumio::readUiSettings()
 
   return false;
 }
+
+bool Volumio::readDeviceInfo()
+{
+  if (pushType != pushDeviceInfo)
+  {
+    DEBUG_PRINTLN("Volumio: readDeviceInfo(): ERROR, no data avaliable");
+    return false;
+  }
+
+  DeviceInfo.uuid = "";
+  DeviceInfo.name = "";
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readDeviceInfo(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getNode() == "uuid")
+      DeviceInfo.uuid = jsonParser.getValue();
+    else if (jsonParser.getNode() == "name")
+      DeviceInfo.name = jsonParser.getValue();
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+  }
+
+  return false;
+}
+
+bool Volumio::readSystemVersion()
+{
+  if (pushType != pushSystemVersion)
+  {
+    DEBUG_PRINTLN("Volumio: readSystemVersion(): ERROR, no data avaliable");
+    return false;
+  }
+
+  SystemVersion.builddate = "";
+  SystemVersion.hardware = "";
+  SystemVersion.systemversion = "";
+  SystemVersion.variant = "";
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readSystemVersion(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getNode() == "builddate")
+      SystemVersion.builddate = jsonParser.getValue();
+    else if (jsonParser.getNode() == "hardware")
+      SystemVersion.hardware = jsonParser.getValue();
+    else if (jsonParser.getNode() == "systemversion")
+      SystemVersion.systemversion = jsonParser.getValue();
+    else if (jsonParser.getNode() == "variant")
+      SystemVersion.variant = jsonParser.getValue();
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+  }
+
+  return false;
+}
+
+String systemversion;
+String builddate;
+String variant;
+String hardware;
 
 void Volumio::process()
 {
@@ -571,6 +875,18 @@ void Volumio::process()
         pushType = pushMultiRoomDevices;
       else if (jsonParser.getValue() == "pushUiSettings")
         pushType = pushUiSettings;
+      else if (jsonParser.getValue() == "pushDeviceInfo")
+        pushType = pushDeviceInfo;
+      else if (jsonParser.getValue() == "pushSystemVersion")
+        pushType = pushSystemVersion;
+      else if (jsonParser.getValue() == "pushAvailableLanguages")
+        pushType = pushAvailableLanguages;
+      else if (jsonParser.getValue() == "pushAudioOutputs")
+        pushType = pushAudioOutputs;
+      else if (jsonParser.getValue() == "pushMenuItems")
+        pushType = pushMenuItems;
+      else if (jsonParser.getValue() == "pushUiConfig")
+        pushType = pushUiConfig;
       else
         pushType = pushUnknown;
     }

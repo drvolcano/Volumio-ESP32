@@ -34,3 +34,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ICON_HEART "\u00b7"
 #define ICON_CLEAR "\u010f"
 #define ICON_SONG "\u009b"
+#define ICON_SETTINGS "\u0081"

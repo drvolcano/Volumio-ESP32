@@ -34,6 +34,12 @@ public:
     pushToastMessage,
     pushMultiRoomDevices,
     pushUiSettings,
+    pushDeviceInfo,
+    pushSystemVersion,
+    pushAvailableLanguages,
+    pushAudioOutputs,
+    pushMenuItems,
+    pushUiConfig,
     pushUnknown
   };
 
@@ -46,7 +52,12 @@ public:
   QueueItemStruct CurrentQueueItem;
   ToastStruct CurrentToastItem;
   MultroomDeviceStruct CurrentMultiRoomDevice;
-  UiSettingsStruct CurrentUiSettings;
+  UiSettingsStruct UiSettings;
+  DeviceInfoStruct DeviceInfo;
+  SystemVersionStruct SystemVersion;
+  MenuItemStruct CurrentMenuItem;
+  UiConfigSectionStruct CurrentUiConfigSection;
+  UiConfigContentStruct CurrentUiConfigContent;
 
   //New State received
   PushType getPushType() { return pushType; };
@@ -66,6 +77,11 @@ public:
   bool readState();
   bool readMultiRoomDevice();
   bool readUiSettings();
+  bool readDeviceInfo();
+  bool readSystemVersion();
+  bool readNextMenuItem();
+  bool readNextUiConfigSection();
+  bool readNextUiConfigContent();
 
   //Commands
   void getState();
@@ -99,6 +115,9 @@ public:
   void getUiSettings();
   void getAvailableLanguages();
   void getPlaylistIndex();
+  void getMenuItems();
+
+  void getUiConfig(String page);
 
 private:
   PushType pushType = pushNone;

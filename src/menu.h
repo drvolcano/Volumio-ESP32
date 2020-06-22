@@ -94,6 +94,7 @@ void menuMain()
   genMenuItem(ICON_CLOCK, locale.ESP.Control, MENU_PLAYBACK);
   genMenuItem(ICON_MUSIC, locale.COMMON.TAB_BROWSE, MENU_BROWSE);
   genMenuItem(ICON_LIST, locale.COMMON.TAB_QUEUE, MENU_QUEUE);
+  genMenuItem(ICON_SETTINGS, locale.COMMON.SETTINGS, MENU_SETTINGS);
   genMenuItem(ICON_STOP, locale.ESP.DisplayOff, MENU_DARK);
 
   GenMenuEnd();
@@ -158,10 +159,7 @@ void contextMenuQueue(int index)
   GenMenuEnd();
 }
 
-void menuSystem()
-{
-  DEBUG_PRINTLN("Main: MenuSystem()");
-}
+
 
 void menuPush()
 {

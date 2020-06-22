@@ -43,9 +43,10 @@ void JSON::stackPush()
   DEBUG_PRINT_LVL2(stackIndex);
 
   stackIndex++;
+  popped = false;
 
   DEBUG_PRINT_LVL2(" --> ");
-  DEBUG_PRINT_LVL2(stackIndex);
+  DEBUG_PRINTLN_LVL2(stackIndex);
   DEBUG_PRINT_LVL2("JSON: next(): read: ");
 }
 
@@ -140,6 +141,7 @@ bool JSON::next()
   popped = false;
 
   actualValue = "";
+  textValue = "";
 
   while (index < buffer.length() || fromStream)
   {

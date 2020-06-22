@@ -132,9 +132,11 @@ void menuAction(MenuItemType type, String data)
   DEBUG_PRINT("Main: menuAction(): ");
 
   waitForSourceUpdate = false;
-  WaitForQueueUpdate = false;
+  waitForQueueUpdate = false;
   waitForLibraryUpdate = false;
   restoreMenuPosition = false;
+  waitForMenuItemsUpdate = false;
+  waitForUiConfigSection = false;
 
   switch (type)
   {
@@ -449,7 +451,7 @@ void menuAction(MenuItemType type, String data)
     genMenuStart();
     genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     genMenuItem(ICON_CLEAR, locale.TRACK_INFO_BAR.CLEAR_QUEUE, MENU_QUEUE_CLEAR);
-    WaitForQueueUpdate = true;
+    waitForQueueUpdate = true;
     volumio.getQueue();
     break;
   case MENU_QUEUE_CLEAR:
@@ -460,7 +462,7 @@ void menuAction(MenuItemType type, String data)
     genMenuStart();
     genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
     genMenuItem(ICON_CLEAR, locale.TRACK_INFO_BAR.CLEAR_QUEUE, MENU_QUEUE_CLEAR);
-    WaitForQueueUpdate = true;
+    waitForQueueUpdate = true;
     volumio.getQueue();
     break;
   case MENU_QUEUE_RANDOM:
@@ -498,12 +500,53 @@ void menuAction(MenuItemType type, String data)
     menuPop();
     menuAction(menuStack[menuStackIndex].Type, menuStack[menuStackIndex].Data);
     break;
-  case MENU_SYSTEM:
-    DEBUG_PRINT("MENU_SYSTEM");
+  case MENU_SETTINGS:
+    DEBUG_PRINT("MENU_SETTINGS");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    menuSystem();
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
+    volumio.getMenuItems();
+    waitForMenuItemsUpdate = true;
     break;
+
+  case MENU_SETTINGS_PLUGIN:
+    DEBUG_PRINT("MENU_SETTINGS_PLUGIN");
+    DEBUG_PRINT(": ");
+    DEBUG_PRINTLN(data);
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    volumio.getUiConfig(data);
+    waitForUiConfigSection = true;
+    break;
+
+  case MENU_SETTINGS_MODAL:
+    DEBUG_PRINT("MENU_SETTINGS_MODAL");
+    DEBUG_PRINT(": ");
+    DEBUG_PRINTLN(data);
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    volumio.getUiConfig(data);
+    waitForUiConfigSection = true;
+    break;
+
+  case MENU_SETTINGS_URL:
+    DEBUG_PRINT("MENU_SETTINGS_URL");
+    DEBUG_PRINT(": ");
+    DEBUG_PRINTLN(data);
+    menuPush();
+    genMenuStart();
+    genMenuItem(ICON_HOME, locale.COMMON.HOME, MENU_HOME);
+    genMenuItem(ICON_BACK, menuStack[menuStackIndex - 2].Text, MENU_BACK);
+    volumio.getUiConfig(data);
+    waitForUiConfigSection = true;
+    break;
+
   case MENU_DARK:
     DEBUG_PRINT("MENU_DARK");
     DEBUG_PRINT(": ");
@@ -639,6 +682,14 @@ void loop()
     {
       volumio.getState();
       volumio.getUiSettings();
+      //  volumio.getDeviceInfo();
+      //  volumio.getSystemVersion();
+      //   volumio.getPushType();
+      //   volumio.getPlaylistIndex();
+      //  volumio.getAvailableLanguages();
+      //   volumio.getAudioOutputs();
+      //    volumio.getMenuItems();
+      //    volumio.getUiConfig("miscellanea/my_music");
 
       menuMain();
     }
@@ -658,6 +709,8 @@ void loop()
     //Only if push was requested
     if (waitForSourceUpdate)
     {
+      waitForSourceUpdate = false;
+
       while (volumio.readNextSourceItem())
       {
         DEBUG_PRINT("Main: Volumio: SourceItem: ");
@@ -686,6 +739,8 @@ void loop()
     //Only if push was requested
     if (waitForLibraryUpdate)
     {
+      waitForLibraryUpdate = false;
+
       volumio.LibraryPrev.uri = "";
 
       while (volumio.readNextLibraryItem())
@@ -751,8 +806,10 @@ void loop()
     DEBUG_PRINTLN("Main: Volumio: pushQueue");
 
     //Only if push was requested
-    if (WaitForQueueUpdate)
+    if (waitForQueueUpdate)
     {
+      waitForQueueUpdate = false;
+
       //Queue is referenced by index, not uri
       int index = 0;
 
@@ -776,11 +833,7 @@ void loop()
         menuOffset = menuStack[menuStackIndex].Offset;
       }
     }
-    else
-    {
-      while (volumio.readNextQueueItem())
-        ;
-    }
+
     break;
 
   case Volumio::pushToastMessage: //Volumio pushes toast message
@@ -818,14 +871,80 @@ void loop()
     volumio.readUiSettings();
 
     DEBUG_PRINT("Main: language = ");
-    DEBUG_PRINTLN(volumio.CurrentUiSettings.language);
+    DEBUG_PRINTLN(volumio.UiSettings.language);
 
-    if (volumio.CurrentUiSettings.language == "de")
+    if (volumio.UiSettings.language == "de")
       locale = Locale_de();
     else
       locale = Locale_en();
 
     menuMain();
+
+    break;
+
+  case Volumio::pushDeviceInfo:
+    DEBUG_PRINTLN("Main: Volumio: pushDeviceInfo");
+
+    volumio.readDeviceInfo();
+
+  case Volumio::pushSystemVersion:
+    DEBUG_PRINTLN("Main: Volumio: pushSystemVersion");
+
+    volumio.readSystemVersion();
+
+  case Volumio::pushMenuItems:
+    DEBUG_PRINTLN("Main: Volumio: pushMenuItems");
+
+    //Only if push was requested
+    if (waitForMenuItemsUpdate)
+    {
+      waitForMenuItemsUpdate = false;
+
+      //Queue is referenced by index, not uri
+      int index = 0;
+
+      while (volumio.readNextMenuItem())
+        if (volumio.CurrentMenuItem.name != "")
+        {
+          DEBUG_PRINT("Main: Volumio: MenuItem: ");
+          DEBUG_PRINT(volumio.CurrentMenuItem.name);
+          DEBUG_PRINT(": ");
+          DEBUG_PRINTLN(index);
+
+          if (volumio.CurrentMenuItem.params.pluginName != "")
+            genMenuItem(ICON_ARROW, volumio.CurrentMenuItem.name, MENU_SETTINGS_PLUGIN, volumio.CurrentMenuItem.params.pluginName);
+          else if (volumio.CurrentMenuItem.params.modalName != "")
+            genMenuItem(ICON_ARROW, volumio.CurrentMenuItem.name, MENU_SETTINGS_MODAL, volumio.CurrentMenuItem.params.modalName);
+          else if (volumio.CurrentMenuItem.params.url != "")
+            genMenuItem(ICON_ARROW, volumio.CurrentMenuItem.name, MENU_SETTINGS_URL, volumio.CurrentMenuItem.params.url);
+        }
+
+      GenMenuEnd();
+
+      if (restoreMenuPosition && false)
+      {
+        restoreMenuPosition = false;
+        leftEncoder.setValue(menuStack[menuStackIndex].Position);
+        menuOffset = menuStack[menuStackIndex].Offset;
+      }
+    }
+
+  case Volumio::pushUiConfig:
+
+    if (waitForUiConfigSection)
+    {
+      waitForUiConfigSection = false;
+
+      while (volumio.readNextUiConfigSection())
+      {
+
+        if (volumio.CurrentUiConfigSection.coreSection != "")
+          genMenuItem(ICON_ARROW, volumio.CurrentUiConfigSection.coreSection, MENU_SETTINGS_PLUGIN, volumio.CurrentUiConfigSection.coreSection);
+
+        if (volumio.CurrentUiConfigSection.label != "" && volumio.CurrentUiConfigSection.hidden != "true")
+          genMenuItem(ICON_ARROW, volumio.CurrentUiConfigSection.label, MENU_SETTINGS_PLUGIN, volumio.CurrentUiConfigSection.id);
+      }
+    }
 
     break;
 
@@ -838,16 +957,16 @@ void loop()
   \*#################################################################*/
 
   /*
-  TouchPin0.process();
-  TouchPin1.process();
-  TouchPin2.process();
-  TouchPin3.process();
-  TouchPin4.process();
-  TouchPin5.process();
-  TouchPin6.process();
-  TouchPin7.process();
-  TouchPin8.process();
-  TouchPin9.process();
+  touchPin0.process();
+  touchPin1.process();
+  touchPin2.process();
+  touchPin3.process();
+  touchPin4.process();
+  touchPin5.process();
+  touchPin6.process();
+  touchPin7.process();
+  touchPin8.process();
+  touchPin9.process();
   */
 
   /*#################################################################*\
@@ -924,7 +1043,7 @@ void loop()
   }
   else
   {
-    if (restoreMenuPosition && !waitForLibraryUpdate && !WaitForQueueUpdate && !waitForSourceUpdate)
+    if (restoreMenuPosition && !waitForLibraryUpdate && !waitForQueueUpdate && !waitForSourceUpdate && !waitForMenuItemsUpdate && !waitForUiConfigSection)
     {
       restoreMenuPosition = false;
       leftEncoder.setValue(menuStack[menuStackIndex].Position);

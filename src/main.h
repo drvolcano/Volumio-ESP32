@@ -105,4 +105,6 @@ u8g2_uint_t item_width;
 
 bool waitForSourceUpdate = false;
 bool waitForLibraryUpdate = false;
-bool WaitForQueueUpdate = false;
+bool waitForQueueUpdate = false;
+bool waitForMenuItemsUpdate = false;
+bool waitForUiConfigSection = false;
