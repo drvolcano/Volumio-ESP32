@@ -218,11 +218,21 @@ void Volumio::getMenuItems()
   socketIoClient.sendJSON("getMenuItems");
 }
 
-
 void Volumio::getUiConfig(String page)
 {
   DEBUG_PRINTLN("Volumio: getUiConfig(" + page + ")");
   socketIoClient.sendJSON("getUiConfig", "{ \"page\" : \"" + page + "\"}");
 }
 
+void Volumio::getInstalledPlugins()
+{
+  DEBUG_PRINTLN("Volumio: getInstalledPlugins()");
+  socketIoClient.sendJSON("getInstalledPlugins");
+}
+
+void Volumio::getAvaliablePlugins()
+{
+  DEBUG_PRINTLN("Volumio: getAvailablePlugins()");
+  socketIoClient.sendJSON("getAvailablePlugins");
+}
 

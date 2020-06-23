@@ -682,6 +682,7 @@ void loop()
     {
       volumio.getState();
       volumio.getUiSettings();
+
       //  volumio.getDeviceInfo();
       //  volumio.getSystemVersion();
       //   volumio.getPushType();
@@ -690,6 +691,9 @@ void loop()
       //   volumio.getAudioOutputs();
       //    volumio.getMenuItems();
       //    volumio.getUiConfig("miscellanea/my_music");
+
+      //   volumio.getInstalledPlugins();
+      //    volumio.getAvaliablePlugins();
 
       menuMain();
     }
@@ -930,6 +934,7 @@ void loop()
     }
 
   case Volumio::pushUiConfig:
+    DEBUG_PRINTLN("Main: Volumio: pushUiConfig");
 
     if (waitForUiConfigSection)
     {
@@ -947,6 +952,17 @@ void loop()
     }
 
     break;
+
+  case Volumio::pushInstalledPlugins:
+    DEBUG_PRINTLN("Main: Volumio: pushInstalledPlugins");
+
+    while (volumio.readNextInstalledPlugin())
+    {
+      DEBUG_PRINT("Main: Volumio: Plugin: ");
+      DEBUG_PRINT(volumio.CurrentInstalledPlugin.name);
+      DEBUG_PRINT(": ");
+      DEBUG_PRINTLN(volumio.CurrentInstalledPlugin.prettyName);
+    };
 
   case Volumio::pushNone:
     break;
@@ -1401,14 +1417,7 @@ void loop()
 
         int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
 
-        display.setColorIndex(0);
-        display.drawRBox(0, posy, DisplayWidth, barBoxHeight, 0);
-        display.setColorIndex(1);
-
-        display.drawRFrame(0, posy, DisplayWidth, barBoxHeight, 0);
-
-        if (int(barlen) > 0)
-          display.drawRBox(2, posy + (barBoxHeight - barHeight) / 2, int(barlen), barHeight, 0);
+        ui.drawProgressBar(0, posy, DisplayWidth, 1, VolumePercent);
       }
     }
   } while (display.nextPage());

@@ -240,6 +240,104 @@ bool Volumio::readNextMenuItem()
   return false;
 }
 
+bool Volumio::readNextInstalledPlugin()
+{
+  if (pushType != pushInstalledPlugins)
+  {
+    DEBUG_PRINTLN("Volumio: readNextPlugin(): ERROR, no data avaliable");
+    return false;
+  }
+
+  CurrentInstalledPlugin.prettyName = "";
+  CurrentInstalledPlugin.name = "";
+  CurrentInstalledPlugin.category = "";
+  CurrentInstalledPlugin.version = "";
+  CurrentInstalledPlugin.icon = "";
+  CurrentInstalledPlugin.enabled = "";
+  CurrentInstalledPlugin.active = "";
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readNextPlugin(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getNode() == "prettyName")
+      CurrentInstalledPlugin.prettyName = jsonParser.getValue();
+    else if (jsonParser.getNode() == "name")
+      CurrentInstalledPlugin.name = jsonParser.getValue();
+    else if (jsonParser.getNode() == "category")
+      CurrentInstalledPlugin.category = jsonParser.getValue();
+    else if (jsonParser.getNode() == "version")
+      CurrentInstalledPlugin.version = jsonParser.getValue();
+    else if (jsonParser.getNode() == "icon")
+      CurrentInstalledPlugin.icon = jsonParser.getValue();
+    else if (jsonParser.getNode() == "enabled")
+      CurrentInstalledPlugin.enabled = jsonParser.getValue();
+    else if (jsonParser.getNode() == "active")
+      CurrentInstalledPlugin.active = jsonParser.getValue();
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+
+    if (jsonParser.getBlockEnd())
+      return true;
+  }
+
+  return false;
+}
+
+bool Volumio::readNextAvailablePlugin()
+{
+  if (pushType != pushAvailablePlugins)
+  {
+    DEBUG_PRINTLN("Volumio: readNextAvailablePlugin(): ERROR, no data avaliable");
+    return false;
+  }
+
+  CurrentInstalledPlugin.prettyName = "";
+  CurrentInstalledPlugin.name = "";
+  CurrentInstalledPlugin.category = "";
+  CurrentInstalledPlugin.version = "";
+  CurrentInstalledPlugin.icon = "";
+  CurrentInstalledPlugin.enabled = "";
+  CurrentInstalledPlugin.active = "";
+
+  while (jsonParser.next())
+  {
+    DEBUG_PRINT("Volumio: readNextAvailablePlugin(): ");
+    DEBUG_PRINT(jsonParser.getPath());
+    DEBUG_PRINT(" = ");
+    DEBUG_PRINTLN(jsonParser.getValue());
+
+    if (jsonParser.getNode() == "prettyName")
+      CurrentInstalledPlugin.prettyName = jsonParser.getValue();
+    else if (jsonParser.getNode() == "name")
+      CurrentInstalledPlugin.name = jsonParser.getValue();
+    else if (jsonParser.getNode() == "category")
+      CurrentInstalledPlugin.category = jsonParser.getValue();
+    else if (jsonParser.getNode() == "version")
+      CurrentInstalledPlugin.version = jsonParser.getValue();
+    else if (jsonParser.getNode() == "icon")
+      CurrentInstalledPlugin.icon = jsonParser.getValue();
+    else if (jsonParser.getNode() == "enabled")
+      CurrentInstalledPlugin.enabled = jsonParser.getValue();
+    else if (jsonParser.getNode() == "active")
+      CurrentInstalledPlugin.active = jsonParser.getValue();
+    else
+    {
+      DEBUG_PRINTLN("UNKNOWN ITEM!");
+    }
+
+    if (jsonParser.getBlockEnd())
+      return true;
+  }
+
+  return false;
+}
+
 bool Volumio::readNextUiConfigSection()
 {
   if (pushType != pushUiConfig)
@@ -848,7 +946,7 @@ void Volumio::process()
     //Process data as long as data generates lines
     if (jsonParser.next())
     {
-      DEBUG_PRINT("Volumio: process(): Receive: ");
+      DEBUG_PRINT("Volumio: process(): Push: ");
       DEBUG_PRINTLN(jsonParser.getValue());
 
       if (jsonParser.getValue() == "pushToastMessage")
@@ -887,6 +985,10 @@ void Volumio::process()
         pushType = pushMenuItems;
       else if (jsonParser.getValue() == "pushUiConfig")
         pushType = pushUiConfig;
+      else if (jsonParser.getValue() == "pushInstalledPlugins")
+        pushType = pushInstalledPlugins;
+      else if (jsonParser.getValue() == "pushAvailablePlugins")
+        pushType = pushAvailablePlugins;
       else
         pushType = pushUnknown;
     }

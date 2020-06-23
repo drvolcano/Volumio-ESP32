@@ -108,6 +108,7 @@ The file "u8g2.h" is located in "/libraries/U8g2_Arduino/src/clib" inside your d
 sketch folder.
 */
 
+
 U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0,PIN_SPI_CS,PIN_SPI_DC,U8X8_PIN_NONE);
 
 //###########################################################

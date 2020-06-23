@@ -40,6 +40,8 @@ public:
     pushAudioOutputs,
     pushMenuItems,
     pushUiConfig,
+    pushInstalledPlugins,
+    pushAvailablePlugins,
     pushUnknown
   };
 
@@ -58,6 +60,8 @@ public:
   MenuItemStruct CurrentMenuItem;
   UiConfigSectionStruct CurrentUiConfigSection;
   UiConfigContentStruct CurrentUiConfigContent;
+  InstalledPluginStruct CurrentInstalledPlugin;
+  //AvailablePluginStruct CurrentAvailablePlugin;
 
   //New State received
   PushType getPushType() { return pushType; };
@@ -82,6 +86,8 @@ public:
   bool readNextMenuItem();
   bool readNextUiConfigSection();
   bool readNextUiConfigContent();
+  bool readNextInstalledPlugin();
+  bool readNextAvailablePlugin();
 
   //Commands
   void getState();
@@ -118,6 +124,9 @@ public:
   void getMenuItems();
 
   void getUiConfig(String page);
+
+  void getInstalledPlugins();
+  void getAvaliablePlugins();
 
 private:
   PushType pushType = pushNone;

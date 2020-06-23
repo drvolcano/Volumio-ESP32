@@ -233,3 +233,40 @@ struct UiConfigContentStruct
     UiConfigContentVisibleIfStruct visibleIf;
     UiConfigContentOnClickStruct onClick;
 };
+
+struct InstalledPluginStruct
+{
+    String prettyName;
+    String name;
+    String category;
+    String version;
+    String icon;
+    String enabled;
+    String active;
+};
+
+
+
+struct AvailabledCategoryStruct
+{
+    String prettyName;
+    String descriptipn;
+    String id;
+    String name;
+    String icon;
+    String enabled;
+    String active;
+};
+
+
+
+struct AvailabledPluginStruct
+{
+    String prettyName;
+    String name;
+    String category;
+    String version;
+    String icon;
+    String enabled;
+    String active;
+};

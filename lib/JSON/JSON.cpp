@@ -56,13 +56,23 @@ void JSON::stackPop()
   DEBUG_PRINT_LVL2("JSON: stackPop(): ");
   DEBUG_PRINT_LVL2(stackIndex);
 
-  stack[stackIndex] = "";
-  stackType[stackIndex] = 0;
+  stack[stackIndex].Name = "";
+  stack[stackIndex].Type = unknown;
+  stack[stackIndex].ArrayIndex = 0;
+
   stackIndex--;
   popped = true;
 
   DEBUG_PRINT_LVL2(" --> ");
   DEBUG_PRINTLN_LVL2(stackIndex);
+
+  DEBUG_PRINT_LVL2("JSON: stackPop(): Name = ");
+  DEBUG_PRINTLN_LVL2(stack[stackIndex].Name);
+  DEBUG_PRINT_LVL2("JSON: stackPop(): Type = ");
+  DEBUG_PRINTLN_LVL2(printType(stack[stackIndex].Type));
+  DEBUG_PRINT_LVL2("JSON: stackPop(): ArrayIndex = ");
+  DEBUG_PRINTLN_LVL2(stack[stackIndex].ArrayIndex);
+
   DEBUG_PRINT_LVL2("JSON: next(): read: ");
 }
 
@@ -72,15 +82,15 @@ String JSON::getPath()
 
   for (int j = 0; j <= nodeCount; j++)
   {
-    if (nodeType[j] == Type_Class)
+    if (nodes[j].Type == Class)
       result += ".";
 
-    if (nodeType[j] == Type_Array)
+    if (nodes[j].Type == Array)
       result += "[";
 
-    result += nodes[j];
+    result += nodes[j].Name;
 
-    if (nodeType[j] == Type_Array)
+    if (nodes[j].Type == Array)
       result += "]";
   }
 
@@ -93,11 +103,15 @@ void JSON::generateOutput()
 
   for (int j = 0; j < 10; j++)
   {
-    nodes[j] = stack[j];
-    nodeType[j] = stackType[j];
 
     if (j > stackIndex)
-      nodes[j] = "";
+    {
+      nodes[j].Name = "";
+      nodes[j].Type = unknown;
+      nodes[j].ArrayIndex = -1;
+    }
+    else
+      nodes[j] = stack[j];
   }
 
   actualValue = textValue;
@@ -170,12 +184,19 @@ bool JSON::next()
     index++;
 
     if (text)
-      if (c == '"')
+      if (controlchar)
+      {
+        textValue += c;
+        controlchar = false;
+      }
+      else if (c == '"')
         text = false;
+      else if (c == '\\')
+        controlchar = true;
       else if (value)
         textValue += c;
       else
-        stack[stackIndex] += c;
+        stack[stackIndex].Name += c;
     else
       switch (c)
       {
@@ -183,7 +204,7 @@ bool JSON::next()
 
         stackPush();
         value = false;
-        stackType[stackIndex] = Type_Class;
+        stack[stackIndex].Type = Class;
         break;
 
       case '[':
@@ -191,9 +212,9 @@ bool JSON::next()
         stackPush();
         value = true;
         textValue = "";
-        stackType[stackIndex] = Type_Array;
-        aryindex = 0;
-        stack[stackIndex] = String(aryindex);
+        stack[stackIndex].Type = Array;
+        stack[stackIndex].ArrayIndex = 0;
+        stack[stackIndex].Name = String(stack[stackIndex].ArrayIndex);
         break;
 
       case '}':
@@ -248,20 +269,32 @@ bool JSON::next()
         break;
 
       case ',':
-        value = (stackType[stackIndex] == Type_Array);
+        value = (stack[stackIndex].Type == Array);
         doreturn = !lastwaspop;
 
         if (doreturn)
           generateOutput();
 
-        if (stackType[stackIndex] == Type_Array)
-          stack[stackIndex] = String(++aryindex);
+        DEBUG_PRINTLN_LVL2("");
+        DEBUG_PRINT_LVL2("JSON: next(): Type = ");
+        DEBUG_PRINTLN_LVL2(printType(stack[stackIndex].Type));
+
+        if (stack[stackIndex].Type == Array)
+        {
+          DEBUG_PRINT_LVL2("JSON: next(): Arrayindex : ");
+          DEBUG_PRINT_LVL2(stack[stackIndex].ArrayIndex);
+
+          stack[stackIndex].Name = String(++stack[stackIndex].ArrayIndex);
+
+          DEBUG_PRINT_LVL2(" --> ");
+          DEBUG_PRINTLN_LVL2(stack[stackIndex].ArrayIndex);
+        }
         else
-          stack[stackIndex] = "";
+          stack[stackIndex].Name = "";
 
         if (doreturn)
         {
-          DEBUG_PRINTLN_LVL2("");
+
           DEBUG_PRINT("JSON: next(): line: ");
           DEBUG_PRINT(getPath());
           DEBUG_PRINT(" = ");
@@ -269,6 +302,8 @@ bool JSON::next()
 
           return true;
         }
+        else
+          DEBUG_PRINT_LVL2("JSON: next(): read: ");
         break;
 
       case ' ':
@@ -289,4 +324,23 @@ bool JSON::next()
   DEBUG_PRINTLN("JSON: next(): END");
 
   return false;
+}
+
+String JSON::printType(StackType type)
+{
+  switch (type)
+  {
+  case unknown:
+    return "unknown";
+    break;
+  case None:
+    return "None";
+    break;
+  case Class:
+    return "Class";
+    break;
+  case Array:
+    return "Array";
+    break;
+  }
 }
