@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
-
 //https://github.com/volumio/Volumio2/blob/30c2235f4ea7f07893e8ca54dc9b02f81829a658/app/plugins/user_interface/websocket/index.js
 
 void Volumio::getState()
@@ -55,10 +54,24 @@ void Volumio::addToQueue(String uri)
   socketIoClient.sendJSON("addToQueue", "{ \"uri\" : \"" + uri + "\"}");
 }
 
+void Volumio::addToQueue(String service, String title, String uri)
+{
+  DEBUG_PRINTLN("Volumio: addToQueue(" + service + "," + title + "," + uri + ")");
+  socketIoClient.sendJSON("addToQueue", " { \"service\" : \"" + service + "\" , \"title\" : \"" + title + "\" , \"uri\" : \"" + uri + "\"}");
+  DEBUG_PRINTLN(" { \"service\" : \"" + service + "\" , \"title\" : \"" + title + "\" , \"uri\" : \"" + uri + "\"}");
+}
+
 void Volumio::replaceAndPlay(String uri)
 {
   DEBUG_PRINTLN("Volumio: replaceAndPlay(" + uri + ")");
   socketIoClient.sendJSON("replaceAndPlay", "{ \"uri\" : \"" + uri + "\"}");
+}
+
+void Volumio::replaceAndPlay(String service, String title, String uri)
+{
+  DEBUG_PRINTLN("Volumio: replaceAndPlay(" + service + "," + title + "," + uri + ")");
+  socketIoClient.sendJSON("replaceAndPlay", " { \"service\" : \"" + service + "\" , \"title\" : \"" + title + "\" , \"uri\" : \"" + uri + "\"}");
+  DEBUG_PRINTLN(" { \"service\" : \"" + service + "\" , \"title\" : \"" + title + "\" , \"uri\" : \"" + uri + "\"}");
 }
 
 void Volumio::addPlay(String uri)
@@ -72,6 +85,14 @@ void Volumio::addPlay(String service, String name, String uri)
   DEBUG_PRINTLN("Volumio: addPlay(" + service + "," + name + "," + uri + ")");
   socketIoClient.sendJSON("addPlay", " { \"service\" : \"" + service + "\" , \"name\" : \"" + name + "\" , \"uri\" : \"" + uri + "\"}");
   DEBUG_PRINTLN(" { \"service\" : \"" + service + "\" , \"name\" : \"" + name + "\" , \"uri\" : \"" + uri + "\"}");
+}
+
+
+void Volumio::addToFavourites(String service, String title, String uri)
+{
+  DEBUG_PRINTLN("Volumio: addToFavourites(" + service + "," + title + "," + uri + ")");
+  socketIoClient.sendJSON("addToFavourites", " { \"service\" : \"" + service + "\" , \"title\" : \"" + title + "\" , \"uri\" : \"" + uri + "\"}");
+  DEBUG_PRINTLN(" { \"service\" : \"" + service + "\" , \"title\" : \"" + title + "\" , \"uri\" : \"" + uri + "\"}");
 }
 
 void Volumio::seek(int position)
@@ -235,4 +256,3 @@ void Volumio::getAvaliablePlugins()
   DEBUG_PRINTLN("Volumio: getAvailablePlugins()");
   socketIoClient.sendJSON("getAvailablePlugins");
 }
-

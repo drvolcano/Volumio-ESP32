@@ -94,9 +94,14 @@ public:
   void getQueue();
   void removeQueueItem(int index);
   void addToQueue(String uri);
+  void addToQueue(String service, String title, String uri);
   void replaceAndPlay(String uri);
+  void replaceAndPlay(String service, String title, String uri);
   void addPlay(String uri);
   void addPlay(String service, String name, String uri);
+  
+  void addToFavourites(String service, String title, String uri);
+
   void seek(int position);
   void getBrowseSources();
   void browseLibrary(String uri);

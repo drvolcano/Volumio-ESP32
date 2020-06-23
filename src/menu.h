@@ -56,7 +56,7 @@ struct StackStruct
 
 bool restoreMenuPosition = false;
 
-MenuStruct Menu[200];
+MenuStruct Menu[600];
 int menuPosition = 0;
 
 StackStruct menuStack[10];
@@ -76,7 +76,7 @@ void genMenuStart()
   MenuLength = 0;
 }
 
-void GenMenuEnd()
+void genMenuEnd()
 {
   // LeftEncoder.reset();
   menuOffset = 0;
@@ -94,10 +94,10 @@ void menuMain()
   genMenuItem(ICON_CLOCK, locale.ESP.Control, MENU_PLAYBACK);
   genMenuItem(ICON_MUSIC, locale.COMMON.TAB_BROWSE, MENU_BROWSE);
   genMenuItem(ICON_LIST, locale.COMMON.TAB_QUEUE, MENU_QUEUE);
- // genMenuItem(ICON_SETTINGS, locale.COMMON.SETTINGS, MENU_SETTINGS); //prototype
+  // genMenuItem(ICON_SETTINGS, locale.COMMON.SETTINGS, MENU_SETTINGS); //prototype
   genMenuItem(ICON_STOP, locale.ESP.DisplayOff, MENU_DARK);
 
-  GenMenuEnd();
+  genMenuEnd();
 }
 
 void menuPlayback()
@@ -113,7 +113,7 @@ void menuPlayback()
   genMenuItem(ICON_STOP, locale.COMMON.STOP_MUSIC, MENU_PLAYBACK_STOP);
   genMenuItem(ICON_RANDOM, locale.TRACK_INFO_BAR.RANDOM, MENU_PLAYBACK_RANDOM_SET_RESET);
   genMenuItem(ICON_REPEAT, locale.TRACK_INFO_BAR.REPEAT, MENU_PLAYBACK_REPEAT_SET_RESET);
-  GenMenuEnd();
+  genMenuEnd();
 }
 
 void contextMenuSong(String data)
@@ -126,9 +126,9 @@ void contextMenuSong(String data)
   genMenuItem(ICON_PLAY, locale.BROWSER.PLAY, MENU_BROWSE_SONG_PLAY, data);
   genMenuItem(ICON_LIST, locale.BROWSER.ADD_TO_QUEUE, MENU_BROWSE_SONG_ADDTOQUEUE, data);
   genMenuItem(ICON_LIST, locale.BROWSER.CLEAR_AND_PLAY, MENU_BROWSE_SONG_CLEARANDPLAY, data);
-  // GenMenuItem(ICON_PLUS, TEXT_BROWSE_SONG_ADDTOPLAYLIST, MENU_BROWSE_SONG_ADDTOPLAYLIST, data);
-  // GenMenuItem(ICON_HEART, TEXT_BROWSE_SONG_ADDTOFAVORITES, MENU_BROWSE_SONG_ADDTOFAVORITES, data);
-  GenMenuEnd();
+  // genMenuItem(ICON_PLUS, TEXT_BROWSE_SONG_ADDTOPLAYLIST, MENU_BROWSE_SONG_ADDTOPLAYLIST, data);
+  genMenuItem(ICON_HEART, locale.BROWSER.ADD_TO_FAVOURITES, MENU_BROWSE_SONG_ADDTOFAVORITES, data);
+  genMenuEnd();
 }
 
 void contextMenuWebradio(String data)
@@ -141,9 +141,9 @@ void contextMenuWebradio(String data)
   genMenuItem(ICON_PLAY, locale.BROWSER.PLAY, MENU_BROWSE_WEBRADIO_PLAY, data);
   genMenuItem(ICON_LIST, locale.BROWSER.ADD_TO_QUEUE, MENU_BROWSE_WEBRADIO_ADDTOQUEUE, data);
   genMenuItem(ICON_LIST, locale.BROWSER.CLEAR_AND_PLAY, MENU_BROWSE_WEBRADIO_CLEARANDPLAY, data);
-  // GenMenuItem(ICON_PLUS, TEXT_BROWSE_WEBRADIO_ADDTOPLAYLIST, MENU_BROWSE_WEBRADIO_ADDTOPLAYLIST, data);
-  // GenMenuItem(ICON_HEART, TEXT_BROWSE_WEBRADIO_ADDTOFAVORITES, MENU_BROWSE_WEBRADIO_ADDTOFAVORITES, data);
-  GenMenuEnd();
+  // genMenuItem(ICON_PLUS, TEXT_BROWSE_WEBRADIO_ADDTOPLAYLIST, MENU_BROWSE_WEBRADIO_ADDTOPLAYLIST, data);
+  genMenuItem(ICON_HEART, locale.BROWSER.ADD_TO_RADIO_FAVOURITES, MENU_BROWSE_WEBRADIO_ADDTOFAVORITES, data);
+  genMenuEnd();
 }
 
 void contextMenuQueue(int index)
@@ -156,10 +156,8 @@ void contextMenuQueue(int index)
   genMenuItem(ICON_PLAY, locale.BROWSER.PLAY, MENU_QUEUE_TRACK_PLAY, String(index));
   genMenuItem(ICON_CLEAR, locale.COMMON.DELETE, MENU_QUEUE_TRACK_DELETE, String(index));
 
-  GenMenuEnd();
+  genMenuEnd();
 }
-
-
 
 void menuPush()
 {

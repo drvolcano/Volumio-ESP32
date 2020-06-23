@@ -298,6 +298,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_BROWSE_SONG_ADDTOFAVORITES");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
+     volumio.addToFavourites("mpd", menuStack[menuStackIndex - 1].Text, menuStack[menuStackIndex - 1].Data);
     break;
   case MENU_BROWSE_WEBRADIO_PLAY:
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_PLAY");
@@ -309,13 +310,13 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_ADDTOQUEUE");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    volumio.addToQueue(data);
+    volumio.addToQueue("webradio", menuStack[menuStackIndex - 1].Text, menuStack[menuStackIndex - 1].Data);
     break;
   case MENU_BROWSE_WEBRADIO_CLEARANDPLAY:
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_CLEARANDPLAY");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-    volumio.replaceAndPlay(data);
+    volumio.replaceAndPlay("webradio", menuStack[menuStackIndex - 1].Text, menuStack[menuStackIndex - 1].Data);
     break;
   case MENU_BROWSE_WEBRADIO_ADDTOPLAYLIST:
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_ADDTOPLAYLIST");
@@ -326,6 +327,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_ADDTOFAVORITES");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
+    volumio.addToFavourites("webradio", menuStack[menuStackIndex - 1].Text, menuStack[menuStackIndex - 1].Data);
     break;
   case MENU_PLAYBACK:
     DEBUG_PRINT("MENU_PLAYBACK");
@@ -725,7 +727,7 @@ void loop()
         genMenuItem(ICON_ARROW, volumio.CurrentSourceItem.name, MENU_BROWSE_SOURCE, volumio.CurrentSourceItem.uri);
       }
 
-      GenMenuEnd();
+      genMenuEnd();
 
       if (restoreMenuPosition && false)
       {
@@ -794,7 +796,7 @@ void loop()
         genMenuItem(ICON_LIST, locale.BROWSER.CLEAR_AND_PLAY, MENU_BROWSE_FOLDER_CLEARANDPLAY, volumio.LibraryInfo.uri);
       }
 
-      GenMenuEnd();
+      genMenuEnd();
 
       if (restoreMenuPosition && false)
       {
@@ -828,7 +830,7 @@ void loop()
           genMenuItem(ICON_SONG, volumio.CurrentQueueItem.name, MENU_QUEUE_TRACK, String(index++));
         }
 
-      GenMenuEnd();
+      genMenuEnd();
 
       if (restoreMenuPosition && false)
       {
@@ -923,7 +925,7 @@ void loop()
             genMenuItem(ICON_ARROW, volumio.CurrentMenuItem.name, MENU_SETTINGS_URL, volumio.CurrentMenuItem.params.url);
         }
 
-      GenMenuEnd();
+      genMenuEnd();
 
       if (restoreMenuPosition && false)
       {
