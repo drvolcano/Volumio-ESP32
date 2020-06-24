@@ -1,3 +1,6 @@
+//All structs from derived from JSON:
+//https://github.com/volumio/Volumio2-UI/tree/development/src/app/i18n
+
 /*
 struct UI_SETTINGS
 {

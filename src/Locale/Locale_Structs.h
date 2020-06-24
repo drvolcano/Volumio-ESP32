@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 
+//Texts that cant be found in Volumio data
 struct STRUCT_ESP32
 {
     String DisplayOff;
@@ -11,6 +12,8 @@ struct STRUCT_ESP32
 
 };
 
+//FOllowing structs from derived from JSON:
+//https://github.com/volumio/Volumio2-UI/tree/development/src/app/i18n
 
 struct STRUCT_COMMON
 {

@@ -1,5 +1,8 @@
 #include "Locale_Structs.h"
 
+//Original files can be found here:
+//https://github.com/volumio/Volumio2-UI/tree/development/src/app/i18n
+
 STRUCT_LOCALE Locale_en()
 {
     STRUCT_LOCALE locale;
