@@ -37,16 +37,11 @@ void DisplayMessage(String Message)
   //Logo and single line (true) or 4 lines scrolling (false)
   if (true)
   {
-    // do
-    //  {
-    //Draw logo in upper half of display centered
     display.drawXBM((DisplayWidth - logo_volumio_big_width) / 2, (DisplayHeight / 2 - logo_volumio_big_height) / 2, logo_volumio_big_width, logo_volumio_big_height, logo_volumio_big_bits);
 
     //Draw message text
     int w = display.getUTF8Width(Message.c_str());
     display.drawUTF8((DisplayWidth - w) / 2, 3 * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Message.c_str());
-
-    //  } while (display.nextPage());
   }
   else
   {
@@ -54,13 +49,9 @@ void DisplayMessage(String Message)
 
     messagebuffer[messageindex] = Message;
 
-    // do
-    // {
     //Draw message texts
     for (int i = 0; i < msgcnt; i++)
       display.drawUTF8(0, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, messagebuffer[(messageindex - i + msgcnt) % msgcnt].c_str());
-
-    //  } while (display.nextPage());
 
     messageindex = (messageindex + 1) % msgcnt;
   }
@@ -567,6 +558,9 @@ void setup()
   display.enableUTF8Print();
 
   ui.initialize(&display);
+  scroll1.initialize(&display);
+  scroll2.initialize(&display);
+  scroll3.initialize(&display);
 
   //Initialize serial port for debugging
   Serial.begin(115200);
@@ -618,7 +612,7 @@ void setup()
 
 void loop()
 {
-  long now = millis();
+  unsigned long now = millis();
 
   /*#################################################################*\
   |* Connection to WiFi and Voulumio
@@ -1052,7 +1046,7 @@ void loop()
     //Memorize last input timesamp for screensaver
     lastinput = now;
     lastmenuchange = now;
-    item_offset = 0;
+    scroll3.reset();
   }
 
   //Do nothing if statusdisplay active
@@ -1158,7 +1152,7 @@ void loop()
       volumeDisplay = false;
 
   /*#################################################################*\
-  |* Display
+  |* Send Screenshot to PC
   \*#################################################################*/
 
   bool send = false;
@@ -1174,24 +1168,22 @@ void loop()
     }
   }
 
-  if(send)
-     Serial.write(STX);
+  /*#################################################################*\
+  |* Display
+  \*#################################################################*/
 
-   
+  if (send)
+    Serial.write(STX);
 
-  //display.clearBuffer();
   display.setFontDirection(0);
   display.firstPage();
+
   u8g2_uint_t x;
 
   do
   {
-    //Display off
-    if (noDisplay)
-    {
-    }
     //Display on
-    else
+    if (!noDisplay)
     {
       //Display toast message from Volumio
       if (toastDisplay)
@@ -1291,42 +1283,42 @@ void loop()
         }
 
         //Text of first line centered or scrolling, depending on width
-        line1_width = display.getUTF8Width(line1.c_str());
+        scroll1.width = display.getUTF8Width(line1.c_str());
 
-        if (line1_width < DisplayWidth)
-          display.drawUTF8((DisplayWidth - line1_width) / 2, 16 * 3, line1.c_str());
+        if (scroll1.width < DisplayWidth)
+          display.drawUTF8((DisplayWidth - scroll1.width) / 2, 16 * 3, line1.c_str());
         else
         //Scrolling text
         {
-          x = line1_offset;
+          x = scroll1.offset;
 
-          if (line1_width > 0)
+          if (scroll1.width > 0)
             do
             {
               display.drawUTF8(x, 48, line1.c_str());
 
               //second text
-              x += line1_width + scrollGapStatus;
+              x += scroll1.width + scrollGapStatus;
             } while (x < DisplayWidth);
         }
 
         //Text of second line centered or scrolling, depending on width
-        line2_width = display.getUTF8Width(line2.c_str());
+        scroll2.width = display.getUTF8Width(line2.c_str());
 
-        if (line2_width < DisplayWidth)
-          display.drawUTF8((DisplayWidth - line2_width) / 2, 16 * 4, line2.c_str());
+        if (scroll2.width < DisplayWidth)
+          display.drawUTF8((DisplayWidth - scroll2.width) / 2, 16 * 4, line2.c_str());
         else
         //Scrolling text
         {
-          x = line2_offset;
+          x = scroll2.offset;
 
-          if (line2_width > 0)
+          if (scroll2.width > 0)
             do
             {
               display.drawUTF8(x, 48 + 16, line2.c_str());
 
               //second text
-              x += line2_width + scrollGapStatus;
+              x += scroll2.width + scrollGapStatus;
             } while (x < DisplayWidth);
         }
 
@@ -1371,11 +1363,11 @@ void loop()
                 display.setColorIndex(1);
 
               display.setFont(MenuTextFont);
-              item_width = display.getUTF8Width(Menu[i + menuOffset].Text.c_str()) + MenuItemHeight;
+              scroll3.width = display.getUTF8Width(Menu[i + menuOffset].Text.c_str()) + MenuItemHeight;
 
-              if (item_width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu || delayScrollMenu == 0)
+              if (scroll3.width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu || delayScrollMenu == 0)
               {
-                item_offset = 0;
+                scroll3.reset();
                 display.setFont(MenuTextFont);
                 display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Text.c_str());
                 display.setFont(MenuIconFont);
@@ -1384,7 +1376,7 @@ void loop()
               else
               //Scrolling text
               {
-                x = item_offset;
+                x = scroll3.offset;
 
                 do
                 {
@@ -1394,7 +1386,7 @@ void loop()
                   display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2 + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Icon.c_str());
 
                   //second text
-                  x += item_width + scrollGapMenu;
+                  x += scroll3.width + scrollGapMenu;
                 } while (x < DisplayWidth);
               }
             }
@@ -1441,50 +1433,22 @@ void loop()
         ui.drawProgressBar(0, posy, DisplayWidth, 1, VolumePercent);
       }
     }
-  if(send)
-     display.writeBufferXBM(Serial);
+    if (send)
+      display.writeBufferXBM(Serial);
   } while (display.nextPage());
 
-  
-
-   if(send)
-      Serial.write(ETX);
-
-
-  //display.sendBuffer();
-
-  /*#################################################################*\
-  |* Send Screenshot to PC
-  \*#################################################################*/
-
-  //not working, bug in u8g2 with this display?
-  //only receiving 8 lines with empty pixels
+  if (send)
+    Serial.write(ETX);
 
   /*#################################################################*\
   |* Scrolling Text
   \*#################################################################*/
 
-  //Calculate milliseconds since last scroll
-  if (lastscroll != 0)
-    scrollbuffer += now - lastscroll;
-  lastscroll = now;
+  scroll1.scrollGapStatus = scrollGapStatus;
+  scroll2.scrollGapStatus = scrollGapStatus;
+  scroll3.scrollGapStatus = scrollGapMenu;
 
-  //Scroll only after x milliseconds (one pixel)
-  if (scrollbuffer >= ScrollInterval)
-  {
-    scrollbuffer -= ScrollInterval;
-    line1_offset -= 1;
-    line2_offset -= 1;
-    item_offset -= 1;
-  }
-
-  //Restart scrolling when at end
-  if ((u8g2_uint_t)line1_offset < (u8g2_uint_t)-line1_width - scrollGapStatus)
-    line1_offset = 0;
-
-  if ((u8g2_uint_t)line2_offset < (u8g2_uint_t)-line2_width - scrollGapStatus)
-    line2_offset = 0;
-
-  if ((u8g2_uint_t)item_offset < (u8g2_uint_t)-item_width - scrollGapMenu)
-    item_offset = 0;
+  scroll1.process();
+  scroll2.process();
+  scroll3.process();
 }

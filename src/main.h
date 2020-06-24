@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "menu.h"
 #include "UiElements.h"
 #include "Locale/Locale.h"
+#include "ScrollText.h"
 //#include "Language.h"
 
 /*#################################################################*\
@@ -62,6 +63,10 @@ DigitalPin rightSwitch;
 
 Volumio volumio;
 UiElements ui;
+ScrollText scroll1;
+ScrollText scroll2;
+ScrollText scroll3;
+
 
 /*#################################################################*\
 |* Volume
@@ -86,18 +91,9 @@ bool toastDisplay = false;
 long toastStart = 0;
 bool noDisplay = false;
 
-long lastscroll = 0;
-int scrollbuffer = 0;
+
 long lastscreenshot = 0;
 long lastmenuchange = 0;
-
-u8g2_uint_t line1_offset; // current offset for the scrolling text
-u8g2_uint_t line2_offset; // current offset for the scrolling text
-u8g2_uint_t item_offset;  // current offset for the scrolling text
-
-u8g2_uint_t line1_width;
-u8g2_uint_t line2_width;
-u8g2_uint_t item_width;
 
 /*#################################################################*\
 |* Menu
