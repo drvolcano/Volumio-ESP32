@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "UiElements.h"
 #include "Locale/Locale.h"
 #include "ScrollText.h"
+#include "TextSplitter.h"
 //#include "Language.h"
 
 /*#################################################################*\
@@ -66,7 +67,7 @@ UiElements ui;
 ScrollText scroll1;
 ScrollText scroll2;
 ScrollText scroll3;
-
+TextSplitter splitter;
 
 /*#################################################################*\
 |* Volume

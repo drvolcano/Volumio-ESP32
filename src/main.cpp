@@ -558,9 +558,9 @@ void setup()
   display.enableUTF8Print();
 
   ui.initialize(&display);
-  scroll1.initialize(&display);
-  scroll2.initialize(&display);
-  scroll3.initialize(&display);
+  scroll1.initialize();
+  scroll2.initialize();
+  scroll3.initialize();
 
   //Initialize serial port for debugging
   Serial.begin(115200);
@@ -621,7 +621,7 @@ void loop()
   //Check if WiFi is connected. If not --> reconnect
   while (WiFi.status() != WL_CONNECTED)
   {
-    DEBUG_PRINT("WiFi: Status: ");
+    DEBUG_PRINT("Main: WiFi: Status: ");
     DEBUG_PRINTLN(WiFiStatusString());
 
     DisplayMessage(locale.ESP.ConnectWiFi);
@@ -633,9 +633,8 @@ void loop()
       WiFi.disconnect();
 
       i++;
-      //  DisplayMessage("connect WiFi " + String(i));
 
-      DEBUG_PRINT("WiFi: Connecting to ");
+      DEBUG_PRINT("Main: WiFi: Connecting to ");
       DEBUG_PRINTLN(ssid);
 
       int laswtifistate = WiFi.status();
@@ -645,9 +644,8 @@ void loop()
 
       for (int i = 0; i < 10; i++)
       {
-        DEBUG_PRINT("WiFi: Status: ");
+        DEBUG_PRINT("Main: WiFi: Status: ");
         DEBUG_PRINTLN(WiFiStatusString());
-        //   DisplayMessage(WiFiStatusString());
 
         if (WiFi.status() == WL_CONNECTED)
           break;
@@ -659,9 +657,8 @@ void loop()
       }
     }
 
-    DEBUG_PRINT("WiFi: IP address: ");
+    DEBUG_PRINT("Main: WiFi: IP address: ");
     DEBUG_PRINTLN(WiFi.localIP());
-    //  DisplayMessage("IP:" + WiFi.localIP().toString());
     DEBUG_PRINTLN();
   }
 
@@ -681,22 +678,21 @@ void loop()
 
       //  volumio.getDeviceInfo();
       //  volumio.getSystemVersion();
-      //   volumio.getPushType();
-      //   volumio.getPlaylistIndex();
+      //  volumio.getPushType();
+      //  volumio.getPlaylistIndex();
       //  volumio.getAvailableLanguages();
-      //   volumio.getAudioOutputs();
-      //    volumio.getMenuItems();
-      //    volumio.getUiConfig("miscellanea/my_music");
-
-      //   volumio.getInstalledPlugins();
-      //    volumio.getAvaliablePlugins();
+      //  volumio.getAudioOutputs();
+      //  volumio.getMenuItems();
+      //  volumio.getUiConfig("miscellanea/my_music");
+      //  volumio.getInstalledPlugins();
+      //  volumio.getAvaliablePlugins();
 
       menuMain();
     }
   }
 
   /*#################################################################*\
-  |* Process data from Volumio (Updates)
+  |* Process data from Volumio (pushed Updates)
   \*#################################################################*/
 
   volumio.process();
@@ -1030,7 +1026,7 @@ void loop()
     //Activate display if not switched on
     if (noDisplay)
       noDisplay = false;
-    //Toggler play/pause
+    //Toggle play/pause
     else
       volumio.toggle();
   }
@@ -1050,10 +1046,7 @@ void loop()
   }
 
   //Do nothing if statusdisplay active
-  if (statusDisplay)
-  {
-  }
-  else
+  if (!statusDisplay)
   {
     if (restoreMenuPosition && !waitForLibraryUpdate && !waitForQueueUpdate && !waitForSourceUpdate && !waitForMenuItemsUpdate && !waitForUiConfigSection)
     {
@@ -1192,52 +1185,17 @@ void loop()
         int y = 0;
         int maxchars = 20;
 
-        for (int p = 0; p < 2; p++)
-        {
-          String block = "";
-          String line = "";
+        splitter.initialize(volumio.CurrentToastItem.title,maxchars);
 
-          String sum = volumio.CurrentToastItem.title;
-          if (p == 1)
-            sum = volumio.CurrentToastItem.message;
+        while (splitter.next())
+          display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
 
-          //Split text into multiple lines
-          for (int i = 0; i < sum.length(); i++)
-          {
-            char c = sum[i];
-            block += c;
+        splitter.initialize(volumio.CurrentToastItem.message,maxchars);
 
-            if (c == ' ')
-            {
-              if (block.length() + line.length() <= maxchars)
-              {
-                line += block;
-                block = "";
-              }
-              else
-              {
-                display.drawUTF8(0, 13 + MenuItemHeight * y++, line.c_str());
-
-                line = block;
-                block = "";
-              }
-            }
-          }
-
-          //Draw last part of text
-          if (block.length() + line.length() <= maxchars)
-          {
-            line += block;
-            display.drawUTF8(0, 13 + MenuItemHeight * y++, line.c_str());
-          }
-          else
-          {
-            display.drawUTF8(0, 13 + MenuItemHeight * y++, line.c_str());
-            display.drawUTF8(0, 13 + MenuItemHeight * y++, block.c_str());
-          }
-
-          display.drawLine(0, 63, (int)(DisplayWidth * ((float)(toastStart + durationShowToast - now)) / (float)durationShowToast), 63);
-        }
+        while (splitter.next())
+          display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
+  
+        display.drawLine(0, 63, (int)(DisplayWidth * ((float)(toastStart + durationShowToast - now)) / (float)durationShowToast), 63);
       }
       //Display player status
       else if (statusDisplay)
@@ -1423,11 +1381,7 @@ void loop()
       {
         //   float VolumePercent = float(volumio.State.volume) / (float)VolumeMaximum;
         float VolumePercent = float(newvolume) / (float)volumeMaximum;
-
-        float barlen = VolumePercent * (DisplayWidth - 4);
         float barBoxHeight = 8;
-        float barHeight = 4;
-
         int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
 
         ui.drawProgressBar(0, posy, DisplayWidth, 1, VolumePercent);
