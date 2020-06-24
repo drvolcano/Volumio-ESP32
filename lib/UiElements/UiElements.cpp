@@ -15,6 +15,8 @@ void UiElements::drawProgressBar(int x, int y, int widh, int style, float value)
         break;
     case 1:
         UiElements::drawProgressBar(x, y, widh, 0, 4, 1, 1, 0, 0, value);
+   case 2:
+        UiElements::drawProgressBar(x, y, widh, 0, 1, 0, 0, 0, 0, value);
         break;
     }
 }

@@ -835,6 +835,15 @@ void loop()
   case Volumio::pushToastMessage: //Volumio pushes toast message
     DEBUG_PRINTLN("Main: Volumio: pushToastMessage");
 
+    if (toastActivatesDisplay)
+    {
+      if (noDisplay)
+        statusDisplay = true;
+
+      lastinput = now;
+      noDisplay = false;
+    }
+
     if (volumio.readPushToastMessage())
     {
       if (durationShowToast > 0)
@@ -1185,17 +1194,17 @@ void loop()
         int y = 0;
         int maxchars = 20;
 
-        splitter.initialize(volumio.CurrentToastItem.title,maxchars);
+        splitter.initialize(volumio.CurrentToastItem.title, maxchars);
 
         while (splitter.next())
           display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
 
-        splitter.initialize(volumio.CurrentToastItem.message,maxchars);
+        splitter.initialize(volumio.CurrentToastItem.message, maxchars);
 
         while (splitter.next())
           display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
-  
-        display.drawLine(0, 63, (int)(DisplayWidth * ((float)(toastStart + durationShowToast - now)) / (float)durationShowToast), 63);
+
+        ui.drawProgressBar(4, DisplayHeight - 8, DisplayWidth - 8, 2, ((float)(toastStart + durationShowToast - now)) / (float)durationShowToast);
       }
       //Display player status
       else if (statusDisplay)

@@ -49,8 +49,8 @@ int port = 80;
 #define PIN_LeftEncoder_CLK 26
 
 //Right encoder
-#define PIN_RightEncoder_SW 33 //blocks one touch pin
-#define PIN_RightEncoder_DT 32 //blocks one touch pin
+#define PIN_RightEncoder_SW 33  //blocks one touch pin
+#define PIN_RightEncoder_DT 32  //blocks one touch pin
 #define PIN_RightEncoder_CLK 35 //not good, has no pullup, to be changed in future!
 
 //Min and Max possible volume on my System, standard would be 0-100
@@ -64,9 +64,11 @@ long volumeSetInterval = 300; //ms
 long ScrollInterval = 10; //ms
 
 //Gap between end and start of scrolling text
-u8g2_uint_t scrollGapStatus = 32;//px
-u8g2_uint_t scrollGapMenu = 16;//px
+u8g2_uint_t scrollGapStatus = 32; //px
+u8g2_uint_t scrollGapMenu = 16;   //px
 
+//Toast message switches display on
+bool toastActivatesDisplay = true;
 
 /*#################################################################*\
 |* Delays
@@ -82,7 +84,7 @@ long durationShowToast = 5 * 1000; //ms
 long delayScrollMenu = 1 * 1000; //ms
 
 //After x ms without operation go back to status display (0 deactivates function)
-long delayBackStatus = 30 * 1000;//ms
+long delayBackStatus = 30 * 1000; //ms
 
 //After x ms without operation switch display off, if not play (0 deactivates function)
 long delayDisplayOffWhenNotPlay = 60 * 1000; //ms
@@ -108,8 +110,7 @@ The file "u8g2.h" is located in "/libraries/U8g2_Arduino/src/clib" inside your d
 sketch folder.
 */
 
-
-U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0,PIN_SPI_CS,PIN_SPI_DC,U8X8_PIN_NONE);
+U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0, PIN_SPI_CS, PIN_SPI_DC, U8X8_PIN_NONE);
 
 //###########################################################
 // Menu
