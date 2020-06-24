@@ -30,23 +30,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 void DisplayMessage(String Message)
 {
-  display.firstPage();
+  //display.firstPage();
   display.setFont(MenuTextFont);
   display.setFontDirection(0);
 
   //Logo and single line (true) or 4 lines scrolling (false)
   if (true)
   {
-    do
-    {
-      //Draw logo in upper half of display centered
-      display.drawXBM((DisplayWidth - logo_volumio_big_width) / 2, (DisplayHeight / 2 - logo_volumio_big_height) / 2, logo_volumio_big_width, logo_volumio_big_height, logo_volumio_big_bits);
+    // do
+    //  {
+    //Draw logo in upper half of display centered
+    display.drawXBM((DisplayWidth - logo_volumio_big_width) / 2, (DisplayHeight / 2 - logo_volumio_big_height) / 2, logo_volumio_big_width, logo_volumio_big_height, logo_volumio_big_bits);
 
-      //Draw message text
-      int w = display.getUTF8Width(Message.c_str());
-      display.drawUTF8((DisplayWidth - w) / 2, 3 * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Message.c_str());
+    //Draw message text
+    int w = display.getUTF8Width(Message.c_str());
+    display.drawUTF8((DisplayWidth - w) / 2, 3 * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Message.c_str());
 
-    } while (display.nextPage());
+    //  } while (display.nextPage());
   }
   else
   {
@@ -54,13 +54,13 @@ void DisplayMessage(String Message)
 
     messagebuffer[messageindex] = Message;
 
-    do
-    {
-      //Draw message texts
-      for (int i = 0; i < msgcnt; i++)
-        display.drawUTF8(0, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, messagebuffer[(messageindex - i + msgcnt) % msgcnt].c_str());
+    // do
+    // {
+    //Draw message texts
+    for (int i = 0; i < msgcnt; i++)
+      display.drawUTF8(0, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, messagebuffer[(messageindex - i + msgcnt) % msgcnt].c_str());
 
-    } while (display.nextPage());
+    //  } while (display.nextPage());
 
     messageindex = (messageindex + 1) % msgcnt;
   }
@@ -298,7 +298,7 @@ void menuAction(MenuItemType type, String data)
     DEBUG_PRINT("MENU_BROWSE_SONG_ADDTOFAVORITES");
     DEBUG_PRINT(": ");
     DEBUG_PRINTLN(data);
-     volumio.addToFavourites("mpd", menuStack[menuStackIndex - 1].Text, menuStack[menuStackIndex - 1].Data);
+    volumio.addToFavourites("mpd", menuStack[menuStackIndex - 1].Text, menuStack[menuStackIndex - 1].Data);
     break;
   case MENU_BROWSE_WEBRADIO_PLAY:
     DEBUG_PRINT("MENU_BROWSE_WEBRADIO_PLAY");
@@ -1161,6 +1161,25 @@ void loop()
   |* Display
   \*#################################################################*/
 
+  bool send = false;
+
+  while (Serial.available())
+  {
+    switch (Serial.read())
+    {
+    //Screenshot
+    case 1:
+      send = true;
+      break;
+    }
+  }
+
+  if(send)
+     Serial.write(STX);
+
+   
+
+  //display.clearBuffer();
   display.setFontDirection(0);
   display.firstPage();
   u8g2_uint_t x;
@@ -1422,7 +1441,24 @@ void loop()
         ui.drawProgressBar(0, posy, DisplayWidth, 1, VolumePercent);
       }
     }
+  if(send)
+     display.writeBufferXBM(Serial);
   } while (display.nextPage());
+
+  
+
+   if(send)
+      Serial.write(ETX);
+
+
+  //display.sendBuffer();
+
+  /*#################################################################*\
+  |* Send Screenshot to PC
+  \*#################################################################*/
+
+  //not working, bug in u8g2 with this display?
+  //only receiving 8 lines with empty pixels
 
   /*#################################################################*\
   |* Scrolling Text
@@ -1451,24 +1487,4 @@ void loop()
 
   if ((u8g2_uint_t)item_offset < (u8g2_uint_t)-item_width - scrollGapMenu)
     item_offset = 0;
-
-  /*#################################################################*\
-  |* Send Screenshot to PC
-  \*#################################################################*/
-
-  //not working, bug in u8g2 with this display?
-  //only receiving 8 lines with empty pixels
-  while (Serial.available())
-  {
-    switch (Serial.read())
-    {
-    //Screenshot
-    case 1:
-      Serial.write(STX);
-
-      display.writeBufferXBM(Serial);
-      Serial.write(ETX);
-      break;
-    }
-  }
 }
