@@ -28,33 +28,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
+
+
 void DisplayMessage(String Message)
 {
-  //display.firstPage();
+
+#ifndef Color
+  display.firstPage();
   display.setFont(MenuTextFont);
+
   display.setFontDirection(0);
 
-  //Logo and single line (true) or 4 lines scrolling (false)
-  if (true)
+  do
   {
-    display.drawXBM((DisplayWidth - logo_volumio_big_width) / 2, (DisplayHeight / 2 - logo_volumio_big_height) / 2, logo_volumio_big_width, logo_volumio_big_height, logo_volumio_big_bits);
 
-    //Draw message text
-    int w = display.getUTF8Width(Message.c_str());
-    display.drawUTF8((DisplayWidth - w) / 2, 3 * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Message.c_str());
-  }
-  else
-  {
-    int msgcnt = 4;
+    //Logo and single line (true) or 4 lines scrolling (false)
+    if (true)
+    {
 
-    messagebuffer[messageindex] = Message;
+      display.drawXBM((DisplayWidth - logo_volumio_big_width) / 2, (DisplayHeight / 2 - logo_volumio_big_height) / 2, logo_volumio_big_width, logo_volumio_big_height, logo_volumio_big_bits);
 
-    //Draw message texts
-    for (int i = 0; i < msgcnt; i++)
-      display.drawUTF8(0, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, messagebuffer[(messageindex - i + msgcnt) % msgcnt].c_str());
+      //Draw message text
+      int w = display.getUTF8Width(Message.c_str());
+      display.drawUTF8((DisplayWidth - w) / 2, 3 * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Message.c_str());
+    }
+    else
+    {
+      int msgcnt = 4;
 
-    messageindex = (messageindex + 1) % msgcnt;
-  }
+      messagebuffer[messageindex] = Message;
+
+      //Draw message texts
+      for (int i = 0; i < msgcnt; i++)
+        display.drawUTF8(0, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, messagebuffer[(messageindex - i + msgcnt) % msgcnt].c_str());
+
+      messageindex = (messageindex + 1) % msgcnt;
+    }
+  } while (display.nextPage());
+
+#endif
 }
 
 String WiFiStatusString()
@@ -551,20 +563,27 @@ void menuAction(MenuItemType type, String data)
 
 void setup()
 {
-  locale = Locale_en();
-
-  //Initialize display
-  display.begin();
-  display.enableUTF8Print();
-
-  ui.initialize(&display);
-  scroll1.initialize();
-  scroll2.initialize();
-  scroll3.initialize();
-
   //Initialize serial port for debugging
   Serial.begin(115200);
   delay(10);
+
+  locale = Locale_en();
+
+//Initialize display
+#ifdef Color
+
+  oled.initialize();
+  oled.clearScreen();
+
+#else
+  display.begin();
+  display.enableUTF8Print();
+  ui.initialize(&display);
+#endif
+
+  scroll1.initialize();
+  scroll2.initialize();
+  scroll3.initialize();
 
   DEBUG_PRINTLN();
 
@@ -610,9 +629,41 @@ void setup()
   */
 }
 
+int py = 0;
+bool dir = false;
+
 void loop()
 {
+
   unsigned long now = millis();
+
+#ifdef Color
+  oled.clearScreen();
+
+  oled.drawBitmap(14, 14, 100, 100, Fallen);
+  oled.setColor(0, 255, 255);
+  oled.drawRect(0, py, 128, 16);
+  oled.flush();
+
+  if (dir)
+  {
+    py--;
+    if (py <= 0)
+    {
+      py = 0;
+      dir = false;
+    }
+  }
+  else
+  {
+    py++;
+    if (py >= 112)
+    {
+      py = 112;
+      dir = true;
+    }
+  }
+#endif
 
   /*#################################################################*\
   |* Connection to WiFi and Voulumio
@@ -1174,6 +1225,28 @@ void loop()
   |* Display
   \*#################################################################*/
 
+#ifdef Color
+  //  display.clearScreen();
+  /*
+  for (int x = 0; x < 100; x++)
+    for (int y = 0; y < 100; y++)
+    {
+
+      display.setColor(
+          (uint8_t)emp_bits[(x + (99 - y) * 100) * 3 + 2 + 54],
+          (uint8_t)emp_bits[(x + (99 - y) * 100) * 3 + 1 + 54],
+          (uint8_t)emp_bits[(x + (99 - y) * 100) * 3 + 0 + 54]);
+      display.drawPixel((ucg_int_t)x + 14, (ucg_int_t)y + 14);
+    }*/
+  display.clearScreen();
+  display.setColor(0, 255, 255, 255); // use white as main color for the font
+  display.setFontMode(UCG_FONT_MODE_TRANSPARENT);
+  display.setPrintPos(4, 16);
+  display.setFont(ucg_font_helvB08_tr);
+  display.print("Does not work:");
+
+#else
+
   if (send)
     Serial.write(STX);
 
@@ -1402,6 +1475,8 @@ void loop()
 
   if (send)
     Serial.write(ETX);
+
+#endif
 
   /*#################################################################*\
   |* Scrolling Text
