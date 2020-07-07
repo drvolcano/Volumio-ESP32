@@ -80,7 +80,7 @@ int SSD1351::getUTF8Width(String text)
   return ox;
 }
 
-void SSD1351::drawUTF8(uint8_t x, uint8_t y, String text)
+void SSD1351::drawUTF8(int16_t x, int16_t y, String text)
 {
   /*
   int ox = 0;
@@ -477,6 +477,10 @@ void SSD1351::drawPixelAlpha(uint8_t x, uint8_t y, uint8_t a)
   if ((x > SSD1351_LASTCOLUMN) || (y > SSD1351_LASTROW))
     return;
 
+  if ((x < SSD1351_FIRSTCOLUMN) || (y < SSD1351_FIRSTROW))
+    return;
+
+
   defineArea(x, y, 1, 1);
   writeColorAlpha(a);
 }
@@ -554,3 +558,15 @@ void SSD1351::drawBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
   for (int i = 0; i < w * h; i++)
     writeColor();
 }
+
+void SSD1351::drawBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
+{
+  if ((x + w > SSD1351_WIDTH) || (y + h > SSD1351_HEIGHT))
+    return;
+
+  defineArea(x, y, w, h);
+
+  for (int i = 0; i < w * h; i++)
+    writeColorAlpha(128);
+}
+
