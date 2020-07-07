@@ -28,8 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
-
-
 void DisplayMessage(String Message)
 {
 
@@ -572,8 +570,9 @@ void setup()
 //Initialize display
 #ifdef Color
 
-  oled.initialize();
-  oled.clearScreen();
+  display.initialize();
+  display.clearScreen();
+  display.flush();
 
 #else
   display.begin();
@@ -636,34 +635,6 @@ void loop()
 {
 
   unsigned long now = millis();
-
-#ifdef Color
-  oled.clearScreen();
-
-  oled.drawBitmap(14, 14, 100, 100, Fallen);
-  oled.setColor(0, 255, 255);
-  oled.drawRect(0, py, 128, 16);
-  oled.flush();
-
-  if (dir)
-  {
-    py--;
-    if (py <= 0)
-    {
-      py = 0;
-      dir = false;
-    }
-  }
-  else
-  {
-    py++;
-    if (py >= 112)
-    {
-      py = 112;
-      dir = true;
-    }
-  }
-#endif
 
   /*#################################################################*\
   |* Connection to WiFi and Voulumio
@@ -1226,24 +1197,245 @@ void loop()
   \*#################################################################*/
 
 #ifdef Color
-  //  display.clearScreen();
-  /*
-  for (int x = 0; x < 100; x++)
-    for (int y = 0; y < 100; y++)
-    {
 
-      display.setColor(
-          (uint8_t)emp_bits[(x + (99 - y) * 100) * 3 + 2 + 54],
-          (uint8_t)emp_bits[(x + (99 - y) * 100) * 3 + 1 + 54],
-          (uint8_t)emp_bits[(x + (99 - y) * 100) * 3 + 0 + 54]);
-      display.drawPixel((ucg_int_t)x + 14, (ucg_int_t)y + 14);
-    }*/
-  display.clearScreen();
-  display.setColor(0, 255, 255, 255); // use white as main color for the font
-  display.setFontMode(UCG_FONT_MODE_TRANSPARENT);
-  display.setPrintPos(4, 16);
-  display.setFont(ucg_font_helvB08_tr);
-  display.print("Does not work:");
+  // display.drawBitmap24bit(14, 14, 100, 100, Fallen);
+  display.clearScreen(0, 0, 0);
+  display.setColor(255, 255, 255);
+  // display.drawRect(0, py, 128, 16);
+  // display.drawUTF8(0, 0, "Volumio selection");
+
+  uint8_t x;
+
+  //Display on
+  if (!noDisplay)
+  {
+    //Display toast message from Volumio
+    if (toastDisplay)
+    {
+      display.setU8g2Font(ToastTextFont);
+      int y = 0;
+      int maxchars = 20;
+
+      splitter.initialize(volumio.CurrentToastItem.title, maxchars);
+
+      while (splitter.next())
+        display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
+
+      splitter.initialize(volumio.CurrentToastItem.message, maxchars);
+
+      while (splitter.next())
+        display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
+
+      ui.drawProgressBar(4, DisplayHeight - 8, DisplayWidth - 8, 2, ((float)(toastStart + durationShowToast - now)) / (float)durationShowToast);
+    }
+    //Display player status
+    else if (statusDisplay)
+    {
+      //Draw small Volumio logo
+      // display.drawXBM((DisplayWidth - logo_volumio_small_width) / 2, (MenuItemHeight - logo_volumio_small_height) / 2, logo_volumio_small_width, logo_volumio_small_height, logo_volumio_small_bits);
+
+      display.drawBitmap65k(9, 0, 110, 15, LogoVolumio65k);
+
+      //Draw status-icons (play/pause/strop and random and repeat)
+      int px = 8;
+      int py = MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2;
+
+      display.setU8g2Font(MenuIconFont);
+      if (volumio.State.status == "pause")
+        display.drawUTF8(px, py, ICON_PAUSE);
+      if (volumio.State.status == "play")
+        display.drawUTF8(px, py, ICON_PLAY);
+      if (volumio.State.status == "stop")
+        display.drawUTF8(px, py, ICON_STOP);
+      if (volumio.State.random == "true")
+        display.drawUTF8(80, py, ICON_RANDOM);
+      if (volumio.State.repeat == "true")
+        display.drawUTF8(104, py, ICON_REPEAT);
+
+      //Draw texts
+      display.setU8g2Font(StatusTextFont);
+
+      display.setColor(255, 255, 255);
+
+      //Artist
+      int widthArtist = display.getUTF8Width(volumio.State.artist.c_str());
+      display.drawUTF8((DisplayWidth - widthArtist) / 2, 16 * 2, volumio.State.artist.c_str());
+
+      //Title
+      String line1 = volumio.State.title;
+      String line2 = "";
+      String line3 = "";
+
+      //Split longer texts if they contain a "-" (often on webradio)
+      int splitIndex = volumio.State.title.indexOf(" - ");
+
+      if (splitIndex > 0)
+      {
+        line1 = volumio.State.title.substring(0, splitIndex);
+        line2 = volumio.State.title.substring(splitIndex + 3);
+      }
+
+      //Text of first line centered or scrolling, depending on width
+      scroll1.width = display.getUTF8Width(line1.c_str());
+
+      if (scroll1.width < DisplayWidth)
+        display.drawUTF8((DisplayWidth - scroll1.width) / 2, 16 * 3, line1.c_str());
+      else
+      //Scrolling text
+      {
+        x = scroll1.offset;
+
+        if (scroll1.width > 0)
+          do
+          {
+            display.drawUTF8(x, 48, line1.c_str());
+
+            //second text
+            x += scroll1.width + scrollGapStatus;
+          } while (x < DisplayWidth);
+      }
+
+      //Text of second line centered or scrolling, depending on width
+      scroll2.width = display.getUTF8Width(line2.c_str());
+
+      if (scroll2.width < DisplayWidth)
+        display.drawUTF8((DisplayWidth - scroll2.width) / 2, 16 * 4, line2.c_str());
+      else
+      //Scrolling text
+      {
+        x = scroll2.offset;
+
+        if (scroll2.width > 0)
+          do
+          {
+            display.drawUTF8(x, 48 + 16, line2.c_str());
+
+            //second text
+            x += scroll2.width + scrollGapStatus;
+          } while (x < DisplayWidth);
+      }
+
+      if (volumio.State.duration > 0)
+      {
+
+        float SeekPercent = (float)volumio.State.seek / (float)volumio.State.duration / 1000.0;
+        float barBoxHeight = 8;
+
+        int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
+
+        ui.drawProgressBar(4, posy, DisplayWidth - 8, 0, SeekPercent);
+
+        int trackMin = volumio.State.duration / 60;
+        int trackSec = volumio.State.duration % 60;
+        String txt1 = String(trackMin) + ":" + ((trackSec < 10) ? "0" : "") + String(trackSec);
+        display.drawUTF8(DisplayWidth - 32, 16 * 7, txt1.c_str());
+
+        int seekMin = int(volumio.State.seek / 1000.0) / 60;
+        int seekSec = int(volumio.State.seek / 1000.0) % 60;
+        String txt2 = String(seekMin) + ":" + ((seekSec < 10) ? "0" : "") + String(seekSec);
+        display.drawUTF8(0, 16 * 7, txt2.c_str());
+      }
+    }
+    else
+    {
+      bool style2 = false;
+
+      if (style2)
+        display.drawBox(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight);
+
+      //Write menu texts
+      for (int i = 0; i < MenuVisibleItems; i++)
+        if (i + menuOffset < MenuLength)
+        {
+
+          if (i == menuPosition - menuOffset)
+          {
+            /*         if (style2)
+              display.setColorIndex(0);
+            else
+              display.setColorIndex(1);
+*/
+            display.setU8g2Font(MenuTextFont);
+            scroll3.width = display.getUTF8Width(Menu[i + menuOffset].Text.c_str()) + MenuItemHeight;
+
+            if (scroll3.width <= MenuPixelWidth - 3 || now < lastmenuchange + delayScrollMenu || delayScrollMenu == 0)
+            {
+              scroll3.reset();
+              display.setU8g2Font(MenuTextFont);
+              display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Text.c_str());
+              display.setU8g2Font(MenuIconFont);
+              display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Icon.c_str());
+            }
+            else
+            //Scrolling text
+            {
+              x = scroll3.offset;
+
+              do
+              {
+                display.setU8g2Font(MenuTextFont);
+                display.drawUTF8(MenuItemHeight + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Text.c_str());
+                display.setU8g2Font(MenuIconFont);
+                display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2 + x, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Icon.c_str());
+
+                //second text
+                x += scroll3.width + scrollGapMenu;
+              } while (x < DisplayWidth);
+            }
+          }
+          else
+          {
+            display.setU8g2Font(MenuTextFont);
+            display.drawUTF8(MenuItemHeight, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Text.c_str());
+            display.setU8g2Font(MenuIconFont);
+            display.drawUTF8((MenuItemHeight - MenuTextHeight) / 2, i * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Menu[i + menuOffset].Icon.c_str());
+          }
+        }
+
+      display.setColor(63, 164, 101);
+
+      //Highlight actual menu item
+      if (MenuLength > MenuVisibleItems)
+        display.drawFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight);
+      else
+        display.drawFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth, MenuItemHeight);
+
+      //Show scrollbar if menu is longer than screen
+      if (MenuLength > MenuVisibleItems)
+      {
+        //       display.setColorIndex(0);
+        display.drawBox(MenuPixelWidth - 3, 0, 3, MenuPixelHeight);
+        //       display.setColorIndex(1);
+
+        int barlen = (int)((float)MenuVisibleItems / (float)MenuLength * MenuPixelHeight);
+        int barpos = (int)((float)menuOffset / (float)MenuLength * MenuPixelHeight);
+        //      display.drawLine(MenuPixelWidth - 1, barpos, MenuPixelWidth - 1, barpos + barlen);
+      }
+    }
+
+    //Display volume
+    if (volumeDisplay)
+    {
+      //   float VolumePercent = float(volumio.State.volume) / (float)VolumeMaximum;
+      float VolumePercent = float(newvolume) / (float)volumeMaximum;
+      float barBoxHeight = 8;
+      int posy = MenuItemHeight * 5 + (MenuItemHeight - barBoxHeight) / 2;
+
+      ui.drawProgressBar(0, posy, DisplayWidth, 1, VolumePercent);
+    }
+  }
+
+  //display.clearScreen();
+
+  //  display.drawBitmap24bit(0, 0, 128, 128, BitmapFonts);
+  //display.drawBitmap24bit(14, 14, 100, 100, Fallen);
+  /*  display.drawBitmap65k(9, 56, 110, 15, LogoVolumio65k);
+
+  display.setColor(0, 255, 255);
+  display.drawRect(0, py, 128, 16);
+  display.drawString(0,0,"Playback");*/
+
+  display.flush();
 
 #else
 
@@ -1441,9 +1633,9 @@ void loop()
 
         //Highlight actual menu item
         if (MenuLength > MenuVisibleItems)
-          display.drawRFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight, 0);
+          display.drawFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight);
         else
-          display.drawRFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth, MenuItemHeight, 0);
+          display.drawFrame(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth, MenuItemHeight);
 
         //Show scrollbar if menu is longer than screen
         if (MenuLength > MenuVisibleItems)

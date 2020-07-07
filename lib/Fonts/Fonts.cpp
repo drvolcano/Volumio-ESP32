@@ -1,6 +1,25 @@
+/*#################################################################*\
+
+Copyright 2020 Jakob Föger
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+\*#################################################################*/
+
 #include "Fonts.h"
 
-#define DEBUG_FONTS
+//#define DEBUG_FONTS
 
 #ifdef DEBUG_FONTS
 #define DEBUG_PRINTLN(x) Serial.println(x)
@@ -14,19 +33,19 @@ int bcnt = 0;
 byte TEMP = 0;
 int buf = 0;
 
-int Fonts::readBits(int cnt)
+uint8_t Fonts::readUnsignedBits(int cnt)
 {
-  int b = 0;
+  uint8_t b = 0;
 
   for (int i = 0; i < cnt; i++)
   {
     if (bcnt == 0)
     {
-      TEMP = u8g2_font_t0_12_tf_2[buf++];
+      TEMP = actualfont[buf++];
       bcnt = 8;
     }
 
-    b += (TEMP & 1) << i;
+    b |= (TEMP & 1) << i;
     TEMP = TEMP >> 1;
     bcnt--;
   }
@@ -34,91 +53,226 @@ int Fonts::readBits(int cnt)
   return b;
 }
 
-void Fonts::initialize()
+int8_t Fonts::readSignedBits(int cnt)
 {
+  //stolen from u8g2
+  //dont know why this works and my attempts not....
+  int8_t v, d;
+  v = (int8_t)readUnsignedBits(cnt);
+  d = 1;
+  cnt--;
+  d <<= cnt;
+  v -= d;
+
+  return v;
+}
+
+uint16_t Fonts::findGlyphPosition(char c)
+{
+  int pos = 23;
+
+  for (int i = 0; i < header.numberGlyphs; i++)
+  {
+    glyph.unicode = actualfont[pos + 0];
+    glyph.jumpOffset = actualfont[pos + 1];
+
+    if (glyph.unicode == c)
+    {
+      return pos;
+    }
+
+    pos += glyph.jumpOffset;
+  }
+
+  return -1;
+}
+
+void Fonts::readGlyph(char c)
+{
+  int pos = 23;
+
+  DEBUG_PRINTLN("Looking for: " + String(c) + " " + String((uint16_t)c));
+
+  for (int i = 0; i < header.numberGlyphs; i++)
+  {
+
+    char unicode = actualfont[pos + 0];
+    uint8_t jumpOffset = actualfont[pos + 1];
+
+    //Start of buffer
+    buf = pos + 2;
+
+    if (pos > (header.ArrayOffsetGlyp0x0100 + 23))
+    {
+
+      unicode = actualfont[pos + 0] << 8 | actualfont[pos + 1];
+      jumpOffset = actualfont[pos + 2];
+
+      //Start of buffer
+      buf = pos + 3;
+    }
+
+    DEBUG_PRINTLN("Found: " + String(unicode) + " " + String((uint16_t)unicode));
+
+    if (unicode == c)
+    {
+      bcnt = 0;
+      TEMP = 0;
+
+      glyph.unicode = unicode;
+      glyph.jumpOffset = jumpOffset;
+
+      glyph.bitmapWidth = readUnsignedBits(header.bitWidhtGlyphBitmapWidth);
+      glyph.bitmapHeight = readUnsignedBits(header.bitWidhtGlyphBitmapHeight);
+      glyph.bitmapOffsetX = readSignedBits(header.bitWidhtGlyphBitmapOffsetX);
+      glyph.bitmapOffsetY = readSignedBits(header.bitWidhtGlyphBitmapOffsetY);
+      glyph.characterPitch = readUnsignedBits(header.bitWidhtGlyphCharacterPitch);
+
+      DEBUG_PRINTLN("");
+      DEBUG_PRINTLN("offset                                     :" + String(pos));
+      DEBUG_PRINTLN("Unicode of character/glyph                 :" + String(glyph.unicode));
+      DEBUG_PRINTLN("jump offset to next glyph                  :" + String(glyph.jumpOffset));
+      DEBUG_PRINTLN("glyph bitmap width                         :" + String(glyph.bitmapWidth));
+      DEBUG_PRINTLN("glyph bitmap height                        :" + String(glyph.bitmapHeight));
+      DEBUG_PRINTLN("glyph bitmap x offset                      :" + String(glyph.bitmapOffsetX));
+      DEBUG_PRINTLN("glyph bitmap y offset                      :" + String(glyph.bitmapOffsetY));
+      DEBUG_PRINTLN("character pitch                            :" + String(glyph.characterPitch));
+
+      int len = 0;
+      int rowcnt = 0;
+
+      while (len < glyph.bitmapWidth * glyph.bitmapHeight)
+      {
+        uint8_t bit0 = readUnsignedBits(header.bitWidhtM0);
+        uint8_t bit1 = readUnsignedBits(header.bitWidhtM1);
+
+        do
+        {
+          for (int c = 0; c < bit0; c++)
+          {
+            glyph.pixels[len++] = false;
+
+            DEBUG_PRINT("⬛");
+            rowcnt++;
+            if (rowcnt >= glyph.bitmapWidth)
+            {
+              rowcnt = 0;
+              DEBUG_PRINTLN("");
+            }
+          }
+
+          for (int c = 0; c < bit1; c++)
+          {
+            glyph.pixels[len++] = true;
+            DEBUG_PRINT("⬜");
+            rowcnt++;
+            if (rowcnt >= glyph.bitmapWidth)
+            {
+              rowcnt = 0;
+              DEBUG_PRINTLN("");
+            }
+          }
+
+        } while (readUnsignedBits(1) != 0);
+      }
+
+      break;
+    }
+
+    pos += jumpOffset;
+  }
+}
+
+void Fonts::initialize(const uint8_t *font)
+{
+  actualfont = font;
+
   //https://github.com/olikraus/u8g2/wiki/u8g2fontformat
   //https://www.mikrocontroller.net/topic/443768
   //https://github.com/olikraus/u8g2/blob/master/csrc/u8g2_font.c
-  uint8_t var0 = u8g2_font_t0_12_tf_2[0];
-  uint8_t var1 = u8g2_font_t0_12_tf_2[1];
-  uint8_t var2 = u8g2_font_t0_12_tf_2[2];
-  uint8_t var3 = u8g2_font_t0_12_tf_2[3];
-  uint8_t var4 = u8g2_font_t0_12_tf_2[4];
-  uint8_t var5 = u8g2_font_t0_12_tf_2[5];
-  uint8_t var6 = u8g2_font_t0_12_tf_2[6];
-  uint8_t var7 = u8g2_font_t0_12_tf_2[7];
-  uint8_t var8 = u8g2_font_t0_12_tf_2[8];
-  uint8_t var9 = u8g2_font_t0_12_tf_2[9];
-  uint8_t var10 = u8g2_font_t0_12_tf_2[10];
-  uint8_t var11 = u8g2_font_t0_12_tf_2[11];
-  uint8_t var12 = u8g2_font_t0_12_tf_2[12];
-  uint8_t var13 = u8g2_font_t0_12_tf_2[13];
-  uint8_t var14 = u8g2_font_t0_12_tf_2[14];
-  uint8_t var15 = u8g2_font_t0_12_tf_2[15];
-  uint8_t var16 = u8g2_font_t0_12_tf_2[16];
-  uint16_t var17 = u8g2_font_t0_12_tf_2[17] << 8 | u8g2_font_t0_12_tf_2[18]; //+23 = pos
-  uint16_t var19 = u8g2_font_t0_12_tf_2[19] << 8 | u8g2_font_t0_12_tf_2[20]; //+23 = pos
-  uint16_t var21 = u8g2_font_t0_12_tf_2[21] << 8 | u8g2_font_t0_12_tf_2[22]; //+23 = pos
+
+  header.numberGlyphs = actualfont[0];
+  header.boundingBoxMode = actualfont[1];
+  header.bitWidhtM0 = actualfont[2];
+  header.bitWidhtM1 = actualfont[3];
+  header.bitWidhtGlyphBitmapWidth = actualfont[4];
+  header.bitWidhtGlyphBitmapHeight = actualfont[5];
+  header.bitWidhtGlyphBitmapOffsetX = actualfont[6];
+  header.bitWidhtGlyphBitmapOffsetY = actualfont[7];
+  header.bitWidhtGlyphCharacterPitch = actualfont[8];
+  header.FontBoundingBoxWidth = actualfont[9];
+  header.FontBoundingBoxHeight = actualfont[10];
+  header.FontBoundingBoxOffsetX = (int8_t)actualfont[11];
+  header.FontBoundingBoxOffsetY = (int8_t)actualfont[12];
+  header.LetterA_Ascent = (int8_t)actualfont[13];
+  header.LetterA_Descent = (int8_t)actualfont[14];
+  header.LetterBracket_Ascent = (int8_t)actualfont[15];
+  header.LetterBracket_Descent = (int8_t)actualfont[16];
+  header.ArrayOffsetGlyphUpperA = actualfont[17] << 8 | actualfont[18]; //+23 = pos
+  header.ArrayOffsetGlypLowerA = actualfont[19] << 8 | actualfont[20];  //+23 = pos
+  header.ArrayOffsetGlyp0x0100 = actualfont[21] << 8 | actualfont[22];  //+23 = pos
 
   DEBUG_PRINTLN("");
-  DEBUG_PRINTLN("Number of glyphs                           :" + String(var0));
-  DEBUG_PRINTLN("Bounding Box Mode                          :" + String(var1));
-  DEBUG_PRINTLN("m0 Bit width of Zero-Bit RLE in bitmap     :" + String(var2));
-  DEBUG_PRINTLN("m1 Bit width of One-Bit RLE in bitmap      :" + String(var3));
-  DEBUG_PRINTLN("Bit width of glyph bitmap width            :" + String(var4));
-  DEBUG_PRINTLN("Bit width of glyph bitmap height           :" + String(var5));
-  DEBUG_PRINTLN("Bit width of glyph bitmap x offset         :" + String(var6));
-  DEBUG_PRINTLN("Bit width of glyph bitmap y offset         :" + String(var7));
-  DEBUG_PRINTLN("Bit width of glyph character pitch         :" + String(var8));
-  DEBUG_PRINTLN("Font Bounding Box width                    :" + String(var9));
-  DEBUG_PRINTLN("Font Bounding Box height                   :" + String(var10));
-  DEBUG_PRINTLN("Font Bounding Box x Offset                 :" + String(var11));
-  DEBUG_PRINTLN("Font Bounding Box y Offset                 :" + String(var12));
-  DEBUG_PRINTLN("Ascent (size above baseline) of letter 'A' :" + String(var13));
-  DEBUG_PRINTLN("Descent (size below baseline) of letter 'g':" + String(var14));
-  DEBUG_PRINTLN("Ascent of '('                              :" + String(var15));
-  DEBUG_PRINTLN("Descent of '('                             :" + String(var16));
-  DEBUG_PRINTLN("Array offset of glyph 'A'                  :" + String(var17));
-  DEBUG_PRINTLN("Array offset of glyph 'a'                  :" + String(var19));
-  DEBUG_PRINTLN("Array offset of glyph 0x0100               :" + String(var21));
+  DEBUG_PRINTLN("Number of glyphs                           :" + String(header.numberGlyphs));
+  DEBUG_PRINTLN("Bounding Box Mode                          :" + String(header.boundingBoxMode));
+  DEBUG_PRINTLN("m0 Bit width of Zero-Bit RLE in bitmap     :" + String(header.bitWidhtM0));
+  DEBUG_PRINTLN("m1 Bit width of One-Bit RLE in bitmap      :" + String(header.bitWidhtM1));
+  DEBUG_PRINTLN("Bit width of glyph bitmap width            :" + String(header.bitWidhtGlyphBitmapWidth));
+  DEBUG_PRINTLN("Bit width of glyph bitmap height           :" + String(header.bitWidhtGlyphBitmapHeight));
+  DEBUG_PRINTLN("Bit width of glyph bitmap x offset         :" + String(header.bitWidhtGlyphBitmapOffsetX));
+  DEBUG_PRINTLN("Bit width of glyph bitmap y offset         :" + String(header.bitWidhtGlyphBitmapOffsetY));
+  DEBUG_PRINTLN("Bit width of glyph character pitch         :" + String(header.bitWidhtGlyphCharacterPitch));
+  DEBUG_PRINTLN("Font Bounding Box width                    :" + String(header.FontBoundingBoxWidth));
+  DEBUG_PRINTLN("Font Bounding Box height                   :" + String(header.FontBoundingBoxHeight));
+  DEBUG_PRINTLN("Font Bounding Box x Offset                 :" + String(header.FontBoundingBoxOffsetX));
+  DEBUG_PRINTLN("Font Bounding Box y Offset                 :" + String(header.FontBoundingBoxOffsetY));
+  DEBUG_PRINTLN("Ascent (size above baseline) of letter 'A' :" + String(header.LetterA_Ascent));
+  DEBUG_PRINTLN("Descent (size below baseline) of letter 'g':" + String(header.LetterA_Descent));
+  DEBUG_PRINTLN("Ascent of '('                              :" + String(header.LetterBracket_Ascent));
+  DEBUG_PRINTLN("Descent of '('                             :" + String(header.LetterBracket_Descent));
+  DEBUG_PRINTLN("Array offset of glyph 'A'                  :" + String(header.ArrayOffsetGlyphUpperA));
+  DEBUG_PRINTLN("Array offset of glyph 'a'                  :" + String(header.ArrayOffsetGlypLowerA));
+  DEBUG_PRINTLN("Array offset of glyph 0x0100               :" + String(header.ArrayOffsetGlyp0x0100));
 
+  /*
   int pos = 23;
 
-  for (int i = 0; i < var0; i++)
+  for (int i = 0; i < header.numberGlyphs; i++)
   {
 
-    uint8_t v0 = u8g2_font_t0_12_tf_2[pos + 0];
-    uint8_t v1 = u8g2_font_t0_12_tf_2[pos + 1];
+
+    glyph.unicode = actualfont[pos + 0];
+    glyph.jumpOffset = actualfont[pos + 1];
 
     //Start of buffer
     buf = pos + 2;
     bcnt = 0;
     TEMP = 0;
 
-    uint8_t v2 = readBits(var4);
-    uint8_t v3 = readBits(var5);
-    uint8_t v4 = readBits(var6);
-    uint8_t v5 = readBits(var7);
-    uint8_t v6 = readBits(var8);
+    glyph.bitmapWidth = readBits(header.bitWidhtGlyphBitmapWidth);
+    glyph.bitmapHeight = readBits(header.bitWidhtGlyphBitmapHeight);
+    glyph.bitmapOffsetX = readBits(header.bitWidhtGlyphBitmapOffsetX);
+    glyph.bitmapOffsetY = readBits(header.bitWidhtGlyphBitmapOffsetY);
+    glyph.characterPitch = readBits(header.bitWidhtGlyphCharacterPitch);
 
     DEBUG_PRINTLN("");
     DEBUG_PRINTLN("offset                                     :" + String(pos));
-    DEBUG_PRINTLN("Unicode of character/glyph                 :" + String(v0));
-    DEBUG_PRINTLN("jump offset to next glyph                  :" + String(v1));
-    DEBUG_PRINTLN("glyph bitmap width                         :" + String(v2));
-    DEBUG_PRINTLN("glyph bitmap height                        :" + String(v3));
-    DEBUG_PRINTLN("glyph bitmap x offset                      :" + String(v4));
-    DEBUG_PRINTLN("glyph bitmap y offset                      :" + String(v5));
-    DEBUG_PRINTLN("character pitch                            :" + String(v6));
+    DEBUG_PRINTLN("Unicode of character/glyph                 :" + String(glyph.unicode));
+    DEBUG_PRINTLN("jump offset to next glyph                  :" + String(glyph.jumpOffset));
+    DEBUG_PRINTLN("glyph bitmap width                         :" + String(glyph.bitmapWidth));
+    DEBUG_PRINTLN("glyph bitmap height                        :" + String(glyph.bitmapHeight));
+    DEBUG_PRINTLN("glyph bitmap x offset                      :" + String(glyph.bitmapOffsetX));
+    DEBUG_PRINTLN("glyph bitmap y offset                      :" + String(glyph.bitmapOffsetY));
+    DEBUG_PRINTLN("character pitch                            :" + String(glyph.characterPitch));
 
 #ifdef DEBUG_FONTS
     int len = 0;
     int rowcnt = 0;
 
-    while (len < v2 * v3)
+    while (len < glyph.bitmapWidth * glyph.bitmapHeight)
     {
-      uint8_t bit0 = readBits(var2);
-      uint8_t bit1 = readBits(var3);
+      uint8_t bit0 = readBits(header.bitWidhtM0);
+      uint8_t bit1 = readBits(header.bitWidhtM1);
 
       do
       {
@@ -127,7 +281,7 @@ void Fonts::initialize()
         {
           Serial.print("⬛");
           rowcnt++;
-          if (rowcnt >= v2)
+          if (rowcnt >= glyph.bitmapWidth)
           {
             rowcnt = 0;
             DEBUG_PRINTLN("");
@@ -138,7 +292,7 @@ void Fonts::initialize()
         {
           Serial.print("⬜");
           rowcnt++;
-          if (rowcnt >= v2)
+          if (rowcnt >= glyph.bitmapWidth)
           {
             rowcnt = 0;
             DEBUG_PRINTLN("");
@@ -150,6 +304,6 @@ void Fonts::initialize()
     }
 #endif
 
-    pos += v1;
-  }
+    pos += glyph.jumpOffset;
+  }*/
 }

@@ -3,7 +3,13 @@
 #include "Arduino.h"
 #include "stdlib.h"
 #include "Fonts.h"
+#include "GrayscaleFonts.h"
 
+#define depth_262k 1
+#define depth_65k 0
+
+#define depth depth_262k
+#define buffered
 
 #define SSD1351_WIDTH 128
 #define SSD1351_HEIGHT 128
@@ -92,8 +98,6 @@ class SSD1351
 public:
   SSD1351(void);
 
-  
-
   void initialize();
   void clearScreen();
   void clearScreen(uint16_t color65k);
@@ -107,15 +111,24 @@ public:
   void drawPixel(uint8_t x, uint8_t y, uint16_t color);
   void drawPixel(uint8_t x, uint8_t y, uint8_t r, uint8_t g, uint8_t b);
 
-  void drawBitmap(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const char *data);
+  void drawPixelAlpha(uint8_t x, uint8_t y, uint8_t a);
+
+
+  void drawUTF8(uint8_t x, uint8_t y, String text);
+  int getUTF8Width(String text);
+  void setU8g2Font(const uint8_t *font);
+
+  void drawBitmap24bit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const char *data);
+  void drawBitmap65k(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const char *data);
 
   void drawFrame(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
-  void drawRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+  void drawBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
   void defineArea(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 
   void flush();
 
   void writeColor();
+  void writeColorAlpha(uint8_t a);
 
   /*
   void Draw_FastHLine(int16_t x, int16_t y, int16_t length);
@@ -136,6 +149,14 @@ public:
   void Display_String_5x8(uint8_t x, uint8_t y, const uint8_t *text);
   void Display_String_8x16(uint8_t x, uint8_t y, const uint8_t *text);
 */
+
+  struct RGB
+  {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+  };
+
 private:
   uint8_t *buffer;
   uint8_t buf_row = 0;
@@ -147,15 +168,22 @@ private:
 
   void spiSetCommand();
   void spiSetData();
-  void bufferWrite(uint8_t dat[3] );
+  void bufferWrite(uint8_t dat[3]);
   void bufferWrite(uint16_t dat);
+  void bufferRead();
+
+
   uint16_t color_65k;
   uint8_t color_262k[3];
 
   uint16_t color_fill_65k;
   uint8_t color_fill_262k[3];
 
+  uint16_t color_buffer_65k;
+  uint8_t color_buffer_262k[3];
+
   Fonts fonts;
+  GrayscaleFonts grayscaleFonts;
 
   void Write_Line(int16_t x0, int16_t y0, int16_t x1, int16_t y1);
   void FillCircle_Helper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta);
@@ -165,6 +193,4 @@ private:
   void spiWriteCommand(uint8_t cmd, uint8_t dat);
   void spiWriteCommand(uint8_t cmd, uint8_t dat1, uint8_t dat2);
   void spiWriteCommand(uint8_t cmd, uint8_t dat1, uint8_t dat2, uint8_t dat3);
-  void spiWriteData(uint8_t dat);
-  void spiWriteData(uint8_t *dat_p, uint32_t length);
 };

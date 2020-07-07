@@ -17,40 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
-//#define Color
 
-#ifdef Color
-#include <Ucglib.h>
-#include "cover.h"
-#include "SSD1351.h"
-
-SSD1351 oled = SSD1351();
-
-#define oled_cs   5
-#define oled_rst  255
-#define oled_dc   21
-#define oled_sck  4
-#define oled_din  23
+#include "config.h"
 
 
-#define BLACK   0x0000
-#define BLUE    0x001F
-#define RED     0xF800
-#define GREEN   0x07E0
-#define CYAN    0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW  0xFFE0
-#define WHITE   0xFFFF
 
-#else
-#include <U8g2lib.h> //enable #define U8G2_16BIT in "u8g2.h"
-#endif
 
 #include "TouchPin.h"
 #include "DigitalPin.h"
 #include "Volumio.h"
 #include "Encoder.h"
-#include "config.h"
+
 #include "define_icons.h"
 #include "define_logo.h"
 #include "menu.h"
@@ -58,9 +35,6 @@ SSD1351 oled = SSD1351();
 #include "Locale/Locale.h"
 #include "ScrollText.h"
 #include "TextSplitter.h"
-
-
-//#include "Language.h"
 
 /*#################################################################*\
 |* COM

@@ -17,6 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
+#include "Arduino.h"
+
+//Delete or comment line for monochrome display
+//Color display is still alpha, many things not working
+#define Color
+
+#ifdef Color
+#include "cover.h"
+#include "GrayscaleFonts.h"
+#include "SSD1351.h"
+
+#else
+#include <U8g2lib.h> //enable #define U8G2_16BIT in "u8g2.h"
+#endif
+
 //WiFi
 String ssid = "FRITZ!Box 6591 Cable CW";
 String password = "09806196161046264509";
@@ -110,7 +125,9 @@ The file "u8g2.h" is located in "/libraries/U8g2_Arduino/src/clib" inside your d
 sketch folder.
 */
 #ifdef Color
-Ucglib_SSD1351_18x128x128_HWSPI display(/*cd=*/21, /*cs=*/5, /*reset=*/255);
+SSD1351 display = SSD1351();
+//(const u8g2_cb_t *rotation, uint8_t cs, uint8_t dc, uint8_t reset = U8X8_PIN_NONE)
+//Ucglib_SSD1351_18x128x128_HWSPI display(/*cd=*/21, /*cs=*/5, /*reset=*/255);
 #else
 U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0, PIN_SPI_CS, PIN_SPI_DC, U8X8_PIN_NONE);
 #endif
