@@ -62,7 +62,7 @@ int SSD1351::getUTF8Width(String text)
   {
     uint16_t a = text.charAt(i);
 
-   //Unicode 1
+    //Unicode 1
     if ((a & 0xE0) == 0xC0)
     {
       i++;
@@ -80,7 +80,7 @@ int SSD1351::getUTF8Width(String text)
   return ox;
 }
 
-void SSD1351::drawUTF8(int16_t x, int16_t y, String text)
+void SSD1351::drawUTF8(int x, int y, String text)
 {
   /*
   int ox = 0;
@@ -106,6 +106,8 @@ void SSD1351::drawUTF8(int16_t x, int16_t y, String text)
 
   for (int i = 0; i < text.length(); i++)
   {
+    if (x + ox > SSD1351_WIDTH)
+      return;
 
     uint16_t a = text.charAt(i);
 
@@ -269,6 +271,26 @@ void SSD1351::bufferRead()
   uint16_t b1 = *(pixel + 0);
   uint16_t b2 = *(pixel + 1);
   color_buffer_65k = b1 << 8 | b2;
+#endif
+}
+
+void SSD1351::writeBuffer()
+{
+
+#if depth == depth_262k
+  for (int i = 0; i < SSD1351_WIDTH * SSD1351_HEIGHT; i++)
+  {
+    Serial.write(*(buffer + i * 3 + 0));
+    Serial.write(*(buffer + i * 3 + 1));
+    Serial.write(*(buffer + i * 3 + 2));
+  }
+#endif
+#if depth == depth_65k
+  for (int i = 0; i < SSD1351_WIDTH * SSD1351_HEIGHT; i++)
+  {
+    Serial.write(*(buffer + i * 2 + 0));
+    Serial.write(*(buffer + i * 2 + 1));
+  }
 #endif
 }
 
@@ -471,7 +493,7 @@ void SSD1351::drawPixel(uint8_t x, uint8_t y, uint8_t r, uint8_t g, uint8_t b)
   writeColor();
 }
 
-void SSD1351::drawPixelAlpha(uint8_t x, uint8_t y, uint8_t a)
+void SSD1351::drawPixelAlpha(int x, int y, uint8_t a)
 {
   // Bounds check.
   if ((x > SSD1351_LASTCOLUMN) || (y > SSD1351_LASTROW))
@@ -479,7 +501,6 @@ void SSD1351::drawPixelAlpha(uint8_t x, uint8_t y, uint8_t a)
 
   if ((x < SSD1351_FIRSTCOLUMN) || (y < SSD1351_FIRSTROW))
     return;
-
 
   defineArea(x, y, 1, 1);
   writeColorAlpha(a);
@@ -559,6 +580,17 @@ void SSD1351::drawBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
     writeColor();
 }
 
+void SSD1351::drawRBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r)
+{
+  if ((x + w > SSD1351_WIDTH) || (y + h > SSD1351_HEIGHT))
+    return;
+
+  defineArea(x, y, w, h);
+
+  for (int i = 0; i < w * h; i++)
+    writeColor();
+}
+
 void SSD1351::drawBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
   if ((x + w > SSD1351_WIDTH) || (y + h > SSD1351_HEIGHT))
@@ -570,3 +602,17 @@ void SSD1351::drawBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
     writeColorAlpha(128);
 }
 
+void SSD1351::drawRBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r)
+{
+  if ((x + w > SSD1351_WIDTH) || (y + h > SSD1351_HEIGHT))
+    return;
+
+  defineArea(x, y, w, h);
+
+  for (int py = 0; py < h; py++)
+    for (int px = 0; px < w; px++)
+      if (false)
+        writeColorAlpha(0);
+      else
+        writeColorAlpha(128);
+}

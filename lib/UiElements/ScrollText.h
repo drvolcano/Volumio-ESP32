@@ -10,8 +10,8 @@ public:
     void initialize();
     String line1;
     long ScrollInterval = 10; //ms
-    u8g2_uint_t offset;
-    u8g2_uint_t width;
+    int offset;
+    int width;
     long lastscroll = 0;
     int scrollbuffer = 0;
 

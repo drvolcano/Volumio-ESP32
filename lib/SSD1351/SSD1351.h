@@ -8,7 +8,7 @@
 #define depth_262k 1
 #define depth_65k 0
 
-#define depth depth_262k
+#define depth depth_65k
 #define buffered
 
 #define SSD1351_WIDTH 128
@@ -111,9 +111,9 @@ public:
   void drawPixel(uint8_t x, uint8_t y, uint16_t color);
   void drawPixel(uint8_t x, uint8_t y, uint8_t r, uint8_t g, uint8_t b);
 
-  void drawPixelAlpha(uint8_t x, uint8_t y, uint8_t a);
+  void drawPixelAlpha(int x, int y, uint8_t a);
 
-  void drawUTF8(int16_t x, int16_t y, String text);
+  void drawUTF8(int x, int y, String text);
   int getUTF8Width(String text);
   void setU8g2Font(const uint8_t *font);
 
@@ -122,11 +122,15 @@ public:
 
   void drawFrame(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
   void drawBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+  void drawRBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r);
+
   void drawBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+ void drawRBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r);
 
   void defineArea(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 
   void flush();
+  void writeBuffer();
 
   void writeColor();
   void writeColorAlpha(uint8_t a);

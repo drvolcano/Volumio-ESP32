@@ -16,5 +16,8 @@ private:
     String block;
     String buffer;
 
+   bool openbracket1 = false;
+   bool openbracket2 = false;
+
 
 };

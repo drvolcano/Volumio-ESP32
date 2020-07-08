@@ -8,6 +8,9 @@ void TextSplitter::initialize(String text, int max)
     block = "";
     buffer = "";
     line = "";
+
+    openbracket1 = false;
+    openbracket2 = false;
 };
 
 bool TextSplitter::process()
@@ -23,12 +26,25 @@ bool TextSplitter::process()
 
 bool TextSplitter::next()
 {
+
     while (i < sum.length())
     {
         char c = sum[i++];
         block += c;
 
-        if (c == ' ')
+        if (c == '(')
+            openbracket1 = true;
+
+        if (c == ')')
+            openbracket1 = false;
+
+        if (c == '[')
+            openbracket2 = true;
+
+        if (c == ']')
+            openbracket2 = false;
+
+        if (c == ' ' && ! openbracket1 && ! openbracket2)
             if (!process())
                 break;
     }

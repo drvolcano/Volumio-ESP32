@@ -1245,7 +1245,7 @@ void loop()
 
 #ifdef Color
 
-  uint8_t x;
+  int x;
 
   //Display on
   if (noDisplay)
@@ -1268,12 +1268,12 @@ void loop()
       splitter.initialize(volumio.CurrentToastItem.title, maxchars);
 
       while (splitter.next())
-        display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
+        display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line);
 
       splitter.initialize(volumio.CurrentToastItem.message, maxchars);
 
       while (splitter.next())
-        display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
+        display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line);
 
       drawProgressBar(4, DisplayHeight - 8, DisplayWidth - 8, 2, ((float)(toastStart + durationShowToast - now)) / (float)durationShowToast);
     }
@@ -1289,7 +1289,7 @@ void loop()
       int px = 8;
       int py = MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2;
 
-/*
+      /*
       display.setU8g2Font(MenuIconFont);
       if (volumio.State.status == "pause")
         display.drawUTF8(px, py, ICON_PAUSE);
@@ -1305,13 +1305,22 @@ void loop()
       //Draw texts
       display.setU8g2Font(StatusTextFont);
 */
+      int textpos = 1;
+
       display.setColor(255, 255, 255);
 
-      //Album
-      int widthAlbum = display.getUTF8Width(volumio.State.album.c_str());
+      //  String line0 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      //  display.drawUTF8(0, 16 * textpos++, line0);
+      // display.drawUTF8(10, 16 * textpos++ * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, "0123456789"); //ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-      display.setColor(63, 164, 101);
-      display.drawUTF8((DisplayWidth - widthAlbum) / 2, 16 * 2, volumio.State.album.c_str());
+      //Album
+      int widthAlbum = display.getUTF8Width(volumio.State.album);
+
+      if (volumio.State.album != "null")
+      {
+        display.setColor(63, 164, 101);
+        display.drawUTF8((DisplayWidth - widthAlbum) / 2, 16 * textpos++, volumio.State.album);
+      }
 
       display.setColor(255, 255, 255);
 
@@ -1320,20 +1329,32 @@ void loop()
       String line2 = "";
       String line3 = "";
 
-      //Split longer texts if they contain a "-" (often on webradio)
-      int splitIndex = volumio.State.title.indexOf(" - ");
+      int maxchars = 20;
+      splitter.initialize(volumio.State.title, maxchars);
 
-      if (splitIndex > 0)
+      int line = 1;
+
+      while (splitter.next())
       {
-        line1 = volumio.State.title.substring(0, splitIndex);
-        line2 = volumio.State.title.substring(splitIndex + 3);
+        //  display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line);
+
+        if (line == 1)
+          line1 = splitter.line;
+        if (line == 2)
+          line2 = splitter.line;
+
+        line++;
       }
 
+      /*
+      //Split longer texts if they contain a "-" (often on webradio)
+      int splitIndex = volumio.State.title.indexOf(" - ");
+*/
       //Text of first line centered or scrolling, depending on width
-      scroll1.width = display.getUTF8Width(line1.c_str());
+      scroll1.width = display.getUTF8Width(line1);
 
       if (scroll1.width < DisplayWidth)
-        display.drawUTF8((DisplayWidth - scroll1.width) / 2, 16 * 3, line1.c_str());
+        display.drawUTF8((DisplayWidth - scroll1.width) / 2, 16 * textpos++, line1);
       else
       //Scrolling text
       {
@@ -1342,18 +1363,20 @@ void loop()
         if (scroll1.width > 0)
           do
           {
-            display.drawUTF8(x, 48, line1.c_str());
+            display.drawUTF8(x, 16 * textpos, line1.c_str());
 
             //second text
             x += scroll1.width + scrollGapStatus;
           } while (x < DisplayWidth);
+
+        textpos++;
       }
 
       //Text of second line centered or scrolling, depending on width
       scroll2.width = display.getUTF8Width(line2.c_str());
 
       if (scroll2.width < DisplayWidth)
-        display.drawUTF8((DisplayWidth - scroll2.width) / 2, 16 * 4, line2.c_str());
+        display.drawUTF8((DisplayWidth - scroll2.width) / 2, 16 * textpos++, line2);
       else
       //Scrolling text
       {
@@ -1362,17 +1385,19 @@ void loop()
         if (scroll2.width > 0)
           do
           {
-            display.drawUTF8(x, 48 + 16, line2.c_str());
+            display.drawUTF8(x, 16 * textpos, line2.c_str());
 
             //second text
             x += scroll2.width + scrollGapStatus;
           } while (x < DisplayWidth);
+
+        textpos++;
       }
 
       int widthArtist = display.getUTF8Width(volumio.State.artist.c_str());
 
       display.setColor(63, 164, 101);
-      display.drawUTF8((DisplayWidth - widthArtist) / 2, 16 * 4, volumio.State.artist.c_str());
+      display.drawUTF8((DisplayWidth - widthArtist) / 2, 16 * textpos++, volumio.State.artist.c_str());
 
       if (volumio.State.duration > 0)
       {
@@ -1385,9 +1410,11 @@ void loop()
         display.setColor(255, 255, 255);
         display.drawBox(4, 120, 120, 4);
 
+        int pos = (int)(116.0 * SeekPercent);
+
         display.setColor(63, 164, 101);
-        display.drawBox(4, 120, 60, 4);
-        display.drawBox(60, 120 - 2, 4, 4 + 2);
+        display.drawBox(4, 120, pos, 4);
+        display.drawBox(pos, 120 - 2, 4, 4 + 2);
 
         //   drawProgressBar(4, 128-16, DisplayWidth - 8, 0, SeekPercent);
 
@@ -1411,9 +1438,9 @@ void loop()
 
       //Highlight actual menu item
       if (MenuLength > MenuVisibleItems)
-        display.drawBoxAlpha(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight);
+        display.drawRBoxAlpha(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth - 3, MenuItemHeight, 8);
       else
-        display.drawBoxAlpha(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth, MenuItemHeight);
+        display.drawRBoxAlpha(0, MenuItemHeight * (menuPosition - menuOffset), MenuPixelWidth, MenuItemHeight, 8);
 
       display.setColor(255, 255, 255);
 
@@ -1513,6 +1540,13 @@ void loop()
   display.drawString(0,0,"Playback");*/
 
   display.flush();
+
+  if (send)
+  {
+    //Serial.write(STX);
+    display.writeBuffer();
+    // Serial.write(ETX);
+  }
 
 #else
 
