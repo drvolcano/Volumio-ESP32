@@ -44,7 +44,7 @@ bool TextSplitter::next()
         if (c == ']')
             openbracket2 = false;
 
-        if (c == ' ' && ! openbracket1 && ! openbracket2)
+        if (c == ' ' && !openbracket1 && !openbracket2)
             if (!process())
                 break;
     }

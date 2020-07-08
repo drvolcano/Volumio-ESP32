@@ -1313,91 +1313,40 @@ void loop()
       //  display.drawUTF8(0, 16 * textpos++, line0);
       // display.drawUTF8(10, 16 * textpos++ * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, "0123456789"); //ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-      //Album
-      int widthAlbum = display.getUTF8Width(volumio.State.album);
-
+      int maxchars = 20;
       if (volumio.State.album != "null")
       {
+        splitter.initialize(volumio.State.album, maxchars);
         display.setColor(63, 164, 101);
-        display.drawUTF8((DisplayWidth - widthAlbum) / 2, 16 * textpos++, volumio.State.album);
+
+        while (splitter.next())
+        {
+          int width = display.getUTF8Width(splitter.line);
+          display.drawUTF8((DisplayWidth - width) / 2, 16 * textpos++, splitter.line);
+        }
       }
 
-      display.setColor(255, 255, 255);
-
-      //Title
-      String line1 = volumio.State.title;
-      String line2 = "";
-      String line3 = "";
-
-      int maxchars = 20;
       splitter.initialize(volumio.State.title, maxchars);
-
-      int line = 1;
+      display.setColor(255, 255, 255);
 
       while (splitter.next())
       {
-        //  display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line);
-
-        if (line == 1)
-          line1 = splitter.line;
-        if (line == 2)
-          line2 = splitter.line;
-
-        line++;
+        int width = display.getUTF8Width(splitter.line);
+        display.drawUTF8((DisplayWidth - width) / 2, 16 * textpos++, splitter.line);
       }
 
       /*
       //Split longer texts if they contain a "-" (often on webradio)
       int splitIndex = volumio.State.title.indexOf(" - ");
 */
-      //Text of first line centered or scrolling, depending on width
-      scroll1.width = display.getUTF8Width(line1);
-
-      if (scroll1.width < DisplayWidth)
-        display.drawUTF8((DisplayWidth - scroll1.width) / 2, 16 * textpos++, line1);
-      else
-      //Scrolling text
-      {
-        x = scroll1.offset;
-
-        if (scroll1.width > 0)
-          do
-          {
-            display.drawUTF8(x, 16 * textpos, line1.c_str());
-
-            //second text
-            x += scroll1.width + scrollGapStatus;
-          } while (x < DisplayWidth);
-
-        textpos++;
-      }
-
-      //Text of second line centered or scrolling, depending on width
-      scroll2.width = display.getUTF8Width(line2.c_str());
-
-      if (scroll2.width < DisplayWidth)
-        display.drawUTF8((DisplayWidth - scroll2.width) / 2, 16 * textpos++, line2);
-      else
-      //Scrolling text
-      {
-        x = scroll2.offset;
-
-        if (scroll2.width > 0)
-          do
-          {
-            display.drawUTF8(x, 16 * textpos, line2.c_str());
-
-            //second text
-            x += scroll2.width + scrollGapStatus;
-          } while (x < DisplayWidth);
-
-        textpos++;
-      }
-
-      int widthArtist = display.getUTF8Width(volumio.State.artist.c_str());
-
+      splitter.initialize(volumio.State.artist, maxchars);
       display.setColor(63, 164, 101);
-      display.drawUTF8((DisplayWidth - widthArtist) / 2, 16 * textpos++, volumio.State.artist.c_str());
+
+      while (splitter.next())
+      {
+        int width = display.getUTF8Width(splitter.line);
+        display.drawUTF8((DisplayWidth - width) / 2, 16 * textpos++, splitter.line);
+      }
 
       if (volumio.State.duration > 0)
       {
