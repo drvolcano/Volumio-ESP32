@@ -86,7 +86,7 @@ int scrollGapMenu = 16;   //px
 bool toastActivatesDisplay = true;
 
 /*#################################################################*\
-|* Delays
+|* Delays                                                        
 \*#################################################################*/
 
 //How long volume bar is displayed after last change ( 0 deactivates function)
@@ -107,9 +107,9 @@ long delayDisplayOffWhenNotPlay = 60 * 1000; //ms
 //After x ms without operation switch display off (0 deactivates function)
 long delayDisplayOff = 0; //ms
 
-//###########################################################
-// Display
-//###########################################################
+/*#################################################################*\
+|* Display                                                        
+\*#################################################################*/
 
 #define DisplayWidth 128
 #define DisplayHeight 128
@@ -132,9 +132,9 @@ SSD1351 display = SSD1351();
 U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0, PIN_SPI_CS, PIN_SPI_DC, U8X8_PIN_NONE);
 #endif
 
-//###########################################################
-// Menu
-//###########################################################
+/*#################################################################*\
+|* Menu                                                        
+\*#################################################################*/
 
 #define MenuItemHeight 16
 #define MenuTextHeight 10

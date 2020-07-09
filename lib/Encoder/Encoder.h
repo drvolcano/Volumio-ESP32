@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*#################################################################*/
 
 #include "Arduino.h"
+#include "LibDebug.h"
 
 class Encoder
 {

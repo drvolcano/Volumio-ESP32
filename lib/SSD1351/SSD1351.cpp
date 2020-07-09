@@ -53,7 +53,6 @@ void SSD1351::setU8g2Font(const uint8_t *font)
 
 int SSD1351::getUTF8Width(String text)
 {
-
   // return text.length() * fonts.header.FontBoundingBoxWidth;
 
   int ox = 0;
@@ -82,7 +81,7 @@ int SSD1351::getUTF8Width(String text)
 
 void SSD1351::drawUTF8(int x, int y, String text)
 {
-  /*
+  /*//u8g2 font
   int ox = 0;
 
   for (int i = 0; i < text.length(); i++)
@@ -126,12 +125,11 @@ void SSD1351::drawUTF8(int x, int y, String text)
 
     for (int px = 0; px < grayscaleFonts.glyph.bitmapWidth; px++)
       for (int py = 0; py < grayscaleFonts.glyph.bitmapHeight; py++)
-      {
         drawPixelAlpha(
             x + px + grayscaleFonts.glyph.bitmapOffsetX + ox,
             y + py - grayscaleFonts.glyph.bitmapOffsetY,
             grayscaleFonts.glyph.data[px + py * grayscaleFonts.glyph.bitmapWidth]);
-      }
+
     ox += grayscaleFonts.glyph.characterPitch;
   }
 }
@@ -150,12 +148,23 @@ void SSD1351::initialize(void)
   SPI.begin();
 
 #ifdef buffered
-#if depth == depth_262k
-  buffer = (uint8_t *)malloc(128 * 128 * 3);
-#endif
-#if depth == depth_65k
+
+#if depth_display == depth_display_65k
   buffer = (uint8_t *)malloc(128 * 128 * 2);
 #endif
+
+#if depth_display == depth_display_262k
+  buffer = (uint8_t *)malloc(128 * 128 * 3);
+#endif
+
+#if depth_buffer == depth_buffer_same
+//Nothing needed
+#endif
+
+#if depth_buffer == depth_buffer_24bit
+  buffer24bit = (uint8_t *)malloc(128 * 128 * 3);
+#endif
+
 #endif
 
   digitalWrite(oled_cs, LOW);
@@ -173,12 +182,12 @@ void SSD1351::initialize(void)
   spiWriteCommand(SSD1351_CMD_CLOCKDIV, 0xF1);
   spiWriteCommand(SSD1351_CMD_MUXRATIO, 0x7F);
 
-#if depth == depth_262k
-  spiWriteCommand(SSD1351_CMD_SETREMAP, 0xB4); //-----
+#if depth_display == depth_display_65k
+  spiWriteCommand(SSD1351_CMD_SETREMAP, 0x74); //-----
 #endif
 
-#if depth == depth_65k
-  spiWriteCommand(SSD1351_CMD_SETREMAP, 0x74); //-----
+#if depth_display == depth_display_262k
+  spiWriteCommand(SSD1351_CMD_SETREMAP, 0xB4); //-----
 #endif
 
   spiWriteCommand(SSD1351_CMD_STARTLINE, 0x00);
@@ -220,10 +229,19 @@ void SSD1351::defineArea(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 void SSD1351::bufferWrite(uint8_t dat[3])
 {
 
+#if depth_buffer == depth_buffer_24bit
+  uint8_t *pixel = buffer24bit + (buf_col + buf_row * 128) * 3;
+  *(pixel + 0) = dat[0];
+  *(pixel + 1) = dat[1];
+  *(pixel + 2) = dat[2];
+#endif
+
+#if depth_buffer == depth_buffer_same
   uint8_t *pixel = buffer + (buf_col + buf_row * 128) * 3;
   *(pixel + 0) = dat[0];
   *(pixel + 1) = dat[1];
   *(pixel + 2) = dat[2];
+#endif
 
   buf_col++;
 
@@ -241,6 +259,8 @@ void SSD1351::bufferWrite(uint8_t dat[3])
 
 void SSD1351::bufferWrite(uint16_t dat)
 {
+
+#if depth_display == depth_display_65k
   *(buffer + (buf_col + buf_row * 128) * 2 + 0) = dat >> 8;
   *(buffer + (buf_col + buf_row * 128) * 2 + 1) = dat;
 
@@ -256,28 +276,44 @@ void SSD1351::bufferWrite(uint16_t dat)
       buf_row = buf_row_min;
     }
   }
+#endif
 }
 
 void SSD1351::bufferRead()
 {
-#if depth == depth_262k
+#if depth_buffer == depth_buffer_24bit
+  uint8_t *pixel = buffer24bit + (buf_col + buf_row * 128) * 3;
+  color_buffer_24bit[0] = *(pixel + 0);
+  color_buffer_24bit[1] = *(pixel + 1);
+  color_buffer_24bit[2] = *(pixel + 2);
+#else
+#if depth_display == depth_display_262k
   uint8_t *pixel = buffer + (buf_col + buf_row * 128) * 3;
   color_buffer_262k[0] = *(pixel + 0);
   color_buffer_262k[1] = *(pixel + 1);
   color_buffer_262k[2] = *(pixel + 2);
 #endif
-#if depth == depth_65k
+#if depth_display == depth_display_65k
   uint8_t *pixel = buffer + (buf_col + buf_row * 128) * 2;
   uint16_t b1 = *(pixel + 0);
   uint16_t b2 = *(pixel + 1);
   color_buffer_65k = b1 << 8 | b2;
+#endif
 #endif
 }
 
 void SSD1351::writeBuffer()
 {
 
-#if depth == depth_262k
+#if depth_buffer == depth_buffer_24bit
+  for (int i = 0; i < SSD1351_WIDTH * SSD1351_HEIGHT; i++)
+  {
+    Serial.write(*(buffer24bit + i * 3 + 0));
+    Serial.write(*(buffer24bit + i * 3 + 1));
+    Serial.write(*(buffer24bit + i * 3 + 2));
+  }
+#else
+#if depth_display == depth_display_262k
   for (int i = 0; i < SSD1351_WIDTH * SSD1351_HEIGHT; i++)
   {
     Serial.write(*(buffer + i * 3 + 0));
@@ -285,12 +321,13 @@ void SSD1351::writeBuffer()
     Serial.write(*(buffer + i * 3 + 2));
   }
 #endif
-#if depth == depth_65k
+#if depth == depth_display_65k
   for (int i = 0; i < SSD1351_WIDTH * SSD1351_HEIGHT; i++)
   {
     Serial.write(*(buffer + i * 2 + 0));
     Serial.write(*(buffer + i * 2 + 1));
   }
+#endif
 #endif
 }
 
@@ -303,20 +340,50 @@ void SSD1351::flush()
   spiWriteCommand(SSD1351_CMD_WRITERAM);
   spiSetData();
 
-#if depth == depth_262k
+#if depth_buffer == depth_buffer_24bit
+#if depth_display == depth_display_262k
+  for (int i = 0; i < SSD1351_WIDTH * SSD1351_HEIGHT; i++)
+  {
+    *(buffer + i * 3 + 0) = *(buffer24bit + i * 3 + 0) >> 2;
+    *(buffer + i * 3 + 1) = *(buffer24bit + i * 3 + 1) >> 2;
+    *(buffer + i * 3 + 2) = *(buffer24bit + i * 3 + 2) >> 2;
+  }
+   SPI.writeBytes(buffer, 128 * 128 * 3);
+#endif
+#if depth_display == depth_display_65k
+  for (int i = 0; i < SSD1351_WIDTH * SSD1351_HEIGHT; i++)
+  {
+    *(buffer + i * 2 + 0) = *(buffer24bit + i * 3 + 0) >> 3 | *(buffer24bit + i * 3 + 1) >> 2 << 5;
+    *(buffer + i * 2 + 1) = *(buffer24bit + i * 3 + 1) >> 3 | *(buffer24bit + i * 3 + 2) >> 3 << 3;
+  }
+   SPI.writeBytes(buffer, 128 * 128 * 2);
+#endif
+
+ 
+
+#else
+#if depth_display == depth_display_262k
   SPI.writeBytes(buffer, 128 * 128 * 3);
 #endif
 
-#if depth == depth_65k
+#if depth_display == depth_display_65k
   SPI.writeBytes(buffer, 128 * 128 * 2);
 #endif
-
+#endif
 #endif
 }
 
 void SSD1351::writeColor()
 {
-#if depth == depth_262k
+
+#if depth_buffer == depth_buffer_24bit
+#ifdef buffered
+  bufferWrite(color_24bit);
+#endif
+
+#endif
+
+#if depth_display == depth_display_262k
 #ifdef buffered
   bufferWrite(color_262k);
 #else
@@ -325,7 +392,7 @@ void SSD1351::writeColor()
 
 #endif
 
-#if depth == depth_65k
+#if depth_display == depth_display_65k
 #ifdef buffered
   bufferWrite(color_65k);
 #else
@@ -336,9 +403,36 @@ void SSD1351::writeColor()
 
 void SSD1351::writeColorAlpha(uint8_t a)
 {
-#if depth == depth_262k
+#if depth_buffer == depth_buffer_24bit
+  bufferRead();
+
+  uint8_t ra = color_24bit[0];
+  uint8_t ga = color_24bit[1];
+  uint8_t ba = color_24bit[2];
+
+  uint8_t rb = color_buffer_24bit[0];
+  uint8_t gb = color_buffer_24bit[1];
+  uint8_t bb = color_buffer_24bit[2];
+
+  rb += ((ra - rb) * a >> 8);
+  gb += ((ga - gb) * a >> 8);
+  bb += ((ba - bb) * a >> 8);
+
+  uint8_t result[3];
+  result[0] = rb;
+  result[1] = gb;
+  result[2] = bb;
+
+  bufferWrite(result);
+
+#else
+
+#if depth_display == depth_display_262k
 #ifdef buffered
   bufferRead();
+
+  uint32_t a1 = (a + 2) >> 2;
+  uint32_t a2 = 64 - a1;
 
   uint8_t ra = color_262k[0];
   uint8_t ga = color_262k[1];
@@ -348,9 +442,9 @@ void SSD1351::writeColorAlpha(uint8_t a)
   uint8_t gb = color_buffer_262k[1];
   uint8_t bb = color_buffer_262k[2];
 
-  rb += ((ra - rb) * a >> 8);
-  gb += ((ga - gb) * a >> 8);
-  bb += ((ba - bb) * a >> 8);
+  rb = ((ra * a1 + rb * a2) >> 6);
+  gb = ((ga * a1 + gb * a2) >> 6);
+  bb = ((ba * a1 + bb * a2) >> 6);
 
   uint8_t result[3];
   result[0] = rb;
@@ -364,26 +458,16 @@ void SSD1351::writeColorAlpha(uint8_t a)
 
 #endif
 
-#if depth == depth_65k
+#if depth_display == depth_display_65k
 #ifdef buffered
   bufferRead();
+  uint32_t a1 = (a + 2) >> 2;
+  uint32_t a2 = 64 - a1;
+  bufferWrite(((((color_65k & 0xF81F) * a1 + (color_buffer_65k & 0xF81F) * a2) & 0x3E07C0) | (((color_65k & 0x7E0) * a1 + (color_buffer_65k & 0x7E0) * a2) & 0x1F800)) >> 6);
 
-  uint8_t ra = (color_65k >> 11);
-  uint8_t ga = ((color_65k >> 5) & 0x3F);
-  uint8_t ba = (color_65k & 0x1F);
-
-  uint8_t rb = (color_buffer_65k >> 11);
-  uint8_t gb = ((color_buffer_65k >> 5) & 0x3F);
-  uint8_t bb = (color_buffer_65k & 0x1F);
-
-  rb += ((ra - rb) * a >> 8) & 0x1F;
-  gb += ((ga - gb) * a >> 8) & 0x3F;
-  bb += ((ba - bb) * a >> 8) & 0x1F;
-
-  uint16_t result = (rb << 11 | gb << 5 | bb);
-  bufferWrite(result);
 #else
   SPI.write16(color_65k);
+#endif
 #endif
 #endif
 }
@@ -403,7 +487,13 @@ void SSD1351::setColor(uint16_t color65k)
 
 void SSD1351::setColor(uint8_t r, uint8_t g, uint8_t b)
 {
-#if depth == depth_65k
+#if depth_buffer == depth_buffer_24bit
+  color_24bit[0] = r;
+  color_24bit[1] = g;
+  color_24bit[2] = b;
+#else
+
+#if depth_display == depth_display_65k
   //Convert 3 x 8 bit to 5 + 6 + 5 bit in a row
   //RRRRR----------- (8bit --> 5 bit (-3), shifted 11 left)
   //-----GGGGGG----- (8bit --> 6 bit (-2), shifted 5 left)
@@ -412,45 +502,26 @@ void SSD1351::setColor(uint8_t r, uint8_t g, uint8_t b)
   color_65k = (r >> 3 << 11 | g >> 2 << 5 | b >> 3);
 #endif
 
-#if depth == depth_262k
+#if depth_display == depth_display_262k
   color_262k[0] = r >> 2;
   color_262k[1] = g >> 2;
   color_262k[2] = b >> 2;
 #endif
-}
-
-void SSD1351::setFillColor(uint16_t color65k)
-{
-  color_fill_65k = color65k;
-}
-
-void SSD1351::setFillColor(uint8_t r, uint8_t g, uint8_t b)
-{
-#if depth == depth_65k
-  //Convert 3 x 8 bit to 5 + 6 + 5 bit in a row
-  //RRRRR----------- (8bit --> 5 bit (-3), shifted 11 left)
-  //-----GGGGGG----- (8bit --> 6 bit (-2), shifted 5 left)
-  //-----------BBBBB (8bit --> 5 bit (-3), shifted 5 left)
-
-  color_fill_65k = (r >> 3 << 11 | g >> 2 << 5 | b >> 3);
-#endif
-
-#if depth == depth_262k
-  color_fill_262k[0] = r;
-  color_fill_262k[1] = g;
-  color_fill_262k[2] = b;
 #endif
 }
 
 void SSD1351::clearScreen(void)
 {
-
-#if depth == depth_262k
+#if depth_buffer == depth_buffer_24bit
+  clearScreen(0, 0, 0);
+#else
+#if depth_display == depth_display_262k
   clearScreen(0, 0, 0);
 #endif
 
-#if depth == depth_65k
+#if depth_display == depth_display_65k
   clearScreen(0);
+#endif
 #endif
 }
 

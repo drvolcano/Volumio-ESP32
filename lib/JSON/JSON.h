@@ -17,8 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
-#include "Arduino.h"
+#include "WString.h"
 #include "CharStream.h"
+
+#include "LibDebug.h"
+#if (DEBUGLEVEL_JSON >= 1)
+#define DEBUG_PRINTLN(x) Serial.println(x)
+#define DEBUG_PRINT(x) Serial.print(x)
+#else
+#define DEBUG_PRINTLN(x)
+#define DEBUG_PRINT(x)
+#endif
+
+#if (DEBUGLEVEL_JSON >= 2)
+#define DEBUG_PRINTLN_LVL2(x) Serial.println(x)
+#define DEBUG_PRINT_LVL2(x) Serial.print(x)
+#else
+#define DEBUG_PRINTLN_LVL2(x)
+#define DEBUG_PRINT_LVL2(x)
+#endif
+
+
 
 class JSON
 {
@@ -29,6 +48,8 @@ public:
   bool next();
   String getValue() { return actualValue; }
   String getPath();
+  String getType() { return actualType; }
+
   String getNode(int i) { return nodes[i].Name; }
   String getNode() { return nodes[nodeCount].Name; }
   String getParent() { return nodes[nodeCount - 1].Name; }
@@ -43,9 +64,7 @@ private:
     None,
     Class,
     Array
-
   };
-
 
   struct NodeStruct
   {
@@ -58,6 +77,7 @@ private:
   int nodeCount;
 
   String actualValue;
+  String actualType;
   bool fromStream = false;
   CharStream *charStream;
 

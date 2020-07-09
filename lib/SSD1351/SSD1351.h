@@ -5,10 +5,16 @@
 #include "Fonts.h"
 #include "GrayscaleFonts.h"
 
-#define depth_262k 1
-#define depth_65k 0
+//Bit depth of display
+#define depth_display_65k 65 //5:6:5 (faster, only 2 bytes per pixel)
+#define depth_display_262k 262 //6:6:6 (3 bytes per pixel)
+#define depth_display depth_display_65k
 
-#define depth depth_65k
+//Bit depth of buffer
+#define depth_buffer_same 0 //same as display (no conversion necessary)
+#define depth_buffer_24bit 24 //8:8:8 (experimental)
+#define depth_buffer depth_buffer_same
+
 #define buffered
 
 #define SSD1351_WIDTH 128
@@ -83,15 +89,6 @@
 #define oled_sck 4
 #define oled_din 23
 
-#define BLACK 0x0000
-#define BLUE 0x001F
-#define RED 0xF800
-#define GREEN 0x07E0
-#define CYAN 0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW 0xFFE0
-#define WHITE 0xFFFF
-
 class SSD1351
 {
 
@@ -104,8 +101,7 @@ public:
   void clearScreen(uint8_t r, uint8_t g, uint8_t b);
   void setColor(uint16_t color65k);
   void setColor(uint8_t r, uint8_t g, uint8_t b);
-  void setFillColor(uint16_t color65k);
-  void setFillColor(uint8_t r, uint8_t g, uint8_t b);
+
 
   void drawPixel(uint8_t x, uint8_t y);
   void drawPixel(uint8_t x, uint8_t y, uint16_t color);
@@ -125,7 +121,7 @@ public:
   void drawRBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r);
 
   void drawBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
- void drawRBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r);
+  void drawRBoxAlpha(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r);
 
   void defineArea(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 
@@ -155,14 +151,8 @@ public:
   void Display_String_8x16(uint8_t x, uint8_t y, const uint8_t *text);
 */
 
-  struct RGB
-  {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-  };
-
 private:
+  uint8_t *buffer24bit;
   uint8_t *buffer;
   uint8_t buf_row = 0;
   uint8_t buf_col = 0;
@@ -179,12 +169,11 @@ private:
 
   uint16_t color_65k;
   uint8_t color_262k[3];
-
-  uint16_t color_fill_65k;
-  uint8_t color_fill_262k[3];
+  uint8_t color_24bit[3];
 
   uint16_t color_buffer_65k;
   uint8_t color_buffer_262k[3];
+  uint8_t color_buffer_24bit[3];
 
   Fonts fonts;
   GrayscaleFonts grayscaleFonts;

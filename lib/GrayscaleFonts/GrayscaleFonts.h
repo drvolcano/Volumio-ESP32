@@ -20,7 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "Arduino.h"
-#include "Fonts/Lato.cpp"
+#include "Fonts/Lato_Regular_8.cpp"
+#include "Fonts/Lato_Regular_8_bold.cpp"
+#include "Fonts/Lato_Regular_8_hint.cpp"
+#include "Fonts/Lato_Regular_8_normal.cpp"
+#include "Fonts/Lato_Regular_8_thin.cpp"
 
 class GrayscaleFonts
 {

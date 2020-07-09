@@ -19,23 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "JSON.h"
 
-#include "LibDebug.h"
-#if (DEBUGLEVEL_JSON >= 1)
-#define DEBUG_PRINTLN(x) Serial.println(x)
-#define DEBUG_PRINT(x) Serial.print(x)
-#else
-#define DEBUG_PRINTLN(x)
-#define DEBUG_PRINT(x)
-#endif
-
-#if (DEBUGLEVEL_JSON >= 2)
-#define DEBUG_PRINTLN_LVL2(x) Serial.println(x)
-#define DEBUG_PRINT_LVL2(x) Serial.print(x)
-#else
-#define DEBUG_PRINTLN_LVL2(x)
-#define DEBUG_PRINT_LVL2(x)
-#endif
-
 void JSON::stackPush()
 {
   DEBUG_PRINTLN_LVL2("");
@@ -149,7 +132,6 @@ void JSON::initialize(String Message)
 
 bool JSON::next()
 {
-
   DEBUG_PRINT_LVL2("JSON: next(): read: ");
 
   popped = false;
@@ -157,31 +139,25 @@ bool JSON::next()
   actualValue = "";
   textValue = "";
 
+  bool doreturn;
+  char c;
+
+  //As long as there is data
   while (index < buffer.length() || fromStream)
   {
-    bool doreturn;
-
-    char c;
-
+    //Read one char
     if (fromStream)
     {
       c = charStream->readChar();
       if (c == 0 || c == -1)
-      {
-        //  DEBUG_PRINT("<END>");
         break;
-      }
-
-      DEBUG_PRINT_LVL2(c);
     }
     else
     {
-      c = buffer[index];
-
-      DEBUG_PRINT_LVL2(c);
+      c = buffer[index++];
     }
 
-    index++;
+    DEBUG_PRINT_LVL2(c);
 
     if (text)
       if (controlchar)
@@ -320,7 +296,7 @@ bool JSON::next()
         break;
       }
   }
-  // DEBUG_PRINTLN("");
+
   DEBUG_PRINTLN("JSON: next(): END");
 
   return false;

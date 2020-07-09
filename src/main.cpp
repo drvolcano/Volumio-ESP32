@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
+JSON parser;
+
 void drawProgressBar(int x, int y, int widh, int lineThickness, int barThickness, int frameThickness, int frameSpacing, int knobWidth, int knobHeigth, float value)
 {
   int thickest = (barThickness > knobHeigth) ? barThickness : knobHeigth;
@@ -607,7 +609,7 @@ void menuAction(MenuItemType type, String data)
 void setup()
 {
   //Initialize serial port for debugging
-  Serial.begin(115200);
+  Serial.begin(921600);
   delay(10);
 
   locale = Locale_en();
@@ -678,6 +680,7 @@ bool dir = false;
 
 void loop()
 {
+
 
   unsigned long now = millis();
 
