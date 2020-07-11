@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
+#pragma once
 #include "Arduino.h"
 #include "u8g2_font_t0_12_tf.c"
-
-
 
 class Fonts
 {
