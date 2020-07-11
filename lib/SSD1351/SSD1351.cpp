@@ -53,6 +53,7 @@ void SSD1351::setU8g2Font(const uint8_t *font)
 
 int SSD1351::getUTF8Width(String text)
 {
+  // U8g2 font
   // return text.length() * fonts.header.FontBoundingBoxWidth;
 
   int ox = 0;
@@ -136,8 +137,6 @@ void SSD1351::drawUTF8(int x, int y, String text)
 
 void SSD1351::initialize(void)
 {
-
-  //display.begin(UCG_FONT_MODE_TRANSPARENT);
   //Init GPIO
   pinMode(oled_cs, OUTPUT);
   pinMode(oled_rst, OUTPUT);
@@ -277,6 +276,7 @@ void SSD1351::bufferWrite(uint16_t dat)
     }
   }
 #endif
+
 }
 
 void SSD1351::bufferRead()

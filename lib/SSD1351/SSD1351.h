@@ -1,8 +1,9 @@
+#pragma once
 #include "stdlib.h"
 #include "SPI.h"
 #include "Arduino.h"
 #include "stdlib.h"
-#include "Fonts.h"
+#include "U8g2Fonts.h"
 #include "GrayscaleFonts.h"
 
 //Bit depth of display

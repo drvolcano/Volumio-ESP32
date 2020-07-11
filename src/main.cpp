@@ -78,7 +78,21 @@ void drawProgressBar(int x, int y, int widh, int style, float value)
 void DisplayMessage(String Message)
 {
 
-#ifndef Color
+#ifdef Color
+
+  display.clearScreen();
+  display.drawBitmap65k(9, 9, 110, 15, LogoVolumio65k);
+
+  // display.drawBitmap24bit(0, 0, 128, 128, Stars);
+  // display.setColor(0, 0, 0);
+  // display.drawBoxAlpha(0, 0, 128, 128);
+
+  display.setColor(255, 255, 255);
+  int w = display.getUTF8Width(Message.c_str());
+  display.drawUTF8((DisplayWidth - w) / 2, 3 * MenuItemHeight + MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2, Message.c_str());
+
+  display.flush();
+#else
   display.firstPage();
   display.setFont(MenuTextFont);
 
@@ -636,6 +650,9 @@ void setup()
   //Initialize WiFi
   WiFi.enableSTA(true);
   WiFi.persistent(false);
+  WiFi.begin(ssid.c_str(), password.c_str());
+  WiFi.setAutoConnect(true);
+  WiFi.setAutoReconnect(true);
   WiFi.mode(WIFI_STA);
 
   //Initialize left encoder
@@ -681,7 +698,6 @@ bool dir = false;
 void loop()
 {
 
-
   unsigned long now = millis();
 
   /*#################################################################*\
@@ -693,16 +709,25 @@ void loop()
   {
     DEBUG_PRINT("Main: WiFi: Status: ");
     DEBUG_PRINTLN(WiFiStatusString());
+    DisplayMessage(locale.ESP.ConnectWiFi);
+    delay(1000);
+  }
+
+  /* while (WiFi.status() != WL_CONNECTED)
+  {
+    DEBUG_PRINT("Main: WiFi: Status: ");
+    DEBUG_PRINTLN(WiFiStatusString());
 
     DisplayMessage(locale.ESP.ConnectWiFi);
 
-    int i = 0;
+    int retrys = 0;
+
+    WiFi.reconnect();
+    delay(1000);
 
     while (WiFi.status() != WL_CONNECTED)
     {
       WiFi.disconnect();
-
-      i++;
 
       DEBUG_PRINT("Main: WiFi: Connecting to ");
       DEBUG_PRINTLN(ssid);
@@ -710,6 +735,8 @@ void loop()
       int laswtifistate = WiFi.status();
 
       WiFi.disconnect();
+      WiFi.mode(WIFI_OFF);
+      WiFi.mode(WIFI_STA);
       WiFi.begin(ssid.c_str(), password.c_str());
 
       for (int i = 0; i < 10; i++)
@@ -725,13 +752,19 @@ void loop()
 
         delay(100);
       }
+
+      if (retrys++ > 10 && WiFi.status() != WL_CONNECTED)
+      {
+        DEBUG_PRINT("Main: WiFi: Too many retrys, restarting ESP");
+        ESP.restart();
+      }
     }
 
     DEBUG_PRINT("Main: WiFi: IP address: ");
     DEBUG_PRINTLN(WiFi.localIP());
     DEBUG_PRINTLN();
   }
-
+*/
   //Check if Volumi (SocketIO) is connected. If not --> reconnect
   while (!volumio.getConnected())
   {

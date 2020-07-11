@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
-
+#pragma once
 #include <WiFi.h>
 #include "Inflate.h"
 #include "JSON.h"

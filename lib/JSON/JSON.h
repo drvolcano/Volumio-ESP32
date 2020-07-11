@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 \*#################################################################*/
 
+#pragma once
 #include "WString.h"
 #include "CharStream.h"
 
@@ -43,6 +44,7 @@ class JSON
 {
 
 public:
+  
   void initialize(String Message);
   void initialize(CharStream *stream);
   bool next();

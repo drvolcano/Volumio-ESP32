@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*#################################################################*/
 
 #include "SocketIO.h"
-#include "Structs.h"
+#include "VolumioStructs.h"
 
 class Volumio
 {
