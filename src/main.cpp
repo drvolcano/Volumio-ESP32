@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 JSON parser;
 
+#if Display == Display_SSD1351
+
 void drawProgressBar(int x, int y, int widh, int lineThickness, int barThickness, int frameThickness, int frameSpacing, int knobWidth, int knobHeigth, float value)
 {
   int thickest = (barThickness > knobHeigth) ? barThickness : knobHeigth;
@@ -75,10 +77,12 @@ void drawProgressBar(int x, int y, int widh, int style, float value)
   }
 }
 
+#endif
+
 void DisplayMessage(String Message)
 {
 
-#ifdef Color
+#if Display == Display_SSD1351
 
   display.clearScreen();
   display.drawBitmap65k(9, 9, 110, 15, LogoVolumio65k);
@@ -629,7 +633,7 @@ void setup()
   locale = Locale_en();
 
 //Initialize display
-#ifdef Color
+#if Display == Display_SSD1351
 
   display.initialize();
   display.clearScreen();
@@ -765,7 +769,7 @@ void loop()
     DEBUG_PRINTLN();
   }
 */
-  //Check if Volumi (SocketIO) is connected. If not --> reconnect
+  //Check if Volumio (SocketIO) is connected. If not --> reconnect
   while (!volumio.getConnected())
   {
     DisplayMessage(locale.ESP.ConnectVolumio);
@@ -1279,7 +1283,7 @@ void loop()
   |* Display
   \*#################################################################*/
 
-#ifdef Color
+#if Display == Display_SSD1351
 
   int x;
 

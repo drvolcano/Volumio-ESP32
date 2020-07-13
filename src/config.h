@@ -21,14 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //Delete or comment line for monochrome display
 //Color display is still alpha, many things not working
-#define Color
 
-#ifdef Color
+#define Display_SSD1351 1351 //Color 128x128
+#define Display_SSD1327 1327//Grayscale 128x128
+#define Display Display_SSD1351
+
+#if Display == Display_SSD1351
 #include "cover.h"
 #include "GrayscaleFonts.h"
 #include "SSD1351.h"
+#endif
 
-#else
+#if Display == Display_SSD1327
 #include <U8g2lib.h> //enable #define U8G2_16BIT in "u8g2.h"
 #endif
 
@@ -124,11 +128,11 @@ in "u8g2.h". Uncomment this line:
 The file "u8g2.h" is located in "/libraries/U8g2_Arduino/src/clib" inside your default
 sketch folder.
 */
-#ifdef Color
+#if Display == Display_SSD1351
 SSD1351 display = SSD1351();
-//(const u8g2_cb_t *rotation, uint8_t cs, uint8_t dc, uint8_t reset = U8X8_PIN_NONE)
-//Ucglib_SSD1351_18x128x128_HWSPI display(/*cd=*/21, /*cs=*/5, /*reset=*/255);
-#else
+#endif
+
+#if Display == Display_SSD1327
 U8G2_SSD1327_WS_128X128_1_4W_HW_SPI display(U8G2_R0, PIN_SPI_CS, PIN_SPI_DC, U8X8_PIN_NONE);
 #endif
 
