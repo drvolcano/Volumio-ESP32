@@ -14,3 +14,6 @@ Code is tested on the following hardware components:
 - ESP32-WROOM-32
 - SSD1327 (Monochromme, 128x128, 4-Wire-SPI, using u8g2 library)
 - SSD1351 (65k Color, 128x128, 4-Wire-SPI, currently Alpha)
+
+Basic settings to adapt it to you system can be made in main.h
+Pins for color display have to be defined in SSD1351.h
