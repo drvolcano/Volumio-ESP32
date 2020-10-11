@@ -20,3 +20,52 @@ Pins for color display have to be defined in SSD1351.h
 
 You may be interrested in this fork (work in progress)
 https://github.com/Maschine2501/Volumio-ESP32
+
+The project contains the following libraries:
+
+DigitalPin
+  Debouncing and edge detection for digital inputs
+
+TouchPin
+  Debouncing and edge detection for touch inputs
+
+Encoder
+  Processing of AB digital encoder wheel
+  
+CharStream
+  Prototype for other classes like Inflate, JSON and SocketIO
+  
+JSON
+  Parser for JSON strings.
+
+Inflate
+  Inflating streams, compressed by deflate algorithm.
+  Needed for SocketIO
+  
+SocketIO
+  Send and receive data from SocketIO Server
+  
+Volumio
+  Connect to volumio using SocketIO
+  Send commands and receive data
+  
+SSD1351
+  Driver class for color display
+  
+GrayscaleFonts
+  Font rendering for color display
+  Using prerendered TTF fonts
+  
+ UiElements
+  Helper lib for drawing to OLEd display
+  Like progress bars and splitting or scrolling text
+ 
+U8g2Fonts
+  Helper lib for rendering U8g2 fonts to color display
+  Actually not used, replaced by GrayscaleFonts
+ 
+ 
+  
+  
+  
+  
