@@ -14,7 +14,7 @@ Newer code in the repository contains alpha-code for color-displays (SSD1351)
 ## Code was tested on the following hardware components
 - ESP32-WROOM-32 (AZDelivery Developement Board - [Amazon link](https://www.amazon.de/gp/product/B071P98VTG))
 - SSD1327 (monochrome, 128x128, 4-Wire-SPI, using u8g2 library - [Amazon link](https://www.amazon.de/gp/product/B079KRC9X3))
-- SSD1351 (65k Color, 128x128, 4-Wire-SPI, currently Alpha - [Amazon link](https://www.amazon.de/gp/product/B07D9NVJPZ))
+- SSD1351 (65k Color, 128x128, 4-Wire-SPI, **currently Alpha** - [Amazon link](https://www.amazon.de/gp/product/B07D9NVJPZ))
 
 ## Configuration
 
