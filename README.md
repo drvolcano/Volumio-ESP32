@@ -16,10 +16,14 @@ Newer code in the repository contains alpha-code for color-displays (SSD1351)
 - SSD1327 (monochrome, 128x128, 4-Wire-SPI, using u8g2 library)
 - SSD1351 (65k Color, 128x128, 4-Wire-SPI, currently Alpha)
 
-Basic settings to adapt it to you system can be made in main.h
-Pins for color display have to be defined in SSD1351.h
+## Configuration
 
+Basic settings to configure your system can be made in main.h
+Pins for color display have to be defined in SSD1351.h as its currently under development
 
+## Debugging
+/lib/LibDebug/LibDebug.h can be used to send debugging messages to COM port.
+Valöue 0 disables debugging, 1 is normal level, 2 extended (if available)
 
 ## The project contains the following libraries:
 
