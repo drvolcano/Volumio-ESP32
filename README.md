@@ -17,3 +17,6 @@ Code is tested on the following hardware components:
 
 Basic settings to adapt it to you system can be made in main.h
 Pins for color display have to be defined in SSD1351.h
+
+You may be interrested in this fork (work in progress)
+https://github.com/Maschine2501/Volumio-ESP32
