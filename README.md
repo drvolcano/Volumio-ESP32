@@ -23,7 +23,7 @@ Pins for color display have to be defined in SSD1351.h as its currently under de
 
 ## Debugging
 /lib/LibDebug/LibDebug.h can be used to send debugging messages to COM port.
-Valöue 0 disables debugging, 1 is normal level, 2 extended (if available)
+Value 0 disables debugging, 1 is normal level, 2 extended (if available)
 
 ## The project contains the following libraries:
 
