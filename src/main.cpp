@@ -698,6 +698,7 @@ void setup()
 
 int py = 0;
 bool dir = false;
+WiFiClient client;
 
 void loop()
 {
@@ -711,6 +712,9 @@ void loop()
   //Check if WiFi is connected. If not --> reconnect
   while (WiFi.status() != WL_CONNECTED)
   {
+    while(client.available())
+      client.read();
+
     DEBUG_PRINT("Main: WiFi: Status: ");
     DEBUG_PRINTLN(WiFiStatusString());
     DisplayMessage(locale.ESP.ConnectWiFi);
@@ -1134,17 +1138,25 @@ void loop()
 
   rightSwitch.process();
 
-  if (rightSwitch.getReleased())
+  if (rightSwitch.getPressed())
   {
     //Memorize last input timesamp for screensaver
     lastinput = now;
 
-    //Activate display if not switched on
-    if (noDisplay)
-      noDisplay = false;
-    //Toggle play/pause
-    else
+    if(volumio.State.status == "play")
+    {
       volumio.toggle();
+      noDisplay= true;
+    }
+    else
+    {
+      volumio.toggle();
+      noDisplay= false;
+      
+    }
+    
+
+
   }
 
   /*#################################################################*\
@@ -1575,10 +1587,10 @@ void loop()
       else if (statusDisplay)
       {
         //Draw small Volumio logo
-        display.drawXBM((DisplayWidth - logo_volumio_small_width) / 2, (MenuItemHeight - logo_volumio_small_height) / 2, logo_volumio_small_width, logo_volumio_small_height, logo_volumio_small_bits);
+    //    display.drawXBM((DisplayWidth - logo_volumio_small_width) / 2, (MenuItemHeight - logo_volumio_small_height) / 2, logo_volumio_small_width, logo_volumio_small_height, logo_volumio_small_bits);
 
         //Draw status-icons (play/pause/strop and random and repeat)
-        int px = 8;
+     /*   int px = 8;
         int py = MenuItemHeight - (MenuItemHeight - MenuTextHeight) / 2;
 
         display.setFont(MenuIconFont);
@@ -1652,7 +1664,46 @@ void loop()
               //second text
               x += scroll2.width + scrollGapStatus;
             } while (x < DisplayWidth);
+        }*/
+        
+     display.setFont(StatusTextFont);
+      int textpos = 0;
+
+      int maxchars = 20;
+      if (volumio.State.album != "null")
+      {
+        splitter.initialize(volumio.State.album, maxchars);
+     
+        while (splitter.next())
+        {
+          int width = display.getUTF8Width(splitter.line.c_str());
+          display.drawUTF8((DisplayWidth - width) / 2,8+ 16 * textpos++, splitter.line.c_str());
         }
+      }
+
+      splitter.initialize(volumio.State.title, maxchars);
+    //  display.setColor(255, 255, 255);
+
+      while (splitter.next())
+      {
+        int width = display.getUTF8Width(splitter.line.c_str());
+        display.drawUTF8((DisplayWidth - width) / 2,16+ 16 * textpos++, splitter.line.c_str());
+      }
+
+      /*
+      //Split longer texts if they contain a "-" (often on webradio)
+      int splitIndex = volumio.State.title.indexOf(" - ");
+*/
+      splitter.initialize(volumio.State.artist, maxchars);
+   //   display.setColor(63, 164, 101);
+
+      while (splitter.next())
+      {
+        int width = display.getUTF8Width(splitter.line.c_str());
+        display.drawUTF8((DisplayWidth - width) / 2,24+ 16 * textpos++, splitter.line.c_str());
+      }
+
+
 
         if (volumio.State.duration > 0)
         {
