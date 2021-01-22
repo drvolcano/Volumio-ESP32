@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define Display_SSD1351 1351 //Color 128x128
 #define Display_SSD1327 1327//Grayscale 128x128
-#define Display Display_SSD1351
+#define Display Display_SSD1327
 
 #if Display == Display_SSD1351
 #include "cover.h"
