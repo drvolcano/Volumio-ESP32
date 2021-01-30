@@ -718,8 +718,24 @@ void loop()
     DEBUG_PRINT("Main: WiFi: Status: ");
     DEBUG_PRINTLN(WiFiStatusString());
     DisplayMessage(locale.ESP.ConnectWiFi);
-    delay(1000);
+  
+    leftSwitch.process();
+    rightSwitch.process();
+ 
+  if(leftSwitch.getPressed())
+        ESP.restart();
+
+    if(rightSwitch.getPressed())
+        ESP.restart();
+
+
+
+
+
   }
+ 
+
+
 
   /* while (WiFi.status() != WL_CONNECTED)
   {
@@ -1571,12 +1587,12 @@ void loop()
         int y = 0;
         int maxchars = 20;
 
-        splitter.initialize(volumio.CurrentToastItem.title, maxchars);
+        splitter.initialize(volumio.CurrentToastItem.title, maxchars,0);
 
         while (splitter.next())
           display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
 
-        splitter.initialize(volumio.CurrentToastItem.message, maxchars);
+        splitter.initialize(volumio.CurrentToastItem.message, maxchars,0);
 
         while (splitter.next())
           display.drawUTF8(0, 13 + MenuItemHeight * y++, splitter.line.c_str());
@@ -1672,7 +1688,7 @@ void loop()
       int maxchars = 20;
       if (volumio.State.album != "null")
       {
-        splitter.initialize(volumio.State.album, maxchars);
+        splitter.initialize(volumio.State.album, maxchars,0);
      
         while (splitter.next())
         {
@@ -1681,7 +1697,7 @@ void loop()
         }
       }
 
-      splitter.initialize(volumio.State.title, maxchars);
+      splitter.initialize(volumio.State.title, maxchars,'-');
     //  display.setColor(255, 255, 255);
 
       while (splitter.next())
@@ -1694,7 +1710,7 @@ void loop()
       //Split longer texts if they contain a "-" (often on webradio)
       int splitIndex = volumio.State.title.indexOf(" - ");
 */
-      splitter.initialize(volumio.State.artist, maxchars);
+      splitter.initialize(volumio.State.artist, maxchars,0);
    //   display.setColor(63, 164, 101);
 
       while (splitter.next())

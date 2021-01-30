@@ -1,7 +1,8 @@
 #include "TextSplitter.h"
 
-void TextSplitter::initialize(String text, int max)
+void TextSplitter::initialize(String text, int max, char breakChar)
 {
+    breakingChar= breakChar;
     sum = text;
     maxchars = max;
     i = 0;
@@ -30,6 +31,11 @@ bool TextSplitter::next()
     while (i < sum.length())
     {
         char c = sum[i++];
+
+        //Split text with special char
+        if(c==breakingChar)
+          break;
+           
         block += c;
 
         if (c == '(')
@@ -47,12 +53,15 @@ bool TextSplitter::next()
         if (c == ' ' && !openbracket1 && !openbracket2)
             if (!process())
                 break;
+        
     }
 
     process();
     line = buffer;
     buffer = block;
     block = "";
+
+    line.trim();
 
     return i != sum.length() || block != "" || buffer != "" || line != "";
 };
