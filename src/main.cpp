@@ -731,7 +731,7 @@ void loop()
     if(rightSwitch.getPressed())
         ESP.restart();
 
-    //Auto reboot after a whilw (deactivate with delay 0)
+    //Auto reboot after a while (deactivate with delay 0)
     if(delayReboot != 0 && millis() > (lastconnected + delayReboot))
         ESP.restart();
 
