@@ -709,6 +709,9 @@ void loop()
   |* Connection to WiFi and Voulumio
   \*#################################################################*/
 
+  lastconnected = now;
+
+
   //Check if WiFi is connected. If not --> reconnect
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -722,15 +725,15 @@ void loop()
     leftSwitch.process();
     rightSwitch.process();
  
-  if(leftSwitch.getPressed())
+    if(leftSwitch.getPressed())
         ESP.restart();
 
     if(rightSwitch.getPressed())
         ESP.restart();
 
-
-
-
+    //Auto reboot after a whilw (deactivate with delay 0)
+    if(delayReboot != 0 && millis() > (lastconnected + delayReboot))
+        ESP.restart();
 
   }
  

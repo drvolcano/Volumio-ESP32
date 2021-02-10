@@ -40,6 +40,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 String ssid = "FRITZ!Box 6591 Cable CW";
 String password = "09806196161046264509";
 
+//Auto reboot when not connected to WiFi
+long delayReboot = 10 * 1000; //ms
+
+
 //Volumio
 String host = "volumio";
 int port = 80;
