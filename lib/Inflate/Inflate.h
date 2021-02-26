@@ -43,6 +43,9 @@ private:
   byte TEMP;
   bool BFINAL = false;
   int BTYPE = 0;
+  int count = 0;
+  int LEN;
+  int NLEN;
 
 #define LEN_DISTBUFFER 32768
   char distbuffer[LEN_DISTBUFFER];

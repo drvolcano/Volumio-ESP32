@@ -166,112 +166,125 @@ void Inflate::finalize()
 
 char Inflate::readChar()
 {
-  if (length <= RESPTR)
+  if (BTYPE == BTYPE_NONE)
   {
-    int temp2 = 0;
-    int i2 = 0;
-    bool ok2 = false;
-    int res2 = 0;
-
-    while (true)
+    if(count < LEN)
     {
-      bool bit = readBits(1) != 0;
-      temp2 <<= 1;
-      if (bit)
-        temp2 += 1;
-
-      i2++;
-
-      for (int j = 0; j < HLIT; j++)
-      {
-        if (lengths[j] == i2)
-
-          if (treecode_lit[j] == temp2)
-          {
-            res2 = j;
-            ok2 = true;
-            break;
-          }
-      }
-
-      if (ok2)
-        break;
+      count++;
+      return readBits(8);
     }
-
-    //End
-    if (res2 == 256)
-    {
-
-      DEBUG_PRINTLN_LVL2("");
-      done = true;
+    else
       return -1;
-    }
-    //Normal char
-    else if (res2 < 256)
+  }
+  else
+  {
+    if (length <= RESPTR)
     {
-      distbuffer[length % LEN_DISTBUFFER] = (char)res2;
-      length++;
-    }
-    //Distance
-    else if (res2 > 256)
-    {
-      int val = res2 - 257;
-
-      int extra = LengthBits[val];
-      int extra2 = 0;
-
-      if (extra > 0)
-      {
-        extra2 = readBits(extra);
-      }
-
-      int res3 = 0;
-      int temp3 = 0;
-      int i3 = 0;
-      bool ok3 = false;
+      int temp2 = 0;
+      int i2 = 0;
+      bool ok2 = false;
+      int res2 = 0;
 
       while (true)
       {
         bool bit = readBits(1) != 0;
-        temp3 <<= 1;
+        temp2 <<= 1;
         if (bit)
-          temp3 += 1;
+          temp2 += 1;
 
-        i3++;
+        i2++;
 
-        for (int j = 0; j < HDIST; j++)
+        for (int j = 0; j < HLIT; j++)
         {
-          if (lengths[j + HLIT] == i3)
+          if (lengths[j] == i2)
 
-            if (treecode_dist[j] == temp3)
+            if (treecode_lit[j] == temp2)
             {
-              res3 = j;
-              ok3 = true;
+              res2 = j;
+              ok2 = true;
               break;
             }
         }
 
-        if (ok3)
+        if (ok2)
           break;
       }
 
-      int extra4 = ExtraBits[res3];
-      int extra5 = readBits(extra4);
-
-      int addlen = LengthLengths[val] + extra2;
-      int adddist = ExtraDist[res3] + extra5;
-
-      int addpos = length - adddist;
-
-      for (int i = 0; i < addlen; i++)
+      //End
+      if (res2 == 256)
       {
-        distbuffer[length % LEN_DISTBUFFER] = distbuffer[(addpos + i + LEN_DISTBUFFER) % LEN_DISTBUFFER];
+
+        DEBUG_PRINTLN_LVL2("");
+        done = true;
+        return -1;
+      }
+      //Normal char
+      else if (res2 < 256)
+      {
+        distbuffer[length % LEN_DISTBUFFER] = (char)res2;
         length++;
       }
+      //Distance
+      else if (res2 > 256)
+      {
+        int val = res2 - 257;
+
+        int extra = LengthBits[val];
+        int extra2 = 0;
+
+        if (extra > 0)
+        {
+          extra2 = readBits(extra);
+        }
+
+        int res3 = 0;
+        int temp3 = 0;
+        int i3 = 0;
+        bool ok3 = false;
+
+        while (true)
+        {
+          bool bit = readBits(1) != 0;
+          temp3 <<= 1;
+          if (bit)
+            temp3 += 1;
+
+          i3++;
+
+          for (int j = 0; j < HDIST; j++)
+          {
+            if (lengths[j + HLIT] == i3)
+
+              if (treecode_dist[j] == temp3)
+              {
+                res3 = j;
+                ok3 = true;
+                break;
+              }
+          }
+
+          if (ok3)
+            break;
+        }
+
+        int extra4 = ExtraBits[res3];
+        int extra5 = readBits(extra4);
+
+        int addlen = LengthLengths[val] + extra2;
+        int adddist = ExtraDist[res3] + extra5;
+
+        int addpos = length - adddist;
+
+        for (int i = 0; i < addlen; i++)
+        {
+          distbuffer[length % LEN_DISTBUFFER] = distbuffer[(addpos + i + LEN_DISTBUFFER) % LEN_DISTBUFFER];
+          length++;
+        }
+      }
     }
+    DEBUG_PRINT_LVL2(distbuffer[(RESPTR) % LEN_DISTBUFFER]);
+    return distbuffer[(RESPTR++) % LEN_DISTBUFFER];
   }
-  DEBUG_PRINT_LVL2(distbuffer[(RESPTR) % LEN_DISTBUFFER]);
-  return distbuffer[(RESPTR++) % LEN_DISTBUFFER];
 }
 
 void Inflate::initialize(Stream *dataStream, int byteCount)
@@ -324,7 +337,20 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
   //to be done
   if (BTYPE == BTYPE_NONE)
   {
-    DEBUG_PRINT("Inflate: initialize(): BTYPE_NONE not programmed ");
+    //Read rest of bits (3 already read by BFINAL and BTYPE);
+    readBits(5);
+
+    //Length and 1 complement of length
+    LEN = readBits(16);
+    DEBUG_PRINT("Inflate: initialize(): LEN = ");
+    DEBUG_PRINTLN(LEN);
+
+    NLEN = readBits(16);
+    DEBUG_PRINT("Inflate: initialize(): NLEN = ");
+    DEBUG_PRINTLN(NLEN);
+
+    count =0;
+       
     return;
   }
 
