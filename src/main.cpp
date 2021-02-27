@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBUG_PRINT(x)
 #endif
 
+
+#include "inflaterTest.h"
+
 JSON parser;
 
 #if Display == Display_SSD1351
@@ -694,7 +697,19 @@ void setup()
   TouchPin8.begin(PIN_TOUCH8);
   TouchPin9.begin(PIN_TOUCH9);
   */
+
+
+ //testInflate();
+
+
+
+
+
 }
+
+
+
+
 
 int py = 0;
 bool dir = false;

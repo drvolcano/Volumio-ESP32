@@ -168,10 +168,17 @@ char Inflate::readChar()
 {
   if (BTYPE == BTYPE_NONE)
   {
-    if(count < LEN)
+    if (count < LEN)
     {
       count++;
-      return readBits(8);
+
+      if (count == LEN)
+        done = true;
+
+      char c= readBits(8);
+      DEBUG_PRINT_LVL2(c);
+
+      return c;
     }
     else
       return -1;
@@ -349,36 +356,19 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
     DEBUG_PRINT("Inflate: initialize(): NLEN = ");
     DEBUG_PRINTLN(NLEN);
 
-    count =0;
-       
+    count = 0;
+
     return;
   }
 
-  //to be done
   if (BTYPE == BTYPE_FIXED)
   {
-    DEBUG_PRINT("Inflate: BTYPE_FIXED not programmed ");
-    return;
-
     //Fixed lengths
     HLIT = 288; //Maximum = 257 + 2^5 - 1 = 288
     HDIST = 32; //Maximum = 1 + 2^5 - 1 = 32
     HCLEN = 0;  //Maximum = 4 + 2^4 - 1 = 19
-
-    for (int i = 0; i < 288; i++)
-    {
-      if (i <= 143)
-        lengths[i] = 8;
-      else if (i <= 255)
-        lengths[i] = 9;
-      else if (i <= 255)
-        lengths[i] = 7;
-      else if (i <= 287)
-        lengths[i] = 8;
-    }
   }
 
-  //WORKING
   if (BTYPE == BTYPE_DYNAMIC)
   {
     // 5 Bits: HLIT, # of Literal/Length codes - 257 (257 - 286)
@@ -388,14 +378,20 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
     HLIT = readBits(5) + 257;
     HDIST = readBits(5) + 1;
     HCLEN = readBits(4) + 4;
+  }
 
+  if (BTYPE == BTYPE_FIXED || BTYPE == BTYPE_DYNAMIC)
+  {
     DEBUG_PRINT("Inflate: initialize(): HLIT = ");
     DEBUG_PRINTLN(HLIT);
     DEBUG_PRINT("Inflate: initialize(): HDIST = ");
     DEBUG_PRINTLN(HDIST);
     DEBUG_PRINT("Inflate: initialize(): HCLEN = ");
     DEBUG_PRINTLN(HCLEN);
+  }
 
+  if (BTYPE == BTYPE_DYNAMIC)
+  {
     lenpos = 0;
     code_clen = 0;
     code_lit = 0;
@@ -499,7 +495,31 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
         DEBUG_PRINT(",");
     }
     DEBUG_PRINTLN("}");
+  }
 
+  
+  if (BTYPE == BTYPE_FIXED)
+  {
+    for (int i = 0; i < 288; i++)
+    {
+      if (i <= 143)
+        lengths[i] = 8;
+      else if (i <= 255)
+        lengths[i] = 9;
+      else if (i <= 279)
+        lengths[i] = 7;
+      else if (i <= 287)
+        lengths[i] = 8;
+    }
+    for (int i = 288; i < 288 + 32; i++)
+    {
+      lengths[i] = 5;
+    }
+  }
+  
+
+  if (BTYPE == BTYPE_DYNAMIC)
+  {
     DEBUG_PRINT("Inflate: initialize(): CLEN: Data = {");
 
     while (lenpos < HLIT + HDIST)
@@ -569,6 +589,25 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
     }
 
     DEBUG_PRINTLN("}");
+  }
+
+  if (BTYPE == BTYPE_FIXED)
+  {
+    for (int i = 0; i < 288; i++)
+    {
+      if (i <= 143)
+        treecode_lit[i] = i - 0 + 48;
+      else if (i <= 255)
+        treecode_lit[i] = i - 144 + 200;
+      else if (i <= 279)
+        treecode_lit[i] = i - 256 + 0;
+      else if (i <= 287)
+        treecode_lit[i] = i - 280 + 192;
+    }
+  }
+
+  if (BTYPE == BTYPE_DYNAMIC)
+  {
 
     //count lengths
     for (int i = 0; i < HLIT; i++)
@@ -609,6 +648,10 @@ void Inflate::initialize(Stream *dataStream, int byteCount)
         DEBUG_PRINT(",");
     }
     DEBUG_PRINTLN("}");
+  }
+
+  if (BTYPE == BTYPE_FIXED || BTYPE == BTYPE_DYNAMIC)
+  {
 
     //count lengths
     for (int i = 0; i < HDIST; i++)

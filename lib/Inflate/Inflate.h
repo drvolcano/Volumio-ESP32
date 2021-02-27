@@ -47,7 +47,10 @@ private:
   int LEN;
   int NLEN;
 
-#define LEN_DISTBUFFER 32768
+  #define LEN_DISTBUFFER 32768
+  //#define LEN_DISTBUFFER 10000
+
+
   char distbuffer[LEN_DISTBUFFER];
 
   int lensrt[19];   //19 per definition
